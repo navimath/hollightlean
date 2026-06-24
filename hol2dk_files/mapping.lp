@@ -291,24 +291,24 @@ builtin "NULL" ≔ NULL;
 builtin "NULL_def" ≔ NULL_def;
 builtin "EX" ≔ EX;
 builtin "EX_def" ≔ EX_def;
-builtin "ALL2" ≔ ALL2;
-builtin "ALL2_def" ≔ ALL2_def;
+/* builtin "ALL2" ≔ ALL2;
+builtin "ALL2_def" ≔ ALL2_def; */
 builtin "LAST" ≔ LAST;
 builtin "LAST_def" ≔ LAST_def;
-builtin "MAP2" ≔ MAP2;
-builtin "MAP2_def" ≔ MAP2_def;
-builtin "EL" ≔ EL;
-builtin "EL_def" ≔ EL_def;
+/* builtin "MAP2" ≔ MAP2;
+builtin "MAP2_def" ≔ MAP2_def; */
+/* builtin "EL" ≔ EL;
+builtin "EL_def" ≔ EL_def; */
 builtin "ASSOC" ≔ ASSOC;
 builtin "ASSOC_def" ≔ ASSOC_def;
-builtin "ZIP" ≔ ZIP;
+/* builtin "ZIP" ≔ ZIP;
 builtin "ZIP_def" ≔ ZIP_def;
 builtin "ALLPAIRS" ≔ ALLPAIRS;
 builtin "ALLPAIRS_def" ≔ ALLPAIRS_def;
 builtin "list_of_seq" ≔ list_of_seq;
 builtin "list_of_seq_def" ≔ list_of_seq_def;
 builtin "ITLIST2" ≔ ITLIST2;
-builtin "ITLIST2_def" ≔ ITLIST2_def;
+builtin "ITLIST2_def" ≔ ITLIST2_def; */
 
 // char
 builtin "CHAR" ≔ char;
