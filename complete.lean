@@ -1,5 +1,4 @@
 -- Writing guidelines: https://leanprover-community.github.io/contribute/style.html
-
 import Mathlib
 
 set_option linter.style.longLine false
@@ -112,7 +111,7 @@ theorem imp_def : Eq imp (fun p : Prop => fun q : Prop => Eq (And p q) p) := by
         rw [← h]
         exact fun a ↦ a.right
 
-def FORALL {α : Type*} [Nonempty α] (P : α -> Prop) := ∀ x : α, P x
+def FORALL {α : Type*} [Nonempty α] (P : α -> Prop) : Prop := ∀ x : α, P x
 
 theorem FORALL_def : ∀ {α : Type*} [Nonempty α], (@FORALL α _) =
 (fun P : α -> Prop => Eq P (fun _ : α => True)) := by
@@ -131,7 +130,10 @@ theorem FORALL_def : ∀ {α : Type*} [Nonempty α], (@FORALL α _) =
         exact hx
 
 def EXISTS {α : Type*} [Nonempty α] (P : α -> Prop) := ∃ x : α, P x
-theorem EXISTS_exists : ∀ {α : Type*} [Nonempty α], (@EXISTS α _) = (@Exists α) := rfl
+theorem EXISTS_exists : ∀ {α : Type*} [Nonempty α], (@EXISTS α _) = (fun P => (∃ x : α, P x)) := by
+  intros
+  ext P
+  rfl
 
 theorem exists_def : ∀ {α : Type*} [Nonempty α], (@Exists α) =
 (fun P : α -> Prop => ∀ q : Prop, (∀ x : α, (P x) -> q) -> q) := by
@@ -283,6 +285,7 @@ In Lean we have the Subtype construction `{x:α // P x}` but it does not need a 
 of non-emptiness, so we extend it to need one, defining `SUBTYPE` which at every
 declaration will have its own instance of non-emptiness.
 -/
+@[expose]
 def SUBTYPE (_ : P a) := Subtype P
 
 instance : Nonempty (SUBTYPE h) := ⟨⟨a,h⟩⟩
@@ -701,7 +704,7 @@ def IND_SUC_pred : (ind -> ind) -> Prop := (fun f : ind -> ind =>
 
 noncomputable def IND_SUC : ind -> ind := @Classical.epsilon (ind -> ind) _ IND_SUC_pred
 
-theorem IND_SUC_def : Eq IND_SUC (@Classical.epsilon (Nat -> ind) _ (fun f : ind -> ind => ∃ z : ind, And (∀ x1 : ind, ∀ x2 : ind, Eq (Eq (f x1) (f x2)) (Eq x1 x2)) (∀ x : ind, Not (Eq (f x) z)))) := Eq.refl IND_SUC
+theorem IND_SUC_def : Eq IND_SUC (@Classical.epsilon (ind -> ind) _ (fun f : ind -> ind => ∃ z : ind, And (∀ x1 : ind, ∀ x2 : ind, Eq (Eq (f x1) (f x2)) (Eq x1 x2)) (∀ x : ind, Not (Eq (f x) z)))) := Eq.refl IND_SUC
 
 def IND_0_pred : ind -> Prop := (fun z : ind => And (∀ x1 : ind, ∀ x2 : ind, Eq
 (Eq (IND_SUC x1) (IND_SUC x2)) (Eq x1 x2)) (∀ x : ind, Not (Eq (IND_SUC x) z)))
@@ -828,7 +831,7 @@ theorem dest_num_inj (n m : Nat) : dest_num n = dest_num m -> n = m := by
       unfold dest_num at h
       have h_inj := (IND_SUC_inj (dest_num n) (dest_num m)) h
       apply (Nat.succ_inj).2
-      exact (h_1 m) h_inj
+      exact Nat.add_right_cancel (congrFun (congrArg HAdd.hAdd (h_1 m h_inj)) n)
 
 def mk_num_pred (i : ind) (n : Nat) := i = dest_num n
 
@@ -866,7 +869,7 @@ theorem NUM_REP_eq_dest_num_img : NUM_REP = (fun i : ind => ∃ n, (i = dest_num
     · expose_names
       unfold dest_num
       apply NUM_REP_id.NUM_REP_id_SUC (dest_num n)
-      exact h
+      assumption
 
 theorem axiom_8_left {i : ind} : NUM_REP i -> ∃ n, mk_num_pred i n := by
   rw [NUM_REP_eq_id]
@@ -893,7 +896,6 @@ theorem axiom_8 : ∀ (i : ind), Eq (NUM_REP i) (Eq (dest_num (mk_num i)) i) := 
     rfl
 
 theorem _0_def : Eq Nat.zero (mk_num IND_0) := by
-  rw [Nat.zero_eq] at *
   apply align_epsilon
   · rfl
   · intros x h1 h2
@@ -914,10 +916,8 @@ theorem SUC_def : Eq Nat.succ (fun _2104 : Nat => mk_num (IND_SUC (dest_num _210
 
 @[simp]
 def NUMERAL (n : Nat) := n
-
 @[simp]
-def BIT0 := fun n : Nat => n + n
-
+def BIT0 : Nat → Nat := fun n : Nat => n + n
 @[simp]
 def BIT1 := fun n : Nat => Nat.succ (BIT0 n)
 
@@ -929,17 +929,16 @@ theorem BIT0_def : BIT0 = @Classical.epsilon (Nat -> Nat) _ (fun y0 : Nat -> Nat
   apply align_epsilon
   · simp only [Nat.zero_eq, Nat.succ_eq_add_one]
     unfold BIT0 NUMERAL
-    grind only
+    grind
   · intros f h1 h2
     unfold BIT0 NUMERAL at *
-    simp only [Nat.zero_eq, Nat.add_zero, Nat.succ_eq_add_one, true_and] at h1
+    simp only [Nat.zero_eq, Nat.succ_eq_add_one] at h1
     funext n;
     induction n
     · simp only [Nat.add_zero]
       exact h2.left.symm
     · rename Nat => n
       have h2 := h2.right n
-      have h1 := h1 n
       lia
 
 theorem PRE_def : Eq Nat.pred (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> Nat -> Nat) _
@@ -950,11 +949,11 @@ theorem PRE_def : Eq Nat.pred (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> 
 (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))
 (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))))) := by
   epsilon_tac
-  · simp
+  · simp[NUMERAL]
   · intros f _ h
     funext n m;
     induction m
-    · simp_all
+    · simp_all[NUMERAL]
     · simp_all +arith
 
 theorem add_def : Eq Nat.add (@Classical.epsilon (Nat -> Nat -> Nat -> Nat) _
@@ -964,7 +963,7 @@ And (∀ n : Nat, Eq (add' _2155 (NUMERAL Nat.zero) n) n)
 (NUMERAL (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) := by
   epsilon_tac
   · intro n ; constructor
-    · simp
+    · simp[NUMERAL]
     · lia
   · intros f _ _
     funext _ m _
@@ -977,11 +976,11 @@ Eq (mul' _2186 (Nat.succ m) n) (Nat.add (mul' _2186 m n) n)))
 (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) := by
   epsilon_tac
   · intro n ; constructor
-    · simp
+    · simp[NUMERAL]
     · lia
   · intros f _ h
-    simp_all +arith only [NUMERAL, Nat.zero_eq, Nat.mul_eq, zero_mul, implies_true,
-      Nat.succ_eq_add_one, Nat.add_eq, true_and, forall_const]
+    simp_all +arith only [NUMERAL, Nat.zero_eq, Nat.mul_eq,
+      Nat.succ_eq_add_one, Nat.add_eq, forall_const]
     funext n m k;
     induction m
     · simp_all
@@ -1002,13 +1001,13 @@ And (∀ m : Nat, Eq (EXP' _2224 m (NUMERAL Nat.zero)) (NUMERAL (BIT1 Nat.zero))
   epsilon_tac
   · simp_all +arith only [Nat.zero_eq, Nat.pow_eq, Nat.succ_eq_add_one, Nat.mul_eq, forall_const]
     apply And.intro
-    · simp_all
+    · simp [NUMERAL, BIT1, BIT0]
     · grind
   · intros f _ h
     simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
     funext n m k;
     induction k
-    · simp_all +arith
+    · simp_all +arith[NUMERAL, BIT1, BIT0]
     · simp_all +arith only [Nat.pow_eq, Nat.mul_eq, forall_const, Prod.forall, Nat.succ_eq_add_one]
 
 
@@ -1023,13 +1022,13 @@ theorem le_def : Eq Nat.le (@Classical.epsilon ((Prod Nat Nat) -> Nat -> Nat -> 
   epsilon_tac
   · simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one, forall_const]
     apply And.intro
-    · simp
+    · simp [NUMERAL]
     · lia
   · intros f _ _
     simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
     funext n m k;
     induction k
-    · simp_all +arith
+    · simp_all +arith [NUMERAL]
     · simp_all +arith only [forall_const, Prod.forall]
 
 theorem lt_def : Eq Nat.lt (@Classical.epsilon (Nat -> Nat -> Nat -> Prop) _
@@ -1040,14 +1039,14 @@ Eq (lt _2248 m (Nat.succ n)) (Or (Eq m n) (lt _2248 m n))))
   epsilon_tac
   · simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one, forall_const]
     apply And.intro
-    · simp
+    · simp [NUMERAL]
     · unfold Nat.lt
       lia
   · intros f _ _
     simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
     funext n m k;
     induction k
-    · simp_all +arith
+    · simp_all +arith[NUMERAL]
     · simp_all +arith only [forall_const]
 
 theorem ge_def : Eq GE.ge (fun _2249 : Nat => fun _2250 : Nat => Nat.le _2250 _2249) := by
@@ -1082,7 +1081,7 @@ Eq (minus' _2766 m (Nat.succ n)) (Nat.pred (minus' _2766 m n))))
   epsilon_tac
   · simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one, forall_const]
     apply And.intro
-    · simp
+    · simp[NUMERAL]
     · intros _ _
       simp
       grind
@@ -1090,7 +1089,7 @@ Eq (minus' _2766 m (Nat.succ n)) (Nat.pred (minus' _2766 m n))))
     simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
     funext n m k;
     induction k
-    · simp_all +arith
+    · simp_all +arith [NUMERAL]
     · simp_all +arith only [forall_const]
 
 theorem FACT_def : Eq Nat.factorial (@Classical.epsilon ((Prod Nat (Prod Nat (Prod Nat Nat))) -> Nat -> Nat) _ (fun FACT' : (Prod Nat (Prod Nat (Prod Nat Nat))) -> Nat -> Nat => ∀ _2944 : Prod Nat
@@ -1112,7 +1111,7 @@ theorem FACT_def : Eq Nat.factorial (@Classical.epsilon ((Prod Nat (Prod Nat (Pr
   · intros f h1 h2
     simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
     funext n m;
-    induction m <;> simp_all +arith
+    induction m <;> simp_all +arith[NUMERAL, BIT1, BIT0]
 
 theorem DIV_def : Eq Nat.div (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> Nat -> Nat -> Nat) _
 (fun q : (Prod Nat (Prod Nat Nat)) -> Nat -> Nat -> Nat => ∀ _3086 : Prod Nat (Prod Nat Nat),
@@ -1127,12 +1126,12 @@ theorem DIV_def : Eq Nat.div (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> N
     apply Exists.intro Nat.mod
     · intros m n
       cases n
-      · simp only [NUMERAL, Nat.mul_eq, mul_zero, add_zero, Nat.lt_eq, Nat.not_lt_zero, and_false]
+      · simp only [NUMERAL, id, Nat.mul_eq, mul_zero, add_zero, Nat.lt_eq, Nat.not_lt_zero, and_false]
         rw [COND_True]
         apply And.intro
         · exact Nat.div_zero m
         · exact Nat.mod_zero m
-      · simp only [NUMERAL, Nat.add_eq_zero_iff, one_ne_zero, and_false, Nat.mul_eq, Nat.lt_eq,
+      · simp only [NUMERAL, id, Nat.add_eq_zero_iff, one_ne_zero, and_false, Nat.mul_eq, Nat.lt_eq,
         Order.lt_add_one_iff]
         expose_names
         rw [COND_False]
@@ -1230,7 +1229,7 @@ theorem minimal_def : Eq minimal (fun _6536 : Nat -> Prop => @Classical.epsilon 
 @[simp]
 def EVEN := @Even Nat _
 
-instance EVEN_decidable (n : Nat) [h : Decidable (Even n)] : Decidable (EVEN n) := h -- #eval EVEN 2 -- true
+--instance EVEN_decidable (n : Nat) [h : Decidable (Even n)] : Decidable (EVEN n) := h -- #eval EVEN 2 -- true
 
 theorem EVEN_def : Eq EVEN (@Classical.epsilon ((Prod Nat (Prod Nat (Prod Nat Nat))) -> Nat -> Prop) _
 (fun EVEN' : (Prod Nat (Prod Nat (Prod Nat Nat))) -> Nat -> Prop =>
@@ -1263,7 +1262,7 @@ theorem EVEN_def : Eq EVEN (@Classical.epsilon ((Prod Nat (Prod Nat (Prod Nat Na
 @[simp]
 def ODD := @Odd Nat _
 
-instance ODD_decidable (n : Nat) [h : Decidable (Odd n)] : Decidable (ODD n) := h
+--instance ODD_decidable (n : Nat) [h : Decidable (Odd n)] : Decidable (ODD n) := h
 
 theorem ODD_def : Eq ODD (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> Nat -> Prop) _
 (fun ODD' : (Prod Nat (Prod Nat Nat)) -> Nat -> Prop => ∀ _2607 : Prod Nat (Prod Nat Nat), And
@@ -1597,8 +1596,6 @@ inductive _ZRECSPACE {α : Type*} [Nonempty α] : (Nat -> α -> Prop) -> Prop
 | ZRECSPACE0 : _ZRECSPACE ZBOT
 | ZRECSPACE1 c i r : (forall n, _ZRECSPACE (r n)) -> _ZRECSPACE (ZCONSTR c i r)
 
-open _ZRECSPACE
-
 def ZRECSPACE {α : Type*} [Nonempty α] := @_ZRECSPACE α _
 
 theorem ZRECSPACE_def {A : Type*} [Nonempty A] : Eq (@ZRECSPACE A _) (fun a : Nat -> A -> Prop => ∀ ZRECSPACE' : (Nat -> A -> Prop) -> Prop, (∀ a' : Nat -> A -> Prop, (Or (Eq a' (@ZBOT A _)) (∃ c : Nat, ∃ i : A, ∃ r : Nat -> Nat -> A -> Prop, And (Eq a' (@ZCONSTR A _ c i r)) (∀ n : Nat, ZRECSPACE' (r n)))) -> ZRECSPACE' a') -> ZRECSPACE' a) := by
@@ -1632,9 +1629,9 @@ theorem ZRECSPACE_def {A : Type*} [Nonempty A] : Eq (@ZRECSPACE A _) (fun a : Na
       apply _ZRECSPACE.ZRECSPACE1
       exact h_l
 
-def recspace := fun (α : Type*) [Nonempty α] => SUBTYPE (@ZRECSPACE0 α _)
+def recspace := fun (α : Type*) [Nonempty α] => SUBTYPE (@_ZRECSPACE.ZRECSPACE0 α _)
 
-instance (α : Type*) [Nonempty α] : Nonempty (recspace α) := instNonemptySUBTYPE (@ZRECSPACE0 α _)
+instance (α : Type*) [Nonempty α] : Nonempty (recspace α) := instNonemptySUBTYPE (@_ZRECSPACE.ZRECSPACE0 α _)
 
 def _dest_rec {α : Type*} [Nonempty α] : (recspace α) -> Nat -> α -> Prop :=
   fun A => dest _ A

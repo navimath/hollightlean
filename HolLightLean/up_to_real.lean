@@ -701,7 +701,7 @@ A bijection between `Nat²` and `Nat\{0}`.
 
 `NUMPAIR(x,y) := (2^x)·(2y+1)`
 -/
-noncomputable def NUMPAIR : Nat -> Nat -> Nat := fun _17487 : Nat => fun _17488 : Nat => Nat.mul (Nat.pow (NUMERAL (BIT0 (BIT1 Nat.zero))) _17487) (Nat.add (Nat.mul (NUMERAL (BIT0 (BIT1 Nat.zero))) _17488) (NUMERAL (BIT1 Nat.zero)))
+def NUMPAIR : Nat -> Nat -> Nat := fun _17487 : Nat => fun _17488 : Nat => Nat.mul (Nat.pow (NUMERAL (BIT0 (BIT1 Nat.zero))) _17487) (Nat.add (Nat.mul (NUMERAL (BIT0 (BIT1 Nat.zero))) _17488) (NUMERAL (BIT1 Nat.zero)))
 
 theorem NUMPAIR_def : Eq (fun x y => (2 ^ x * (2 * y + 1))) (fun _17487 : Nat => fun _17488 : Nat => Nat.mul (Nat.pow (NUMERAL (BIT0 (BIT1 Nat.zero))) _17487) (Nat.add (Nat.mul (NUMERAL (BIT0 (BIT1 Nat.zero))) _17488) (NUMERAL (BIT1 Nat.zero)))) := Eq.refl NUMPAIR
 
@@ -1171,8 +1171,9 @@ def SUM (α β : Type*) [Nonempty α] [Nonempty β] := Sum α β
 def INL {α β : Type*} [Nonempty α] [Nonempty β] := @Sum.inl α β
 def INR {α β : Type*} [Nonempty α] [Nonempty β] := @Sum.inr α β
 
-instance {A B : Type*} [Nonempty A] [Nonempty B] : Nonempty (SUM A B) :=
-  Nonempty.intro (INL (Nonempty.some (inferInstance)))
+instance {A B : Type*} [h : Nonempty A] [Nonempty B] : Nonempty (SUM A B) := ⟨INL h.some⟩
+
+theorem SUM_equiv {A B : Type*} [Nonempty A] [Nonempty B] : SUM A B = Sum A B := rfl
 
 noncomputable def _dest_sum : forall {A B : Type*} [Nonempty A] [Nonempty B], SUM A B -> recspace (prod A B) :=
 fun p => match p with
@@ -1720,7 +1721,6 @@ theorem TL_def {A : Type*} [Nonempty A] : Eq (@TL A _) (@TL_HOL A _) := by
       specialize h2 hd t
       simp_all only [forall_eq]
 
-
 noncomputable def LAST_HOL {A : Type*} [Nonempty A] : (List A) -> A := @Classical.epsilon ((prod Nat (prod Nat (prod Nat Nat))) -> (List A) -> A) _ (fun LAST' : (prod Nat (prod Nat (prod Nat Nat))) -> (List A) -> A => ∀ _18117 : prod Nat (prod Nat (prod Nat Nat)), ∀ h : A, ∀ t : List A, Eq (LAST' _18117 (@List.cons A h t)) (@COND A _ (Eq t (@NIL A _)) h (LAST' _18117 t))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))))))
 
 noncomputable def LAST {A : Type*} [Nonempty A] (l : List A) : A :=
@@ -1928,36 +1928,38 @@ open Classical in def ALL2 {A B : Type*} [Nonempty A] [Nonempty B] : (A -> B -> 
 /-
 noncomputable def ALL2_HOL {A B : Type*} [Nonempty A] [Nonempty B] : (A -> B -> Prop) -> (List A) -> (List B) -> Prop := @Classical.epsilon ((prod Nat (prod Nat (prod Nat Nat))) -> (A -> B -> Prop) -> (List A) -> (List B) -> Prop) _ (fun ALL2' : (prod Nat (prod Nat (prod Nat Nat))) -> (A -> B -> Prop) -> (List A) -> (List B) -> Prop => ∀ _18166 : prod Nat (prod Nat (prod Nat Nat)), And (∀ P : A -> B -> Prop, ∀ l2 : List B, Eq (ALL2' _18166 P (@NIL A _) l2) (Eq l2 (@NIL B _))) (∀ h1' : A, ∀ P : A -> B -> Prop, ∀ t1 : List A, ∀ l2 : List B, Eq (ALL2' _18166 P (@List.cons A h1' t1) l2) (@COND Prop _ (Eq l2 (@NIL B _)) False (And (P h1' (@HD B _ l2)) (ALL2' _18166 P t1 (@TL B _ l2)))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero))))))))))
 
+#check List.all₂
+
 theorem ALL2_def {A B : Type*} [Nonempty A] [Nonempty B] : (@ALL2 A B _ _) = (@ALL2_HOL  A B _ _) := by
-unfold ALL2_HOL
-epsilon_tac
-· intros R
-  constructor
-  · intros P l
-    unfold NIL
-    unfold ALL2
-    simp?
+  unfold ALL2_HOL
+  epsilon_tac
+  · intros R
+    constructor
+    · intros P l
+      unfold NIL
+      apply Eq.propIntro <;>
+      unfold ALL2 <;>
+      simp only [List.zip_nil_left, List.all_nil] <;> intro h
+      sorry
+    · intros hd a t
+      simp_all only [List.mem_cons]
+  · intros f hQ hQf
+    funext B' a
+    specialize hQ B'
+    specialize hQf B'
+    funext l
+    induction l
+    · have hQ := hQ.1 a
+      have hQf := hQf.1 a
+      unfold NIL at hQf hQ
+      lia
+    · rename_i h t ih
+      have hQ := hQ.2 h a t
+      have hQf := hQf.2 h a t
+      rw[ih] at hQ
+      rw[hQf]
+      exact hQ -/
 
-
-  · intros hd a t
-    simp_all only [List.mem_cons]
-· intros f hQ hQf
-  funext B' a
-  specialize hQ B'
-  specialize hQf B'
-  funext l
-  induction l
-  · have hQ := hQ.1 a
-    have hQf := hQf.1 a
-    unfold NIL at hQf hQ
-    lia
-  · rename_i h t ih
-    have hQ := hQ.2 h a t
-    have hQf := hQf.2 h a t
-    rw[ih] at hQ
-    rw[hQf]
-    exact hQ
--/
 def MAP2 {A B C : Type*} [Nonempty A] [Nonempty B] [Nonempty C] : (A -> B -> C) -> (List A) -> (List B) -> List C :=
 fun f lA lB => (List.zip lA lB).map (fun (a,b) => f a b)
 /-
@@ -2059,53 +2061,152 @@ match lA with
 /-
 theorem ITLIST2_def {A B C : Type*} [Nonempty A] [Nonempty B] [Nonempty C] : Eq (@ITLIST2 A B C _ _ _) (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (A -> B -> C -> C) -> (List A) -> (List B) -> C -> C) _ (fun ITLIST2' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (A -> B -> C -> C) -> (List A) -> (List B) -> C -> C => ∀ _18201 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))), And (∀ f : A -> B -> C -> C, ∀ l2 : List B, ∀ b : C, Eq (ITLIST2' _18201 f (@NIL A _) l2 b) b) (∀ h1' : A, ∀ f : A -> B -> C -> C, ∀ t1 : List A, ∀ l2 : List B, ∀ b : C, Eq (ITLIST2' _18201 f (@List.cons A h1' t1) l2 b) (f h1' (@HD B _ l2) (ITLIST2' _18201 f t1 (@TL B _ l2) b)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))))))))) := sorry -/
 
-noncomputable def ZIP {A B : Type*} [Nonempty A] [Nonempty B] : (List A) -> (List B) -> List (prod A B) := List.zip
+noncomputable def ZIP_HOL {A B : Type*} [Nonempty A] [Nonempty B] := @Classical.epsilon ((prod Nat (prod Nat Nat)) -> (List A) -> (List B) -> List (prod A B)) _ (fun ZIP' : (prod Nat (prod Nat Nat)) -> (List A) -> (List B) -> List (prod A B) => ∀ _18205 : prod Nat (prod Nat Nat), And (∀ l2 : List B, Eq (ZIP' _18205 (@NIL A _) l2) (@NIL (prod A B) _)) (∀ h1' : A, ∀ t1 : List A, ∀ l2 : List B, Eq (ZIP' _18205 (@List.cons A h1' t1) l2) (@List.cons (prod A B) (@prod_mk A B _ _ h1' (@HD B _ l2)) (ZIP' _18205 t1 (@TL B _ l2))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))))
+
+noncomputable def ZIP_Ind {A B : Type*} [Nonempty A] [Nonempty B] : ((prod Nat (prod Nat Nat)) -> (List A) -> (List B) -> List (prod A B)) := fun R lA lB => match lA with
+    | [] => []
+    | h::t => prod_mk h (HD lB) :: ZIP_Ind R t (TL lB)
+
+@[simp]
+theorem ZIP_HOL_empty {A B : Type*} [Nonempty A] [Nonempty B] : ∀ l : List B, ZIP_HOL (@NIL A _) l = [] := by
+  intro lB
+  set P := (fun ZIP' : prod ℕ (prod ℕ ℕ) → List A → List B → List (prod A B)  ↦ ∀ (_18205 : prod ℕ (prod ℕ ℕ)), (∀ (l2 : List B), ZIP' _18205 NIL l2 = NIL) ∧ ∀ (h1' : A) (t1 : List A) (l2 : List B), ZIP' _18205 (h1' :: t1) l2 = prod_mk h1' (HD l2) :: ZIP' _18205 t1 (TL l2))
+  set R := (prod_mk (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (prod_mk (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))))
+  have spec := @Classical.epsilon_spec _ P ⟨ZIP_Ind ,by
+  intro _18205
+  apply And.intro
+  · intro l2
+    rfl
+  · intro h1' t1 l2
+    rfl⟩
+  have := (spec R).1 lB
+  exact this
+
+instance {A B : Type*} [Nonempty A] [Nonempty B] : CoeSort (List (A × B)) (List (prod A B)) := ⟨fun x => x⟩
+
+instance {A B : Type*} [Nonempty A] [Nonempty B] : CoeSort (List (prod A B)) (List (A × B)) := ⟨fun x => x⟩
+
+noncomputable def ZIP {A B : Type*} [Nonempty A] [Nonempty B] : (List A) -> (List B) -> List (prod A B) :=
+  fun lA lB => if lA.length = lB.length then List.zip lA lB else ZIP_HOL lA lB
+
+theorem ZIP_def {A B : Type*} [Nonempty A] [Nonempty B] : Eq (@ZIP A B _ _) (@ZIP_HOL A B _ _) := by sorry
 /-
-theorem ZIP_def {A B : Type*} [Nonempty A] [Nonempty B] : Eq (@ZIP A B _ _) (@Classical.epsilon ((prod Nat (prod Nat Nat)) -> (List A) -> (List B) -> List (prod A B)) _ (fun ZIP' : (prod Nat (prod Nat Nat)) -> (List A) -> (List B) -> List (prod A B) => ∀ _18205 : prod Nat (prod Nat Nat), And (∀ l2 : List B, Eq (ZIP' _18205 (@NIL A _) l2) (@NIL (prod A B) _)) (∀ h1' : A, ∀ t1 : List A, ∀ l2 : List B, Eq (ZIP' _18205 (@List.cons A h1' t1) l2) (@List.cons (prod A B) (@prod_mk A B _ _ h1' (@HD B _ l2)) (ZIP' _18205 t1 (@TL B _ l2))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))))) := by
+  set P := (fun ZIP' : prod ℕ (prod ℕ ℕ) → List A → List B → List (A × B)  ↦ ∀ (_18205 : prod ℕ (prod ℕ ℕ)), (∀ (l2 : List B), ZIP' _18205 NIL l2 = NIL) ∧ ∀ (h1' : A) (t1 : List A) (l2 : List B), ZIP' _18205 (h1' :: t1) l2 = prod_mk h1' (HD l2) :: ZIP' _18205 t1 (TL l2))
+  set R := (prod_mk (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (prod_mk (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))))
+  have spec := @Classical.epsilon_spec _ P ⟨ZIP_Ind ,by
+    intro _18205
+    apply And.intro
+    · intro l2
+      rfl
+    · intro h1' t1 l2
+      rfl⟩ --aesop
+  unfold ZIP_HOL
+  epsilon_tac
+  · intro R' ; constructor
+    · intro l2
+      induction l2
+      · rfl
+      · unfold ZIP NIL
+        simp
+        apply ZIP_HOL_empty
+    · intros hd tA lB
+      unfold ZIP
+      simp only [List.length_cons]
+      by_cases h : tA.length + 1 = lB.length <;>
+      -- · have : ∃ h t, lB = h :: t := by apply List.exists_cons_of_ne_nil ; grind
+      --   obtain ⟨hdB,tB, hB⟩ := this
+      --   rw[hB]
+      --   simp_all ; constructor
+      --   · simp[prod_mk, HD]
+      --   · simp[TL]
+      -- · cases lB
+      --   · simp_all[prod_mk]
+      --     split_ifs
+      --     · have := (spec R).2 hd tA []
+
+      -- · simp_all
+      induction lB
+      · unfold TL
+        simp_all
+        rfl
+      · simp_all
+        split_ifs
+        have t1 := (spec R).2 hd (tA) []
+        · cases tA
+          · simp_all[prod_mk]
+            have := (spec R).2 hd [] []
+            simp_all[prod_mk]
+            have tt : (hd, HD []) :: Classical.epsilon P R [] (TL []) = [(hd, HD [])] :=
+              by
+                refine (List.cons_inj_right (hd, HD [])).mpr ?_
+                apply ZIP_HOL_empty
+            rw[← tt]
+            have ttt : (hd, HD []) :: Classical.epsilon P R [] (TL []) =  Classical.epsilon P R [hd] [] := this.symm
+            rw[ttt]
+            rfl
+          · expose_names
+            simp_all[prod_mk]
+            have ff : (hd, HD []) :: Classical.epsilon P R (head :: tail) (TL []) = (hd, HD []) :: (head, HD (TL [])) :: Classical.epsilon P R (tail) (TL (TL [])) :=
+              by
+                refine (List.cons_inj_right (hd, HD [])).mpr ?_
+                exact (spec R).2 head (tail) (TL [])
+            rw[← ff] at t1
+
+  · sorry
+
+
+ -/
+
+
+
+/-
 funext lA lB
-set P := (fun ZIP' : prod ℕ (prod ℕ ℕ) → List A → List B → List (prod A B)  ↦
-      ∀ (_18205 : prod ℕ (prod ℕ ℕ)),
-        (∀ (l2 : List B), ZIP' _18205 NIL l2 = NIL) ∧
-          ∀ (h1' : A) (t1 : List A) (l2 : List B),
-            ZIP' _18205 (h1' :: t1) l2 = prod_mk h1' (HD l2) :: ZIP' _18205 t1 (TL l2))
-set R := (prod_mk (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero))))))))
-      (prod_mk (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
-        (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))))
-apply partial_align_2 (fun l : List B => l ≠ []) (fun N : prod Nat (prod Nat Nat) => @ZIP A B _ _) P
-· simp_all only [forall_const, P]
-  constructor
-  · exact (fun _ => rfl)
-  · intro hdA tA lB'
-    unfold ZIP HD TL
-    cases lB'
-    · simp_all only [List.zip_nil_right, List.headD_eq_head?_getD, List.head?_nil, Option.getD_none, List.nil_eq]
-      unfold prod_mk
+  by_cases h : lA.length = lB.length
+  unfold ZIP_HOL
+  funext lA lB
+  set P := (fun ZIP' : prod ℕ (prod ℕ ℕ) → List A → List B → List (prod A B)  ↦ ∀ (_18205 : prod ℕ (prod ℕ ℕ)), (∀ (l2 : List B), ZIP' _18205 NIL l2 = NIL) ∧ ∀ (h1' : A) (t1 : List A) (l2 : List B), ZIP' _18205 (h1' :: t1) l2 = prod_mk h1' (HD l2) :: ZIP' _18205 t1 (TL l2))
+  set R := (prod_mk (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (prod_mk (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))))
+  apply partial_align_2 (fun l : List B => l.length = lA.length) (fun N : prod Nat (prod Nat Nat) => @ZIP A B _ _) P
+  · simp_all only [forall_const, P, ZIP]
+    constructor
+    · intro l2
+      by_cases  h1 : @List.length A NIL = l2.length <;>
+      have : @List.length A NIL = 0 := by simp only [NIL, List.length_nil]
+      · simp_all only [↓reduceIte]
+        rfl
+      · simp_all only [↓reduceIte]
+        unfold ZIP_HOL NIL
+        symm
+
+    · intro hdA tA lB'
+      unfold HD
+      cases lB'
+      · simp_all only [List.zip_nil_right, List.headD_eq_head?_getD, List.head?_nil, Option.getD_none, List.nil_eq]
+        unfold prod_mk
 
 
 
 
 
-  obtain ⟨fst, snd⟩ := a
-  rfl
-· intros l' h
-  unfold TL TL_HOL
-  subst h
-  simp_all only [Nat.zero_eq, P, a]
-· intros f a' l' h1 h2 h3
-  unfold P at h1 h2
-  specialize h1 a'
-  specialize h2 a'
-  cases l'
-  · exact h3 [] (rfl)
-  · rename_i hd t
-    specialize h1 hd t
-    specialize h2 hd t
-    simp_all only [forall_eq]
-
--/
+      obtain ⟨fst, snd⟩ := a
+      rfl
+    · intros l' h
+      unfold TL TL_HOL
+      subst h
+      simp_all only [Nat.zero_eq, P, a]
+    · intros f a' l' h1 h2 h3
+      unfold P at h1 h2
+      specialize h1 a'
+      specialize h2 a'
+      cases l'
+      · exact h3 [] (rfl)
+      · rename_i hd t
+        specialize h1 hd t
+        specialize h2 hd t
+        simp_all only [forall_eq]
 
 
-
+ -/
 
 
 /- by
@@ -2567,6 +2668,8 @@ Reals in HOL Light are defined as the Quotient type of `treal` over the relation
 def real := QUOTIENT (treal_eq)
 instance : Nonempty real := instNonemptyQUOTIENT (treal_eq)
 
+namespace real
+
 noncomputable def mk_real : ((prod hreal hreal) → Prop) → real := mk_quotient treal_eq
 def dest_real : real → (prod hreal hreal) → Prop := dest_quotient treal_eq
 
@@ -2576,5 +2679,6 @@ theorem axiom_24 : ∀ (r : (prod hreal hreal) -> Prop), Eq ((fun s : (prod hrea
 
 theorem axiom_24_aux : ∀ (r : (prod hreal hreal) -> Prop), ((fun s : (prod hreal hreal) -> Prop => ∃ x : prod hreal hreal, Eq s (treal_eq x)) r) → (Eq (dest_real (mk_real r)) r) := fun r => (Iff.of_eq (axiom_24 r)).1
 
+end real
 /- noncomputable def real_of_num : Nat -> real := fun m : Nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)
 theorem real_of_num_def : Eq real_of_num (fun m : Nat => mk_real (fun u : prod hreal hreal => treal_eq (treal_of_num m) u)) := Eq.refl real_of_num -/

@@ -531,6 +531,9 @@ def prod_snd {A B : Type*} [Nonempty A] [Nonempty B] (P : A × B) := Prod.snd P
 instance (A B : Type*) [Nonempty A] [Nonempty B] : Nonempty (prod A B) :=
       Nonempty.intro (prod_mk (@Classical.ofNonempty A _) (@Classical.ofNonempty B _))
 
+@[simp]
+theorem prod_def (A B : Type*) [Nonempty A] [Nonempty B] : prod A B = Prod A B := rfl
+
 def mk_pair {α β : Type*} [Nonempty α] [Nonempty β] := fun x : α => fun y : β =>
 fun a : α => fun b : β => (a = x) ∧ (b = y)
 

@@ -37,23 +37,63 @@ elab "part_tac_1" Q:term : tactic =>
     let goalMvar ← Lean.Elab.Tactic.getMainGoal
     match_expr goalType with
     | Eq _ lhs rhs =>
-      let α ← Lean.Meta.whnf (← Lean.Meta.inferType lhs)
-      let u ← Lean.Meta.getDecLevel α
       let x := lhs.getAppPrefix ((Array.size lhs.getAppArgs) - 1)
-      let some ne ← Lean.Meta.synthInstance? (.app (.const ``Nonempty [u.succ]) α)
-      | throwError "Failed to find an instance of Nonempty {α} in the context."
       match_expr rhs with
         | Classical.epsilon _ _ P a S =>
           let β ← Lean.Meta.whnf (← Lean.Meta.inferType a)
-          let v ← Lean.Meta.getDecLevel β
-          let γ ← Lean.Meta.whnf (← Lean.Meta.inferType S)
-          let w ← Lean.Meta.getDecLevel γ
           let f := .lam `_ β x .default
-          let partial_app := Lean.mkAppN
-            (.const ``partial_align_1 [v,w,u])
-            #[β, γ, α, ne, a, S, Q', f, P]
+          let partial_app ←  Lean.Meta.mkAppOptM
+            `partial_align_1 #[none, none, none, none, a, S, Q', some f, P]
           let newMvars ← goalMvar.apply partial_app
           Lean.Elab.Term.synthesizeSyntheticMVarsNoPostponing
           Lean.Elab.Tactic.replaceMainGoal newMvars
         | _ => throwError "Right hand side is not of the form ε P a r"
     | _ => throwError "Goal is not an equality"
+
+/- structure Type' where
+type : Type*
+el : type
+
+instance : CoeSort Type' Type where
+coe A := A.type
+
+instance {α : Type'} : Nonempty α := ⟨α.el⟩
+
+def nat' : Type' := { type := Nat, el := Nat.zero}
+
+def bool' : Type' := { type := Bool, el := true}
+
+def test {a : Type'} := fun x : a => x
+
+#check @test nat' 0
+
+def z' : nat':= nat'.el
+
+def arr (a : Type') (b : Type') : Type' := { type := a → b, el := fun _ => b.el}
+
+def lambda' {a : Type'} {b : Type'} (f : a → b) : arr a b := f
+
+def id' {a : Type'} := lambda' (fun x : a => x)
+
+#check Sum
+
+#check @id' (arr _ _) test
+#check test id'
+#check @test (arr _ _) test
+
+noncomputable opaque eps {α : Type'} (P : α → Prop) : α := Classical.epsilon P
+
+open Lean  PrettyPrinter Delaborator SubExpr
+open TSyntax.Compat
+macro "λ'" xs:explicitBinders " => " b:term : term => expandExplicitBinders ``lambda' xs b
+infixr:26 " →' " => arr
+
+/-- Delaborator for `Finset.prod`. The `pp.funBinderTypes` option controls whether
+to show the domain type when the product is over `Finset.univ`. -/
+@[app_delab Type'.type] meta def delabType'type : Delab :=
+  whenPPOption getPPNotation <| withOverApp 1 do
+  withAppArg delab
+
+#check λ' x y : nat'=> z'
+
+#check eps (fun _ : nat' => True) -/

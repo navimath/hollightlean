@@ -5,7 +5,7 @@ replaced by the given Lean expressions. */
 // builtin "<lean_exp>" = <lp_symbol> 
 
 // primitive types
-builtin "Type*" ≔ Set;
+builtin "Type _" ≔ Set;
 builtin "el" ≔ el;
 builtin "Prop" ≔ bool;
 builtin "arr" ≔ fun;

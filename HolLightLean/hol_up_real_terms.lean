@@ -6,6 +6,8 @@ set_option linter.style.missingEnd false
 set_option linter.unusedVariables false
 set_option linter.style.longLine false
 
+open real
+
 @[reducible]
 noncomputable def _FALSITY_ : Prop := False
 theorem _FALSITY__def : _FALSITY_ = False := by apply Eq.refl _FALSITY_

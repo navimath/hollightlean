@@ -8,6 +8,8 @@ set_option linter.style.missingEnd false
 set_option linter.unusedVariables false
 set_option linter.style.longLine false
 
+open real
+
 axiom thm_T_DEF : True = ((fun p : Prop => p) = (fun p : Prop => p))
 axiom thm_AND_DEF : And = (fun p : Prop => fun q : Prop => (fun f : Prop -> Prop -> Prop => f p q) = (fun f : Prop -> Prop -> Prop => f True True))
 axiom thm_IMP_DEF : imp = (fun p : Prop => fun q : Prop => (p ∧ q) = p)
