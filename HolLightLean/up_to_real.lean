@@ -2660,6 +2660,8 @@ theorem treal_eq_trans x y z : treal_eq x y -> treal_eq y z -> treal_eq x z := b
     _ = (y.1 + x.2) + (z.1 + y.2) := by rw [xy', yz']
     _ = z.1 + x.2 + (y.1 + y.2) := by simp [add_comm, add_left_comm]
 
+instance : Setoid (prod hreal hreal) := ⟨treal_eq, ⟨treal_eq_rfl,@treal_eq_sym,@treal_eq_trans⟩⟩
+
 /-!
 # real alignment
 Reals in HOL Light are defined as the Quotient type of `treal` over the relation `(x1,y1)≈(x2,y2) ↔ x1+y2 = y1+x2` where `+` is `hreal_add`

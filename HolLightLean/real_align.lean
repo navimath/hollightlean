@@ -13,6 +13,7 @@ noncomputable instance : Sub real := ⟨real_sub⟩
 noncomputable instance : Mul real := ⟨real_mul⟩
 noncomputable instance : Inv real := ⟨real_inv⟩
 noncomputable instance : Div real := ⟨real_div⟩
+noncomputable instance : Pow real Nat := ⟨real_pow⟩
 noncomputable instance : LE real := ⟨real_le⟩
 noncomputable instance : LT real := ⟨real_lt⟩
 noncomputable instance : Max real := ⟨real_max⟩
@@ -463,6 +464,12 @@ noncomputable def real_lt : Real → Real → Prop := fun x y : Real =>
         (iso_Real_real x) (iso_Real_real y)
         )
 
+theorem real_lt_eq : _root_.real_lt = @LT.lt Real _ := by
+  funext x y
+  unfold _root_.real_lt
+  simp only [eq_iff_iff]
+  exact map_lt_map_iff (iso_Real_real)
+
 theorem real_lt_def :
     @LT.lt Real _ =
       (fun x y : Real => ¬ (real_le y x)) := by
@@ -525,18 +532,15 @@ theorem real_of_num_def : _root_.real_of_num = @Nat.cast ℝ _ := by
     induction n
     · simp ; rfl
     · expose_names
-      simp_all only [prod_def, Nat.cast_add, Nat.cast_one]
-      rw[← h, treal_add_of_num]
-      sorry
+      simp_all only [prod_def, real_symm_apply_eq, map_natCast, Nat.cast_add, Nat.cast_one, map_add,
+        map_one]
+      have : (HolLightLean.hol_up_real_terms.real_of_num 1) = 1 := by exact Eq.refl (HolLightLean.hol_up_real_terms.real_of_num 1)
+      rw[← h, ← this]
+      have := (thm_REAL_OF_NUM_ADD n 1).symm
+      simp only [HolLightLean.hol_up_real_terms.real_of_num] at this
+      exact this
 
-
-theorem real_abs_def :
-    abs =
-      (fun x : Real =>
-        @COND Real _
-          (_root_.real_le (_root_.real_of_num (NUMERAL Nat.zero)) x)
-          x
-          (real_neg x)) := by
+theorem real_abs_def : abs = (fun _24160 : Real => @COND Real _ (real_le (real_of_num (NUMERAL Nat.zero)) _24160) _24160 (real_neg _24160)) := by
   funext x
   unfold abs
   rw [_root_.real_le_eq, _root_.real_of_num_def, _root_.real_neg_eq]
@@ -545,20 +549,75 @@ theorem real_abs_def :
     sup_of_le_left] ; grind
 
 
-noncomputable def real_abs : Real -> Real := fun _24160 : Real => @COND Real _ (real_le (real_of_num (NUMERAL Nat.zero)) _24160) _24160 (real_neg _24160)
+noncomputable def real_pow : Real →  Nat→ Real := fun x y =>
+  iso_real_Real
+    (@Pow.pow real Int _
+    (iso_Real_real x)
+      y)
 
-noncomputable def real_pow : Real -> Nat -> Real := @Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real) _ (fun real_pow' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real => ∀ _24171 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))), (∀ x : Real, (real_pow' _24171 x (NUMERAL Nat.zero)) = (real_of_num (NUMERAL (BIT1 Nat.zero)))) ∧ (∀ x : Real, ∀ n : Nat, (real_pow' _24171 x (Nat.succ n)) = (real_mul x (real_pow' _24171 x n)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))))))))))
-theorem real_pow_def : real_pow = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real) _ (fun real_pow' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real => ∀ _24171 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))), (∀ x : Real, (real_pow' _24171 x (NUMERAL Nat.zero)) = (real_of_num (NUMERAL (BIT1 Nat.zero)))) ∧ (∀ x : Real, ∀ n : Nat, (real_pow' _24171 x (Nat.succ n)) = (real_mul x (real_pow' _24171 x n)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))))))))))) := by apply Eq.refl real_pow
+theorem real_pow_eq : _root_.real_pow = @Pow.pow Real Nat _ := by
+  funext r s
+  unfold _root_.real_pow
+  simp only [iso_Real_real, real_symm_apply_eq]
+  symm
+  exact map_pow (iso_real_Real.symm) r s
+
+theorem real_pow_def : @Pow.pow Real Nat _ = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real) _ (fun real_pow' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real => ∀ _24171 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))), (∀ x : Real, (real_pow' _24171 x (NUMERAL Nat.zero)) = (_root_.real_of_num (NUMERAL (BIT1 Nat.zero)))) ∧ (∀ x : Real, ∀ n : Nat, (real_pow' _24171 x (Nat.succ n)) = (real_mul x (real_pow' _24171 x n)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))))))))))) := by
+  epsilon_tac
+  · intros r
+    constructor
+    · intro x
+      simp only [NUMERAL, Nat.zero_eq, _root_.real_of_num_def, BIT1, BIT0, add_zero,
+        Nat.succ_eq_add_one, zero_add, Nat.cast_one]
+      rfl
+    · intro x n ;
+      simp[_root_.real_mul_eq, Pow.pow, Mul.mul, pow_succ'] ; rfl
+  · intros HOL_POW h h1
+    funext r x n
+    specialize h r
+    specialize h1 r
+    simp_all only [NUMERAL, Nat.zero_eq, BIT1, BIT0, add_zero, Nat.succ_eq_add_one, zero_add]
+    induction n
+    · grind
+    · grind
+
+/- noncomputable def real_sgn : Real -> Real := fun x => x / abs x
+
+theorem real_sgn_eq : _root_.real_sgn = Real.sign := by
+  funext x
+  unfold _root_.real_sgn
+  by_cases h : x ≤ 0
+  · by_cases h : x < 0
+    · rw[Real.sign_of_neg h, abs_of_neg h]
+      grind
+    · simp_all
+      have : x = 0 := by grind
+      subst this
+      simp_all only [Std.le_refl, abs_zero, div_zero, Real.sign_zero]
+  · simp_all only [not_le]
+    rw[Real.sign_of_pos h, abs_of_pos h]
+    grind -/
 
 
-noncomputable def real_sgn : Real -> Real := fun _26684 : Real => @COND Real _ (real_lt (real_of_num (NUMERAL Nat.zero)) _26684) (real_of_num (NUMERAL (BIT1 Nat.zero))) (@COND Real _ (real_lt _26684 (real_of_num (NUMERAL Nat.zero))) (real_neg (real_of_num (NUMERAL (BIT1 Nat.zero)))) (real_of_num (NUMERAL Nat.zero)))
-theorem real_sgn_def : real_sgn = (fun _26684 : Real => @COND Real _ (real_lt (real_of_num (NUMERAL Nat.zero)) _26684) (real_of_num (NUMERAL (BIT1 Nat.zero))) (@COND Real _ (real_lt _26684 (real_of_num (NUMERAL Nat.zero))) (real_neg (real_of_num (NUMERAL (BIT1 Nat.zero)))) (real_of_num (NUMERAL Nat.zero)))) := by apply Eq.refl real_sgn
+theorem real_sgn_def : Real.sign = (fun _26684 : Real => @COND Real _ (real_lt (real_of_num (NUMERAL Nat.zero)) _26684) (real_of_num (NUMERAL (BIT1 Nat.zero))) (@COND Real _ (real_lt _26684 (real_of_num (NUMERAL Nat.zero))) (real_neg (real_of_num (NUMERAL (BIT1 Nat.zero)))) (real_of_num (NUMERAL Nat.zero)))) := by
+  funext x
+  simp only [COND, real_lt_eq, _root_.real_of_num_def, NUMERAL, Nat.zero_eq, CharP.cast_eq_zero,
+    BIT1, BIT0, add_zero, Nat.succ_eq_add_one, zero_add, Nat.cast_one, real_neg_eq]
+  split_ifs
+  · (expose_names; exact Real.sign_of_pos h)
+  · (expose_names; exact Real.sign_of_neg h_1)
+  · simp_all ; grind
 
-noncomputable def SQRT : Real -> Real := fun _27235 : Real => @Classical.epsilon Real _ (fun y : Real => ((real_sgn y) = (real_sgn _27235)) ∧ ((real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero)))) = (real_abs _27235)))
-theorem SQRT_def : SQRT = (fun _27235 : Real => @Classical.epsilon Real _ (fun y : Real => ((real_sgn y) = (real_sgn _27235)) ∧ ((real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero)))) = (real_abs _27235)))) := by apply Eq.refl SQRT
 
-noncomputable def DECIMAL : Nat -> Nat -> Real := fun _27914 : Nat => fun _27915 : Nat => real_div (real_of_num _27914) (real_of_num _27915)
-theorem DECIMAL_def : DECIMAL = (fun _27914 : Nat => fun _27915 : Nat => real_div (real_of_num _27914) (real_of_num _27915)) := by apply Eq.refl DECIMAL
+/- noncomputable def real_SQRT : Real -> Real := fun x =>
+  iso_real_Real (
+    HolLightLean.hol_up_real_terms.SQRT (iso_Real_real x)
+  )
 
-noncomputable def integer : Real -> Prop := fun _28801 : Real => ∃ n : Nat, (real_abs _28801) = (real_of_num n)
-theorem integer_def : integer = (fun _28801 : Real => ∃ n : Nat, (real_abs _28801) = (real_of_num n)) := by apply Eq.refl integer
+theorem real_SQRT_eq : real_SQRT = Real.sqrt := by
+  funext x
+  unfold real_SQRT SQRT
+  sorry
+
+theorem SQRT_def : Real.sqrt = (fun _27235 : Real => @Classical.epsilon Real _ (fun y : Real => ((real_sgn y) = (real_sgn _27235)) ∧ ((real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero)))) = (real_abs _27235)))) := by
+ -/
