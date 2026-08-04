@@ -479,12 +479,16 @@ theorem real_lt_def :
   simp_all only [not_le, eq_iff_iff]
   rfl
 
+def real_ge : ℝ → ℝ → Prop := (fun x y : Real => real_le y x)
+
 theorem real_ge_def :
     @GE.ge Real _ =
       (fun x y : Real => real_le y x) := by
   funext x y
   unfold GE.ge
   rw [real_le_eq]
+
+def real_gt : ℝ → ℝ → Prop := (fun x y : Real => real_lt y x)
 
 theorem real_gt_def :
     @GT.gt Real _ =
@@ -494,6 +498,8 @@ theorem real_gt_def :
   ext ; symm
   exact map_lt_map_iff (iso_real_Real.symm)
 
+noncomputable def real_div : Real → Real → Real := (fun x y : Real => real_mul x (real_inv y))
+
 theorem real_div_def :
     @Div.div Real _ =
       (fun x y : Real => real_mul x (real_inv y)) := by
@@ -501,6 +507,8 @@ theorem real_div_def :
   unfold Div.div
   rw [_root_.real_mul_eq, _root_.real_inv_eq]
   rfl
+
+noncomputable def real_max : ℝ → ℝ → ℝ := (fun x y : Real => @COND Real _ (real_le x y) y x)
 
 theorem real_max_def :
     max =
@@ -511,6 +519,8 @@ theorem real_max_def :
   rw [_root_.real_le_eq]
   unfold COND
   split_ifs <;> grind
+
+noncomputable def real_min : ℝ → ℝ → ℝ := (fun x y : Real => @COND Real _ (real_le x y) x y)
 
 theorem real_min_def :
     min =
@@ -623,7 +633,7 @@ theorem real_SQRT_eq : real_SQRT = Real.sqrt := by
 -/
 
 noncomputable def SQRT_HOL := fun x : Real => if x ≥ 0 then Real.sqrt x else - (Real.sqrt (-x))
-
+--TODO: Correct this proof
 theorem SQRT_def : SQRT_HOL = (fun _27235 : Real => @Classical.epsilon Real _ (fun y : Real => ((real_sgn y) = (real_sgn _27235)) ∧ ((real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero)))) = (real_abs _27235)))) := by
   simp only [real_sgn_eq, real_pow_eq, _root_.real_abs]
   funext s
@@ -633,16 +643,16 @@ theorem SQRT_def : SQRT_HOL = (fun _27235 : Real => @Classical.epsilon Real _ (f
       · rw[Real.sign_of_neg h, SQRT_HOL]
         split_ifs
         · grind
-        · simp_all
+        · simp_all only [ge_iff_le, not_le]
           have : √(-s) > 0 := by refine Real.sqrt_pos_of_pos ?_ ; simp_all only [Left.neg_pos_iff]
           rw [@Real.sign_neg, Real.sign_of_pos this]
-      · simp at h
+      · simp only [not_lt] at h
         by_cases h : s > 0
-        · simp[SQRT_HOL]
+        · simp only [SQRT_HOL, ge_iff_le]
           split_ifs
-          · simp_all ; rw[Real.sign_of_pos h, Real.sign_of_pos (Real.sqrt_pos_of_pos h)]
+          · simp_all only [gt_iff_lt] ; rw[Real.sign_of_pos h, Real.sign_of_pos (Real.sqrt_pos_of_pos h)]
           · grind
-        · simp_all
+        · simp_all only [gt_iff_lt, not_lt]
           expose_names
           have : s = 0 := by exact eq_of_le_of_ge h h_1
           rw[this]
@@ -659,30 +669,37 @@ theorem SQRT_def : SQRT_HOL = (fun _27235 : Real => @Classical.epsilon Real _ (f
     · rw[Real.sign_of_neg hx] at hsign
       have : s < 0 := by unfold SQRT_HOL at * ;
                           split_ifs at hsign ;
-                          · simp_all[Pow.pow]; rw[Real.sqrt_sq_eq_abs x] at hsign ; have : Real.sign (abs x) = 1 := Real.sign_of_pos (abs_pos_of_neg hx) ; rw[this] at hsign ; grind ;;
+                          · simp_all only [Pow.pow, NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero,
+                            Nat.succ_eq_add_one, zero_add, Nat.reduceAdd, ge_iff_le, ↓reduceIte,
+                            npow_eq_pow, Real.sq_sqrt]; rw[Real.sqrt_sq_eq_abs x] at hsign ; have : Real.sign (abs x) = 1 := Real.sign_of_pos (abs_pos_of_neg hx) ; rw[this] at hsign ; exfalso ; norm_num at hsign ;;
                           · grind
       unfold SQRT_HOL at *
       split_ifs
       · grind
-      · simp_all[Pow.pow]
+      · simp_all only [ge_iff_le, ↓reduceIte, Pow.pow, NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero,
+        Nat.succ_eq_add_one, zero_add, Nat.reduceAdd, npow_eq_pow, even_two, Even.neg_pow, not_le]
         have : √(-s) ^ 2 = √(-s) * √(-s) := by grind
         rw[this] at hpow
         have : -s ≥ 0 := by grind
-        simp[Real.mul_self_sqrt (this)] at hpow
+        simp only [Real.mul_self_sqrt (this)] at hpow
         rw[hpow]
         have := Real.sqrt_mul_self_eq_abs x
         grind
-    · simp_all
+    · simp_all only [NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero, Nat.succ_eq_add_one, zero_add,
+      Nat.reduceAdd, not_lt]
       by_cases hx : x > 0
       · unfold SQRT_HOL at *
         rw[Real.sign_of_pos hx] at hsign
         split_ifs at *
         · simp[Pow.pow] at hpow
           simp_all only [gt_iff_lt, ge_iff_le, Real.sq_sqrt, Real.sqrt_sq]
-        · simp_all[Pow.pow, Real.sign] ; exfalso ; norm_num at hsign
-      · simp_all
+        · simp_all only [gt_iff_lt, ge_iff_le, not_le, Real.sign, Left.neg_neg_iff, Real.sqrt_pos,
+          Left.neg_pos_iff, ↓reduceIte, Pow.pow, npow_eq_pow, even_two, Even.neg_pow,
+          Real.sqrt_nonneg, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_left_inj₀] ; exfalso ; norm_num at hsign
+      · simp_all only [gt_iff_lt, not_lt]
         expose_names
         have : x = 0 := by exact eq_of_le_of_ge hx hx_1
         subst this
-        simp[Pow.pow] at hpow
+        simp only [Pow.pow, npow_eq_pow, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow,
+          pow_eq_zero_iff] at hpow
         exact hpow
