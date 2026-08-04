@@ -80,6 +80,7 @@ theorem axiom_26 : ∀ (r : Real), ((fun x : Real => integer x) r) = ((real_of_i
       simp_all
       grind
 
+@[simp]
 def int_le := @LE.le ℤ _
 
 theorem int_le_def : int_le = (fun _28827 : ℤ => fun _28828 : ℤ => real_le (real_of_int _28827) (real_of_int _28828)) := by
@@ -87,6 +88,7 @@ theorem int_le_def : int_le = (fun _28827 : ℤ => fun _28828 : ℤ => real_le (
   rw[int_le, real_le_eq]
   simp_all only [real_of_int, Int.cast_le]
 
+@[simp]
 def int_lt := @LT.lt ℤ _
 
 theorem int_lt_def : int_lt = (fun _28839 : ℤ => fun _28840 : ℤ => real_lt (real_of_int _28839) (real_of_int _28840)) := by
@@ -94,6 +96,7 @@ theorem int_lt_def : int_lt = (fun _28839 : ℤ => fun _28840 : ℤ => real_lt (
   rw[int_lt, real_lt_eq]
   simp_all only [real_of_int, Int.cast_lt]
 
+@[simp]
 def int_ge := @GE.ge ℤ _
 
 theorem int_ge_def :
@@ -103,6 +106,7 @@ theorem int_ge_def :
   rw[real_le_eq]
   simp_all only [ge_iff_le, real_of_int, Int.cast_le]
 
+@[simp]
 def int_gt := @GT.gt ℤ _
 
 theorem int_gt_def :
@@ -112,13 +116,16 @@ theorem int_gt_def :
   rw[real_lt_eq]
   simp_all only [gt_iff_lt, real_of_int, Int.cast_lt]
 
+@[simp]
 def int_of_num : Nat -> ℤ := Int.ofNat
 
 theorem int_of_num_def : int_of_num = (fun _28875 : Nat => int_of_real (real_of_num _28875)) := by
   funext n
   simp only [int_of_num, Int.ofNat_eq_natCast, int_of_real, real_of_num_def, Int.floor_natCast]
 
+@[simp]
 noncomputable def int_neg : ℤ -> ℤ := Int.neg
+
 theorem int_neg_def : int_neg = (fun _28880 : ℤ => int_of_real (real_neg (real_of_int _28880))) := by
   funext z
   simp only [int_neg, int_of_real, real_neg_eq, real_of_int]
@@ -126,7 +133,9 @@ theorem int_neg_def : int_neg = (fun _28880 : ℤ => int_of_real (real_neg (real
   rw[Int.floor_intCast]
   rfl
 
+@[simp]
 noncomputable def int_add : ℤ -> ℤ -> ℤ := Int.add
+
 theorem int_add_def : int_add = (fun _28889 : ℤ => fun _28890 : ℤ => int_of_real (real_add (real_of_int _28889) (real_of_int _28890))) := by
   funext x y
   simp only [int_add, Int.add_def, int_of_real, real_add_eq, real_of_int]
@@ -134,7 +143,9 @@ theorem int_add_def : int_add = (fun _28889 : ℤ => fun _28890 : ℤ => int_of_
   have : @Add.add ℝ _ ↑x ↑y = ↑(x + y) := by norm_num ; rfl
   rw[this]
 
+@[simp]
 noncomputable def int_sub : ℤ -> ℤ -> ℤ := Int.sub
+
 theorem int_sub_def : int_sub = (fun _28921 : ℤ => fun _28922 : ℤ => int_of_real (real_sub (real_of_int _28921) (real_of_int _28922))) := by
   funext x y
   simp only [int_sub, int_of_real, real_sub_eq, real_of_int]
@@ -142,7 +153,9 @@ theorem int_sub_def : int_sub = (fun _28921 : ℤ => fun _28922 : ℤ => int_of_
   have : @Sub.sub ℝ _ ↑x ↑y = ↑(x - y) := by norm_num ; rfl
   rw[this] ; rfl
 
+@[simp]
 noncomputable def int_mul : ℤ → ℤ → ℤ := Int.mul
+
 theorem int_mul_def :
     int_mul =
       (fun x : ℤ => fun y : ℤ =>
@@ -155,6 +168,7 @@ theorem int_mul_def :
     rfl
   rw [this]
 
+@[simp]
 noncomputable def int_abs : ℤ → ℤ := abs
 
 theorem int_abs_def : int_abs = (fun x : ℤ => int_of_real (real_abs (real_of_int x))) := by
@@ -163,6 +177,7 @@ theorem int_abs_def : int_abs = (fun x : ℤ => int_of_real (real_abs (real_of_i
   norm_cast
   rw [@Int.floor_intCast ℝ _ _ _ _ (abs (x))]
 
+@[simp]
 noncomputable def int_sgn : ℤ → ℤ := Int.sign
 
 theorem int_sgn_def : int_sgn = (fun x : ℤ => int_of_real (real_sgn (real_of_int x))) := by
@@ -171,6 +186,7 @@ theorem int_sgn_def : int_sgn = (fun x : ℤ => int_of_real (real_sgn (real_of_i
   rw[Real.sign_intCast]
   rw [@Int.floor_intCast ℝ _ _ _ _ (x.sign)]
 
+@[simp]
 noncomputable def int_max : ℤ → ℤ → ℤ := max
 
 theorem int_max_def :
@@ -184,7 +200,9 @@ theorem int_max_def :
   rw[h2, this]
   rw [@Int.floor_intCast ℝ _ _ _ _ (max x y)]
 
+@[simp]
 noncomputable def int_min : ℤ -> ℤ -> ℤ := min
+
 theorem int_min_def : int_min = (fun _29042 : ℤ => fun _29043 : ℤ => int_of_real (real_min (real_of_int _29042) (real_of_int _29043))) := by
   funext x y
   simp only [int_min, int_of_real, real_of_int]
@@ -193,6 +211,7 @@ theorem int_min_def : int_min = (fun _29042 : ℤ => fun _29043 : ℤ => int_of_
   rw[h2, this]
   rw [@Int.floor_intCast ℝ _ _ _ _ (min x y)]
 
+@[simp]
 noncomputable def int_pow : ℤ → Nat → ℤ := Int.pow
 
 theorem int_pow_def :
@@ -207,6 +226,7 @@ theorem int_pow_def :
     rfl
   rw [this]
 
+@[simp]
 noncomputable def div : ℤ -> ℤ -> ℤ := Int.ediv
 
 theorem div_def : div = (@Classical.epsilon ((prod Nat (prod Nat Nat)) -> ℤ -> ℤ -> ℤ) _ (fun q : (prod Nat (prod Nat Nat)) -> ℤ -> ℤ -> ℤ => ∀ _29412 : prod Nat (prod Nat Nat), ∃ r : ℤ -> ℤ -> ℤ, ∀ m : ℤ, ∀ n : ℤ, @COND Prop _ (n = (int_of_num (NUMERAL Nat.zero))) (((q _29412 m n) = (int_of_num (NUMERAL Nat.zero))) ∧ ((r m n) = m)) ((int_le (int_of_num (NUMERAL Nat.zero)) (r m n)) ∧ ((int_lt (r m n) (int_abs n)) ∧ (m = (int_add (int_mul (q _29412 m n) n) (r m n)))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero))))))))))) := by
@@ -217,8 +237,7 @@ theorem div_def : div = (@Classical.epsilon ((prod Nat (prod Nat Nat)) -> ℤ ->
     · intro a b
       simp only [COND, NUMERAL, Nat.zero_eq]
       split
-      · rename_i h
-        simp_all only [int_of_num, Int.ofNat_eq_natCast, CharP.cast_eq_zero, div, Mod.mod]
+      · simp_all only [int_of_num, Int.ofNat_eq_natCast, CharP.cast_eq_zero, div, Mod.mod]
         exact ⟨Int.ediv_zero a, Int.emod_zero a⟩
       · simp_all only [int_of_num, Int.ofNat_eq_natCast, CharP.cast_eq_zero, int_le, int_lt, int_abs, int_add, int_mul, Mod.mod, div]
         expose_names
@@ -242,7 +261,9 @@ theorem div_def : div = (@Classical.epsilon ((prod Nat (prod Nat Nat)) -> ℤ ->
       have hdiv2 : a / b = a.ediv b := by grind
       rw[← hdiv1,hdiv2]
 
+@[simp]
 noncomputable def rem : ℤ -> ℤ -> ℤ := Int.emod
+
 theorem rem_def : rem = (@Classical.epsilon ((prod Nat (prod Nat Nat)) -> ℤ -> ℤ -> ℤ) _ (fun r : (prod Nat (prod Nat Nat)) -> ℤ -> ℤ -> ℤ => ∀ _29413 : prod Nat (prod Nat Nat), ∀ m : ℤ, ∀ n : ℤ, @COND Prop _ (n = (int_of_num (NUMERAL Nat.zero))) (((div m n) = (int_of_num (NUMERAL Nat.zero))) ∧ ((r _29413 m n) = m)) ((int_le (int_of_num (NUMERAL Nat.zero)) (r _29413 m n)) ∧ ((int_lt (r _29413 m n) (int_abs n)) ∧ (m = (int_add (int_mul (div m n) n) (r _29413 m n)))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero))))))))))) := by
   epsilon_tac
   · intro ascii x y
@@ -265,26 +286,78 @@ theorem rem_def : rem = (@Classical.epsilon ((prod Nat (prod Nat Nat)) -> ℤ ->
 noncomputable def eq2 {A : Type _} [Nonempty A] : A -> A -> (A -> A -> Prop) -> Prop := fun _29688 : A => fun _29689 : A => fun _29690 : A -> A -> Prop => _29690 _29688 _29689
 theorem eq2_def {A : Type _} [Nonempty A] : (@eq2 A _) = (fun _29688 : A => fun _29689 : A => fun _29690 : A -> A -> Prop => _29690 _29688 _29689) := by apply Eq.refl (@eq2 A _)
 
+@[simp]
 noncomputable def real_mod : Real -> Real -> Real -> Prop := fun _29709 : Real => fun _29710 : Real => fun _29711 : Real => ∃ q : Real, (integer q) ∧ ((real_sub _29710 _29711) = (real_mul q _29709))
+
 theorem real_mod_def : real_mod = (fun _29709 : Real => fun _29710 : Real => fun _29711 : Real => ∃ q : Real, (integer q) ∧ ((real_sub _29710 _29711) = (real_mul q _29709))) := by apply Eq.refl real_mod
 
-noncomputable def int_divides : ℤ -> ℤ -> Prop := fun _29730 : ℤ => fun _29731 : ℤ => ∃ x : ℤ, _29731 = (int_mul _29730 x)
+@[simp]
+noncomputable def int_divides : ℤ -> ℤ -> Prop := Dvd.dvd
+
 theorem int_divides_def : int_divides = (fun _29730 : ℤ => fun _29731 : ℤ => ∃ x : ℤ, _29731 = (int_mul _29730 x)) := by apply Eq.refl int_divides
 
+@[simp]
 noncomputable def int_mod : ℤ -> ℤ -> ℤ -> Prop := fun _29750 : ℤ => fun _29751 : ℤ => fun _29752 : ℤ => int_divides _29750 (int_sub _29751 _29752)
+
 theorem int_mod_def : int_mod = (fun _29750 : ℤ => fun _29751 : ℤ => fun _29752 : ℤ => int_divides _29750 (int_sub _29751 _29752)) := by apply Eq.refl int_mod
 
-noncomputable def int_coprime : (prod ℤ ℤ) -> Prop := fun _29777 : prod ℤ ℤ => ∃ x : ℤ, ∃ y : ℤ, (int_add (int_mul (@prod_fst ℤ ℤ _ _ _29777) x) (int_mul (@prod_snd ℤ ℤ _ _ _29777) y)) = (int_of_num (NUMERAL (BIT1 Nat.zero)))
-theorem int_coprime_def : int_coprime = (fun _29777 : prod ℤ ℤ => ∃ x : ℤ, ∃ y : ℤ, (int_add (int_mul (@prod_fst ℤ ℤ _ _ _29777) x) (int_mul (@prod_snd ℤ ℤ _ _ _29777) y)) = (int_of_num (NUMERAL (BIT1 Nat.zero)))) := by apply Eq.refl int_coprime
+@[simp]
+noncomputable def int_coprime : (prod ℤ ℤ) -> Prop := fun p => IsCoprime p.1 p.2
 
-noncomputable def int_gcd : (prod ℤ ℤ) -> ℤ := @Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (prod ℤ ℤ) -> ℤ) _ (fun d : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (prod ℤ ℤ) -> ℤ => ∀ _31046 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))), ∀ a : ℤ, ∀ b : ℤ, (int_le (int_of_num (NUMERAL Nat.zero)) (d _31046 (@prod_mk ℤ ℤ _ _ a b))) ∧ ((int_divides (d _31046 (@prod_mk ℤ ℤ _ _ a b)) a) ∧ ((int_divides (d _31046 (@prod_mk ℤ ℤ _ _ a b)) b) ∧ (∃ x : ℤ, ∃ y : ℤ, (d _31046 (@prod_mk ℤ ℤ _ _ a b)) = (int_add (int_mul a x) (int_mul b y)))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero))))))))))))))
-theorem int_gcd_def : int_gcd = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (prod ℤ ℤ) -> ℤ) _ (fun d : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (prod ℤ ℤ) -> ℤ => ∀ _31046 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))), ∀ a : ℤ, ∀ b : ℤ, (int_le (int_of_num (NUMERAL Nat.zero)) (d _31046 (@prod_mk ℤ ℤ _ _ a b))) ∧ ((int_divides (d _31046 (@prod_mk ℤ ℤ _ _ a b)) a) ∧ ((int_divides (d _31046 (@prod_mk ℤ ℤ _ _ a b)) b) ∧ (∃ x : ℤ, ∃ y : ℤ, (d _31046 (@prod_mk ℤ ℤ _ _ a b)) = (int_add (int_mul a x) (int_mul b y)))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero))))))))))))))) := by apply Eq.refl int_gcd
+theorem int_coprime_def : int_coprime = (fun _29777 : prod ℤ ℤ => ∃ x : ℤ, ∃ y : ℤ, (int_add (int_mul (@prod_fst ℤ ℤ _ _ _29777) x) (int_mul (@prod_snd ℤ ℤ _ _ _29777) y)) = (int_of_num (NUMERAL (BIT1 Nat.zero)))) := by
+  funext x
+  simp only [int_coprime, IsCoprime, int_add, int_mul, prod_fst, Int.mul_def, prod_snd, Int.add_def,
+    int_of_num, NUMERAL, BIT1, BIT0, Nat.zero_eq, add_zero, Nat.succ_eq_add_one, zero_add,
+    Int.ofNat_eq_natCast, Nat.cast_one, eq_iff_iff]
+  refine exists₂_congr (by grind)
 
-noncomputable def int_lcm : (prod ℤ ℤ) -> ℤ := fun _31047 : prod ℤ ℤ => @COND ℤ _ ((int_mul (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047)) = (int_of_num (NUMERAL Nat.zero))) (int_of_num (NUMERAL Nat.zero)) (div (int_abs (int_mul (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047))) (int_gcd (@prod_mk ℤ ℤ _ _ (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047))))
-theorem int_lcm_def : int_lcm = (fun _31047 : prod ℤ ℤ => @COND ℤ _ ((int_mul (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047)) = (int_of_num (NUMERAL Nat.zero))) (int_of_num (NUMERAL Nat.zero)) (div (int_abs (int_mul (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047))) (int_gcd (@prod_mk ℤ ℤ _ _ (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047))))) := by apply Eq.refl int_lcm
+@[simp]
+noncomputable def int_gcd : (prod ℤ ℤ) -> ℤ := fun (x,y) => ↑(Int.gcd x y)
 
-noncomputable def num_of_int : ℤ -> Nat := fun _31320 : ℤ => @Classical.epsilon Nat _ (fun n : Nat => (int_of_num n) = _31320)
-theorem num_of_int_def : num_of_int = (fun _31320 : ℤ => @Classical.epsilon Nat _ (fun n : Nat => (int_of_num n) = _31320)) := by apply Eq.refl num_of_int
+theorem int_gcd_def : int_gcd = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (prod ℤ ℤ) -> ℤ) _ (fun d : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (prod ℤ ℤ) -> ℤ => ∀ _31046 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))), ∀ a : ℤ, ∀ b : ℤ, (int_le (int_of_num (NUMERAL Nat.zero)) (d _31046 (@prod_mk ℤ ℤ _ _ a b))) ∧ ((int_divides (d _31046 (@prod_mk ℤ ℤ _ _ a b)) a) ∧ ((int_divides (d _31046 (@prod_mk ℤ ℤ _ _ a b)) b) ∧ (∃ x : ℤ, ∃ y : ℤ, (d _31046 (@prod_mk ℤ ℤ _ _ a b)) = (int_add (int_mul a x) (int_mul b y)))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero))))))))))))))) := by
+  epsilon_tac
+  · intro ascii a b
+    simp only [int_le, int_of_num, NUMERAL, Nat.zero_eq, Int.ofNat_eq_natCast, CharP.cast_eq_zero,
+      int_gcd, prod_mk, Nat.cast_nonneg, int_divides, int_add, int_mul, Int.mul_def, Int.add_def,
+      true_and]
+    exact ⟨Int.gcd_dvd_left a b, ⟨Int.gcd_dvd_right a b,exists_gcd_eq_mul_add_mul a b⟩⟩
+  · intro f hgcd hf
+    funext ascii (x,y)
+    specialize hgcd ascii x y
+    specialize hf ascii x y
+    simp_all only [int_le, int_of_num, NUMERAL, Nat.zero_eq, Int.ofNat_eq_natCast,
+      CharP.cast_eq_zero, prod_mk, int_divides, int_add, int_mul, Int.mul_def, Int.add_def, int_gcd,
+      Nat.cast_nonneg, true_and]
+    have : (f ascii (x,y)).toNat = (f ascii (x,y)) := by apply Int.toNat_of_nonneg hf.1
+    have h_2 := (@Int.gcd_eq_iff x y (f ascii (x,y)).toNat).2
+    rw[this] at h_2
+    specialize h_2 ⟨hf.2.1,⟨hf.2.2.1, ?_⟩⟩
+    · intro c hx hy
+      obtain ⟨a,b,hab⟩ := hf.2.2.2
+      rw[hab]
+      refine (Int.dvd_add_right (Int.dvd_mul_of_dvd_left hx)).mpr (Int.dvd_mul_of_dvd_left hy)
+    rw[← this, h_2]
+
+@[simp]
+noncomputable def int_lcm : (prod ℤ ℤ) -> ℤ := fun (x,y) => ↑(Int.lcm x y)
+theorem int_lcm_def : int_lcm = (fun _31047 : prod ℤ ℤ => @COND ℤ _ ((int_mul (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047)) = (int_of_num (NUMERAL Nat.zero))) (int_of_num (NUMERAL Nat.zero)) (div (int_abs (int_mul (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047))) (int_gcd (@prod_mk ℤ ℤ _ _ (@prod_fst ℤ ℤ _ _ _31047) (@prod_snd ℤ ℤ _ _ _31047))))) := by
+  funext (x,y)
+  simp only [int_lcm, COND, int_mul, prod_fst, prod_snd, Int.mul_def, int_of_num, NUMERAL,
+    Nat.zero_eq, Int.ofNat_eq_natCast, CharP.cast_eq_zero, mul_eq_zero, div, int_abs, abs_mul,
+    int_gcd, prod_mk]
+  split <;> expose_names <;> norm_cast
+  · apply Or.elim h <;> intro h0
+    · subst x; exact Int.lcm_zero_left y
+    · subst y; exact Int.lcm_zero
+  · have := Int.lcm_eq_mul_div x y
+    simp_all only [not_or, Int.natCast_ediv, Nat.cast_mul, Nat.cast_natAbs, Int.cast_abs,
+      Int.cast_eq]
+    rfl
+
+/-! ## Non-aligned maps -/
+
+noncomputable def num_of_int : ℤ -> Nat := (fun _31320 : ℤ => @Classical.epsilon Nat _ (fun n : Nat => (int_of_num n) = _31320))
+theorem num_of_int_def : num_of_int = (fun _31320 : ℤ => @Classical.epsilon Nat _ (fun n : Nat => (int_of_num n) = _31320)) := rfl
 
 noncomputable def num_divides : Nat -> Nat -> Prop := fun _31352 : Nat => fun _31353 : Nat => int_divides (int_of_num _31352) (int_of_num _31353)
 theorem num_divides_def : num_divides = (fun _31352 : Nat => fun _31353 : Nat => int_divides (int_of_num _31352) (int_of_num _31353)) := by apply Eq.refl num_divides
@@ -307,8 +380,9 @@ theorem prime_def : prime = (fun _32188 : Nat => (¬ (_32188 = (NUMERAL (BIT1 Na
 noncomputable def real_zpow : Real -> ℤ -> Real := fun _32346 : Real => fun _32347 : ℤ => @COND Real _ (int_le (int_of_num (NUMERAL Nat.zero)) _32347) (real_pow _32346 (num_of_int _32347)) (real_inv (real_pow _32346 (num_of_int (int_neg _32347))))
 theorem real_zpow_def : real_zpow = (fun _32346 : Real => fun _32347 : ℤ => @COND Real _ (int_le (int_of_num (NUMERAL Nat.zero)) _32347) (real_pow _32346 (num_of_int _32347)) (real_inv (real_pow _32346 (num_of_int (int_neg _32347))))) := by apply Eq.refl real_zpow
 
-#exit
-/-! ## Set Theory alignment -/
+/-!
+# Set Theory alignment
+-/
 
 noncomputable def IN {A : Type _} [Nonempty A] : A -> (A -> Prop) -> Prop := fun _32403 : A => fun _32404 : A -> Prop => _32404 _32403
 theorem IN_def {A : Type _} [Nonempty A] : (@IN A _) = (fun _32403 : A => fun _32404 : A -> Prop => _32404 _32403) := by apply Eq.refl (@IN A _)
@@ -477,6 +551,8 @@ theorem support_def {A B : Type _} [Nonempty A] [Nonempty B] : (@support A B _ _
 
 noncomputable def iterate {A B : Type _} [Nonempty A] [Nonempty B] : (B -> B -> B) -> (A -> Prop) -> (A -> B) -> B := fun _69031 : B -> B -> B => fun _69032 : A -> Prop => fun _69033 : A -> B => @COND B _ (@FINITE A _ (@support A B _ _ _69031 _69033 _69032)) (@ITSET A B _ _ (fun x : A => fun a : B => _69031 (_69033 x) a) (@support A B _ _ _69031 _69033 _69032) (@neutral B _ _69031)) (@neutral B _ _69031)
 theorem iterate_def {A B : Type _} [Nonempty A] [Nonempty B] : (@iterate A B _ _) = (fun _69031 : B -> B -> B => fun _69032 : A -> Prop => fun _69033 : A -> B => @COND B _ (@FINITE A _ (@support A B _ _ _69031 _69033 _69032)) (@ITSET A B _ _ (fun x : A => fun a : B => _69031 (_69033 x) a) (@support A B _ _ _69031 _69033 _69032) (@neutral B _ _69031)) (@neutral B _ _69031)) := by apply Eq.refl (@iterate A B _ _)
+
+#exit
 
 noncomputable def iterato {A K : Type _} [Nonempty A] [Nonempty K] : (A -> Prop) -> A -> (A -> A -> A) -> (K -> K -> Prop) -> (K -> Prop) -> (K -> A) -> A := @Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (A -> Prop) -> A -> (A -> A -> A) -> (K -> K -> Prop) -> (K -> Prop) -> (K -> A) -> A) _ (fun itty : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (A -> Prop) -> A -> (A -> A -> A) -> (K -> K -> Prop) -> (K -> Prop) -> (K -> A) -> A => ∀ _76787 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))), ∀ dom : A -> Prop, ∀ neut : A, ∀ op : A -> A -> A, ∀ ltle : K -> K -> Prop, ∀ k : K -> Prop, ∀ f : K -> A, (itty _76787 dom neut op ltle k f) = (@COND A _ ((@FINITE K _ (@GSPEC K _ (fun GEN_PVAR_265 : K => ∃ i : K, @SETSPEC K _ GEN_PVAR_265 ((@IN K _ i k) ∧ (@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _))))) i))) ∧ (¬ ((@GSPEC K _ (fun GEN_PVAR_266 : K => ∃ i : K, @SETSPEC K _ GEN_PVAR_266 ((@IN K _ i k) ∧ (@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _))))) i)) = (@EMPTY K _)))) (@LET K A _ _ (fun i : K => @LET_END A _ (op (f i) (itty _76787 dom neut op ltle (@GSPEC K _ (fun GEN_PVAR_267 : K => ∃ j : K, @SETSPEC K _ GEN_PVAR_267 ((@IN K _ j (@DELETE K _ k i)) ∧ (@IN A _ (f j) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _))))) j)) f))) (@COND K _ (∃ i : K, (@IN K _ i k) ∧ ((@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))) ∧ (∀ j : K, ((ltle j i) ∧ ((@IN K _ j k) ∧ (@IN A _ (f j) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))))) -> j = i))) (@Classical.epsilon K _ (fun i : K => (@IN K _ i k) ∧ ((@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))) ∧ (∀ j : K, ((ltle j i) ∧ ((@IN K _ j k) ∧ (@IN A _ (f j) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))))) -> j = i)))) (@Classical.epsilon K _ (fun i : K => (@IN K _ i k) ∧ (@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))))))) neut)) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero))))))))))))))
 theorem iterato_def {A K : Type _} [Nonempty A] [Nonempty K] : (@iterato A K _ _) = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (A -> Prop) -> A -> (A -> A -> A) -> (K -> K -> Prop) -> (K -> Prop) -> (K -> A) -> A) _ (fun itty : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) -> (A -> Prop) -> A -> (A -> A -> A) -> (K -> K -> Prop) -> (K -> Prop) -> (K -> A) -> A => ∀ _76787 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))), ∀ dom : A -> Prop, ∀ neut : A, ∀ op : A -> A -> A, ∀ ltle : K -> K -> Prop, ∀ k : K -> Prop, ∀ f : K -> A, (itty _76787 dom neut op ltle k f) = (@COND A _ ((@FINITE K _ (@GSPEC K _ (fun GEN_PVAR_265 : K => ∃ i : K, @SETSPEC K _ GEN_PVAR_265 ((@IN K _ i k) ∧ (@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _))))) i))) ∧ (¬ ((@GSPEC K _ (fun GEN_PVAR_266 : K => ∃ i : K, @SETSPEC K _ GEN_PVAR_266 ((@IN K _ i k) ∧ (@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _))))) i)) = (@EMPTY K _)))) (@LET K A _ _ (fun i : K => @LET_END A _ (op (f i) (itty _76787 dom neut op ltle (@GSPEC K _ (fun GEN_PVAR_267 : K => ∃ j : K, @SETSPEC K _ GEN_PVAR_267 ((@IN K _ j (@DELETE K _ k i)) ∧ (@IN A _ (f j) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _))))) j)) f))) (@COND K _ (∃ i : K, (@IN K _ i k) ∧ ((@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))) ∧ (∀ j : K, ((ltle j i) ∧ ((@IN K _ j k) ∧ (@IN A _ (f j) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))))) -> j = i))) (@Classical.epsilon K _ (fun i : K => (@IN K _ i k) ∧ ((@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))) ∧ (∀ j : K, ((ltle j i) ∧ ((@IN K _ j k) ∧ (@IN A _ (f j) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))))) -> j = i)))) (@Classical.epsilon K _ (fun i : K => (@IN K _ i k) ∧ (@IN A _ (f i) (@DIFF A _ dom (@INSERT A _ neut (@EMPTY A _)))))))) neut)) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero))))))))))))))) := by apply Eq.refl (@iterato A K _ _)
