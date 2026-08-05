@@ -5,6 +5,7 @@ import HolLightLean.real_align
 -- open HolLightLean.hol_up_real_terms
 
 set_option linter.style.longLine false
+set_option linter.unusedVariables false
 
 
 -- noncomputable def DECIMAL : Nat -> Nat -> Real := fun _27914 : Nat => fun _27915 : Nat => real_div (real_of_num _27914) (real_of_num _27915)
@@ -384,56 +385,155 @@ theorem real_zpow_def : real_zpow = (fun _32346 : Real => fun _32347 : ℤ => @C
 # Set Theory alignment
 -/
 
-noncomputable def IN {A : Type _} [Nonempty A] : A -> (A -> Prop) -> Prop := fun _32403 : A => fun _32404 : A -> Prop => _32404 _32403
+noncomputable def IN {A : Type _} [Nonempty A] : A -> (A -> Prop) -> Prop := fun (a : A) (S : Set A) => a ∈ S
 theorem IN_def {A : Type _} [Nonempty A] : (@IN A _) = (fun _32403 : A => fun _32404 : A -> Prop => _32404 _32403) := by apply Eq.refl (@IN A _)
 
-noncomputable def GSPEC {A : Type _} [Nonempty A] : (A -> Prop) -> A -> Prop := fun _32415 : A -> Prop => _32415
+noncomputable def GSPEC {A : Type _} [Nonempty A] : (A -> Prop) -> A -> Prop := id
 theorem GSPEC_def {A : Type _} [Nonempty A] : (@GSPEC A _) = (fun _32415 : A -> Prop => _32415) := by apply Eq.refl (@GSPEC A _)
 
-noncomputable def SETSPEC {A : Type _} [Nonempty A] : A -> Prop -> A -> Prop := fun _32420 : A => fun _32421 : Prop => fun _32422 : A => _32421 ∧ (_32420 = _32422)
+noncomputable def SETSPEC {A : Type _} [Nonempty A] : A -> Prop -> A -> Prop := fun x P => {x' | P ∧ x = x'}
 theorem SETSPEC_def {A : Type _} [Nonempty A] : (@SETSPEC A _) = (fun _32420 : A => fun _32421 : Prop => fun _32422 : A => _32421 ∧ (_32420 = _32422)) := by apply Eq.refl (@SETSPEC A _)
 
-noncomputable def EMPTY {A : Type _} [Nonempty A] : A -> Prop := fun x : A => False
+noncomputable def EMPTY {A : Type _} [Nonempty A] : A -> Prop := Set.instEmptyCollection.emptyCollection
 theorem EMPTY_def {A : Type _} [Nonempty A] : (@EMPTY A _) = (fun x : A => False) := by apply Eq.refl (@EMPTY A _)
 
-noncomputable def INSERT {A : Type _} [Nonempty A] : A -> (A -> Prop) -> A -> Prop := fun _32459 : A => fun _32460 : A -> Prop => fun y : A => (@IN A _ y _32460) ∨ (y = _32459)
-theorem INSERT_def {A : Type _} [Nonempty A] : (@INSERT A _) = (fun _32459 : A => fun _32460 : A -> Prop => fun y : A => (@IN A _ y _32460) ∨ (y = _32459)) := by apply Eq.refl (@INSERT A _)
+noncomputable def INSERT {A : Type _} [Nonempty A] : A -> (A -> Prop) -> A -> Prop := fun a S x => IN x (Set.insert a S)
+theorem INSERT_def {A : Type _} [Nonempty A] : (@INSERT A _) = (fun _32459 : A => fun _32460 : A -> Prop => fun y : A => (@IN A _ y _32460) ∨ (y = _32459)) := by
+  unfold INSERT IN Set.insert
+  grind
 
-noncomputable def UNIV {A : Type _} [Nonempty A] : A -> Prop := fun x : A => True
+elab "two_set_align"  : tactic => do
+  Lean.Elab.Tactic.evalTactic (← `(tactic|
+  (try unfold GSPEC);
+  (try unfold SETSPEC);
+  (try unfold IN);
+  (try unfold EMPTY);
+  (try unfold id);
+  (try unfold INSERT);
+  (try unfold Set.insert);
+  first
+  | (funext U V x;
+          apply Eq.propIntro <;> intro h;
+          refine ⟨x, by try trivial⟩;
+          obtain ⟨x', h'⟩ := h;
+          rw [h'.2];
+          exact h'.1)
+  | (funext U V;
+     apply Eq.propIntro <;> intro h <;>
+     try grind <;> try solve_by_elim;
+     );
+  | (funext U;
+     apply Eq.propIntro <;> intro h <;>
+     try grind <;> try solve_by_elim;
+     );
+    )
+  )
+
+noncomputable def UNIV {A : Type _} [Nonempty A] : A -> Prop := Set.univ
 theorem UNIV_def {A : Type _} [Nonempty A] : (@UNIV A _) = (fun x : A => True) := by apply Eq.refl (@UNIV A _)
 
-noncomputable def UNION {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun _32471 : A -> Prop => fun _32472 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_0 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_0 ((@IN A _ x _32471) ∨ (@IN A _ x _32472)) x)
-theorem UNION_def {A : Type _} [Nonempty A] : (@UNION A _) = (fun _32471 : A -> Prop => fun _32472 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_0 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_0 ((@IN A _ x _32471) ∨ (@IN A _ x _32472)) x)) := by apply Eq.refl (@UNION A _)
+noncomputable def UNION {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => (U ∪ V: Set A)
+theorem UNION_def {A : Type _} [Nonempty A] : (@UNION A _) = (fun _32471 : A -> Prop => fun _32472 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_0 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_0 ((@IN A _ x _32471) ∨ (@IN A _ x _32472)) x)) := by
+  unfold UNION
+  two_set_align
 
-noncomputable def UNIONS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun _32483 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_1 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_1 (∃ u : A -> Prop, (@IN (A -> Prop) _ u _32483) ∧ (@IN A _ x u)) x)
-theorem UNIONS_def {A : Type _} [Nonempty A] : (@UNIONS A _) = (fun _32483 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_1 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_1 (∃ u : A -> Prop, (@IN (A -> Prop) _ u _32483) ∧ (@IN A _ x u)) x)) := by apply Eq.refl (@UNIONS A _)
+noncomputable def UNIONS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun F : Set (Set A) => ⋃₀ F
 
-noncomputable def INTER {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun _32488 : A -> Prop => fun _32489 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_2 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_2 ((@IN A _ x _32488) ∧ (@IN A _ x _32489)) x)
-theorem INTER_def {A : Type _} [Nonempty A] : (@INTER A _) = (fun _32488 : A -> Prop => fun _32489 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_2 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_2 ((@IN A _ x _32488) ∧ (@IN A _ x _32489)) x)) := by apply Eq.refl (@INTER A _)
+theorem UNIONS_def {A : Type _} [Nonempty A] : (@UNIONS A _) = (fun _32483 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_1 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_1 (∃ u : A -> Prop, (@IN (A -> Prop) _ u _32483) ∧ (@IN A _ x u)) x)) := by
+  unfold UNIONS GSPEC SETSPEC id IN
+  funext F x
+  apply Eq.propIntro <;> intro h
+  · refine ⟨x,⟨?_,rfl⟩⟩
+    rw[Set.sUnion_eq_iUnion] at h
+    obtain ⟨V,hVx⟩ := Set.mem_iUnion.1 h
+    refine ⟨(V : Set A), ⟨?_, hVx⟩⟩
+    simp_all only [Set.iUnion_coe_set, Subtype.coe_prop]
+  · obtain ⟨x', h'⟩ := h
+    rw[h'.2]
+    exact h'.1
 
-noncomputable def INTERS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun _32500 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_3 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_3 (∀ u : A -> Prop, (@IN (A -> Prop) _ u _32500) -> @IN A _ x u) x)
-theorem INTERS_def {A : Type _} [Nonempty A] : (@INTERS A _) = (fun _32500 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_3 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_3 (∀ u : A -> Prop, (@IN (A -> Prop) _ u _32500) -> @IN A _ x u) x)) := by apply Eq.refl (@INTERS A _)
+noncomputable def INTER {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => (U ∩ V : Set A)
 
-noncomputable def DIFF {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun _32505 : A -> Prop => fun _32506 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_4 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_4 ((@IN A _ x _32505) ∧ (¬ (@IN A _ x _32506))) x)
-theorem DIFF_def {A : Type _} [Nonempty A] : (@DIFF A _) = (fun _32505 : A -> Prop => fun _32506 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_4 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_4 ((@IN A _ x _32505) ∧ (¬ (@IN A _ x _32506))) x)) := by apply Eq.refl (@DIFF A _)
+theorem INTER_def {A : Type _} [Nonempty A] : (@INTER A _) = (fun _32488 : A -> Prop => fun _32489 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_2 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_2 ((@IN A _ x _32488) ∧ (@IN A _ x _32489)) x)) := by
+  unfold INTER ; two_set_align
 
-noncomputable def DELETE {A : Type _} [Nonempty A] : (A -> Prop) -> A -> A -> Prop := fun _32517 : A -> Prop => fun _32518 : A => @GSPEC A _ (fun GEN_PVAR_6 : A => ∃ y : A, @SETSPEC A _ GEN_PVAR_6 ((@IN A _ y _32517) ∧ (¬ (y = _32518))) y)
-theorem DELETE_def {A : Type _} [Nonempty A] : (@DELETE A _) = (fun _32517 : A -> Prop => fun _32518 : A => @GSPEC A _ (fun GEN_PVAR_6 : A => ∃ y : A, @SETSPEC A _ GEN_PVAR_6 ((@IN A _ y _32517) ∧ (¬ (y = _32518))) y)) := by apply Eq.refl (@DELETE A _)
+noncomputable def INTERS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun F : Set (Set A) => ⋂₀ F
 
-noncomputable def SUBSET {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun _32529 : A -> Prop => fun _32530 : A -> Prop => ∀ x : A, (@IN A _ x _32529) -> @IN A _ x _32530
+theorem INTERS_def {A : Type _} [Nonempty A] : (@INTERS A _) = (fun _32500 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_3 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_3 (∀ u : A -> Prop, (@IN (A -> Prop) _ u _32500) -> @IN A _ x u) x)) := by
+  unfold INTERS GSPEC SETSPEC id IN
+  funext F x
+  apply Eq.propIntro <;> intro h
+  · refine ⟨x,⟨?_,rfl⟩⟩
+    intro a ha
+    apply h
+    exact ha
+  · obtain ⟨x', h'⟩ := h
+    rw[h'.2]
+    exact h'.1
+
+noncomputable def DIFF {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => U \ V
+
+theorem DIFF_def {A : Type _} [Nonempty A] : (@DIFF A _) = (fun _32505 : A -> Prop => fun _32506 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_4 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_4 ((@IN A _ x _32505) ∧ (¬ (@IN A _ x _32506))) x)) := by
+  unfold DIFF
+  two_set_align
+
+noncomputable def DELETE {A : Type _} [Nonempty A] : (A -> Prop) -> A -> A -> Prop := fun (S : Set A) (a : A) => S \ ({a} : Set A)
+theorem DELETE_def {A : Type _} [Nonempty A] : (@DELETE A _) = (fun _32517 : A -> Prop => fun _32518 : A => @GSPEC A _ (fun GEN_PVAR_6 : A => ∃ y : A, @SETSPEC A _ GEN_PVAR_6 ((@IN A _ y _32517) ∧ (¬ (y = _32518))) y)) := by
+  unfold DELETE ; two_set_align
+
+noncomputable def SUBSET {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => U ⊆ V
 theorem SUBSET_def {A : Type _} [Nonempty A] : (@SUBSET A _) = (fun _32529 : A -> Prop => fun _32530 : A -> Prop => ∀ x : A, (@IN A _ x _32529) -> @IN A _ x _32530) := by apply Eq.refl (@SUBSET A _)
 
-noncomputable def PSUBSET {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun _32541 : A -> Prop => fun _32542 : A -> Prop => (@SUBSET A _ _32541 _32542) ∧ (¬ (_32541 = _32542))
-theorem PSUBSET_def {A : Type _} [Nonempty A] : (@PSUBSET A _) = (fun _32541 : A -> Prop => fun _32542 : A -> Prop => (@SUBSET A _ _32541 _32542) ∧ (¬ (_32541 = _32542))) := by apply Eq.refl (@PSUBSET A _)
+noncomputable def PSUBSET {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => U ⊂ V
+theorem PSUBSET_def {A : Type _} [Nonempty A] : (@PSUBSET A _) = (fun _32541 : A -> Prop => fun _32542 : A -> Prop => (@SUBSET A _ _32541 _32542) ∧ (¬ (_32541 = _32542))) := by
+  unfold PSUBSET SUBSET
+  two_set_align
+  expose_names
+  exact Set.ssubset_iff_subset_ne.mpr h
 
-noncomputable def DISJOINT {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun _32553 : A -> Prop => fun _32554 : A -> Prop => (@INTER A _ _32553 _32554) = (@EMPTY A _)
-theorem DISJOINT_def {A : Type _} [Nonempty A] : (@DISJOINT A _) = (fun _32553 : A -> Prop => fun _32554 : A -> Prop => (@INTER A _ _32553 _32554) = (@EMPTY A _)) := by apply Eq.refl (@DISJOINT A _)
+noncomputable def DISJOINT {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => Disjoint U V
 
-noncomputable def SING {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun _32565 : A -> Prop => ∃ x : A, _32565 = (@INSERT A _ x (@EMPTY A _))
-theorem SING_def {A : Type _} [Nonempty A] : (@SING A _) = (fun _32565 : A -> Prop => ∃ x : A, _32565 = (@INSERT A _ x (@EMPTY A _))) := by apply Eq.refl (@SING A _)
+theorem DISJOINT_def {A : Type _} [Nonempty A] : (@DISJOINT A _) = (fun _32553 : A -> Prop => fun _32554 : A -> Prop => (@INTER A _ _32553 _32554) = (@EMPTY A _)) := by
+  unfold DISJOINT INTER EMPTY; two_set_align <;> expose_names
+  · exact Disjoint.inter_eq h
+  · exact Set.disjoint_iff_inter_eq_empty.mpr h
 
-noncomputable def FINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun a : A -> Prop => ∀ FINITE' : (A -> Prop) -> Prop, (∀ a' : A -> Prop, ((a' = (@EMPTY A _)) ∨ (∃ x : A, ∃ s : A -> Prop, (a' = (@INSERT A _ x s)) ∧ (FINITE' s))) -> FINITE' a') -> FINITE' a
-theorem FINITE_def {A : Type _} [Nonempty A] : (@FINITE A _) = (fun a : A -> Prop => ∀ FINITE' : (A -> Prop) -> Prop, (∀ a' : A -> Prop, ((a' = (@EMPTY A _)) ∨ (∃ x : A, ∃ s : A -> Prop, (a' = (@INSERT A _ x s)) ∧ (FINITE' s))) -> FINITE' a') -> FINITE' a) := by apply Eq.refl (@FINITE A _)
+noncomputable def SING {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun S => ∃ a : A, S = ({a} : Set A)
+theorem SING_def {A : Type _} [Nonempty A] : (@SING A _) = (fun _32565 : A -> Prop => ∃ x : A, _32565 = (@INSERT A _ x (@EMPTY A _))) := by
+  unfold INSERT EMPTY SING
+  two_set_align <;> expose_names <;>
+  ( obtain ⟨a, h⟩ := h
+    rw[h]
+    refine ⟨a, ?_⟩
+    funext x ; simp only [Set.mem_empty_iff_false, or_false, Set.setOf_eq_eq_singleton,
+      Set.mem_singleton_iff, eq_iff_iff]
+    trivial)
+
+noncomputable def FINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := Set.Finite
+theorem FINITE_def {A : Type _} [Nonempty A] : (@FINITE A _) = (fun a : A -> Prop => ∀ FINITE' : (A -> Prop) -> Prop, (∀ a' : A -> Prop, ((a' = (@EMPTY A _)) ∨ (∃ x : A, ∃ s : A -> Prop, (a' = (@INSERT A _ x s)) ∧ (FINITE' s))) -> FINITE' a') -> FINITE' a) := by
+  unfold FINITE
+  two_set_align <;> try unfold IN <;> expose_names
+  · intro Fin_HOL h'
+    have h'U := h' U
+    apply h'
+    refine Set.Finite.induction_on U h (Or.inl rfl) ?_
+    · intro a S hSa ha hInd
+      apply Or.elim hInd <;>
+      simp_all only [Set.mem_setOf_eq, forall_eq_or_imp, forall_exists_index, and_imp, insert,
+        Set.insert, Set.mem_empty_iff_false, or_false, Set.setOf_eq_eq_singleton]
+      · intro hS0
+        refine Or.inr ⟨a,⟨(S : A → Prop),⟨by funext y ; aesop, by grind⟩⟩⟩
+      · intro a S hS hFinS
+        aesop
+  · expose_names
+    specialize h FINITE
+    simp_all only [IN, Set.mem_setOf_eq, FINITE, forall_eq_or_imp, Set.finite_empty,
+      forall_exists_index, and_imp, true_and]
+    apply h
+    intro S a U hS hU
+    have : S = Set.insert a U := by exact Set.setOf_inj.mp hS
+    rw[← hS, this]
+    exact Set.finite_insert.2 hU
 
 noncomputable def INFINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun _32574 : A -> Prop => ¬ (@FINITE A _ _32574)
 theorem INFINITE_def {A : Type _} [Nonempty A] : (@INFINITE A _) = (fun _32574 : A -> Prop => ¬ (@FINITE A _ _32574)) := by apply Eq.refl (@INFINITE A _)

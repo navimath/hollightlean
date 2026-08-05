@@ -50,6 +50,16 @@ elab "part_tac_1" Q:term : tactic =>
         | _ => throwError "Right hand side is not of the form ε P a r"
     | _ => throwError "Goal is not an equality"
 
+/- elab "one_set_align"  : tactic => do
+  Lean.Elab.Tactic.evalTactic (← `(tactic|
+    unfold GSPEC SETSPEC IN id;
+    funext U x;
+    apply Eq.propIntro <;> intro h;
+    refine ⟨x, by trivial⟩;
+    obtain ⟨x', h'⟩ := h;
+    rw [h'.2];
+    exact h'.1)) -/
+
 /- structure Type' where
 type : Type*
 el : type
