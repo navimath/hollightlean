@@ -385,18 +385,23 @@ theorem real_zpow_def : real_zpow = (fun _32346 : Real => fun _32347 : ℤ => @C
 # Set Theory alignment
 -/
 
+@[simp]
 noncomputable def IN {A : Type _} [Nonempty A] : A -> (A -> Prop) -> Prop := fun (a : A) (S : Set A) => a ∈ S
 theorem IN_def {A : Type _} [Nonempty A] : (@IN A _) = (fun _32403 : A => fun _32404 : A -> Prop => _32404 _32403) := by apply Eq.refl (@IN A _)
 
+@[simp]
 noncomputable def GSPEC {A : Type _} [Nonempty A] : (A -> Prop) -> A -> Prop := id
 theorem GSPEC_def {A : Type _} [Nonempty A] : (@GSPEC A _) = (fun _32415 : A -> Prop => _32415) := by apply Eq.refl (@GSPEC A _)
 
+@[simp]
 noncomputable def SETSPEC {A : Type _} [Nonempty A] : A -> Prop -> A -> Prop := fun x P => {x' | P ∧ x = x'}
 theorem SETSPEC_def {A : Type _} [Nonempty A] : (@SETSPEC A _) = (fun _32420 : A => fun _32421 : Prop => fun _32422 : A => _32421 ∧ (_32420 = _32422)) := by apply Eq.refl (@SETSPEC A _)
 
+@[simp]
 noncomputable def EMPTY {A : Type _} [Nonempty A] : A -> Prop := Set.instEmptyCollection.emptyCollection
 theorem EMPTY_def {A : Type _} [Nonempty A] : (@EMPTY A _) = (fun x : A => False) := by apply Eq.refl (@EMPTY A _)
 
+@[simp]
 noncomputable def INSERT {A : Type _} [Nonempty A] : A -> (A -> Prop) -> A -> Prop := fun a S x => IN x (Set.insert a S)
 theorem INSERT_def {A : Type _} [Nonempty A] : (@INSERT A _) = (fun _32459 : A => fun _32460 : A -> Prop => fun y : A => (@IN A _ y _32460) ∨ (y = _32459)) := by
   unfold INSERT IN Set.insert
@@ -404,13 +409,7 @@ theorem INSERT_def {A : Type _} [Nonempty A] : (@INSERT A _) = (fun _32459 : A =
 
 elab "two_set_align"  : tactic => do
   Lean.Elab.Tactic.evalTactic (← `(tactic|
-  (try unfold GSPEC);
-  (try unfold SETSPEC);
-  (try unfold IN);
-  (try unfold EMPTY);
-  (try unfold id);
-  (try unfold INSERT);
-  (try unfold Set.insert);
+  simp_all;
   first
   | (funext U V x;
           apply Eq.propIntro <;> intro h;
@@ -429,16 +428,20 @@ elab "two_set_align"  : tactic => do
     )
   )
 
+@[simp]
 noncomputable def UNIV {A : Type _} [Nonempty A] : A -> Prop := Set.univ
 theorem UNIV_def {A : Type _} [Nonempty A] : (@UNIV A _) = (fun x : A => True) := by apply Eq.refl (@UNIV A _)
 
+@[simp]
 noncomputable def UNION {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => (U ∪ V: Set A)
 theorem UNION_def {A : Type _} [Nonempty A] : (@UNION A _) = (fun _32471 : A -> Prop => fun _32472 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_0 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_0 ((@IN A _ x _32471) ∨ (@IN A _ x _32472)) x)) := by
   unfold UNION
   two_set_align
 
+@[simp]
 noncomputable def UNIONS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun F : Set (Set A) => ⋃₀ F
 
+@[simp]
 theorem UNIONS_def {A : Type _} [Nonempty A] : (@UNIONS A _) = (fun _32483 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_1 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_1 (∃ u : A -> Prop, (@IN (A -> Prop) _ u _32483) ∧ (@IN A _ x u)) x)) := by
   unfold UNIONS GSPEC SETSPEC id IN
   funext F x
@@ -452,11 +455,13 @@ theorem UNIONS_def {A : Type _} [Nonempty A] : (@UNIONS A _) = (fun _32483 : (A 
     rw[h'.2]
     exact h'.1
 
+@[simp]
 noncomputable def INTER {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => (U ∩ V : Set A)
 
 theorem INTER_def {A : Type _} [Nonempty A] : (@INTER A _) = (fun _32488 : A -> Prop => fun _32489 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_2 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_2 ((@IN A _ x _32488) ∧ (@IN A _ x _32489)) x)) := by
   unfold INTER ; two_set_align
 
+@[simp]
 noncomputable def INTERS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun F : Set (Set A) => ⋂₀ F
 
 theorem INTERS_def {A : Type _} [Nonempty A] : (@INTERS A _) = (fun _32500 : (A -> Prop) -> Prop => @GSPEC A _ (fun GEN_PVAR_3 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_3 (∀ u : A -> Prop, (@IN (A -> Prop) _ u _32500) -> @IN A _ x u) x)) := by
@@ -471,55 +476,63 @@ theorem INTERS_def {A : Type _} [Nonempty A] : (@INTERS A _) = (fun _32500 : (A 
     rw[h'.2]
     exact h'.1
 
+@[simp]
 noncomputable def DIFF {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => U \ V
 
 theorem DIFF_def {A : Type _} [Nonempty A] : (@DIFF A _) = (fun _32505 : A -> Prop => fun _32506 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_4 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_4 ((@IN A _ x _32505) ∧ (¬ (@IN A _ x _32506))) x)) := by
   unfold DIFF
   two_set_align
 
+@[simp]
 noncomputable def DELETE {A : Type _} [Nonempty A] : (A -> Prop) -> A -> A -> Prop := fun (S : Set A) (a : A) => S \ ({a} : Set A)
 theorem DELETE_def {A : Type _} [Nonempty A] : (@DELETE A _) = (fun _32517 : A -> Prop => fun _32518 : A => @GSPEC A _ (fun GEN_PVAR_6 : A => ∃ y : A, @SETSPEC A _ GEN_PVAR_6 ((@IN A _ y _32517) ∧ (¬ (y = _32518))) y)) := by
   unfold DELETE ; two_set_align
 
+@[simp]
 noncomputable def SUBSET {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => U ⊆ V
 theorem SUBSET_def {A : Type _} [Nonempty A] : (@SUBSET A _) = (fun _32529 : A -> Prop => fun _32530 : A -> Prop => ∀ x : A, (@IN A _ x _32529) -> @IN A _ x _32530) := by apply Eq.refl (@SUBSET A _)
 
+@[simp]
 noncomputable def PSUBSET {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => U ⊂ V
 theorem PSUBSET_def {A : Type _} [Nonempty A] : (@PSUBSET A _) = (fun _32541 : A -> Prop => fun _32542 : A -> Prop => (@SUBSET A _ _32541 _32542) ∧ (¬ (_32541 = _32542))) := by
   unfold PSUBSET SUBSET
-  two_set_align
-  expose_names
-  exact Set.ssubset_iff_subset_ne.mpr h
+  funext U V
+  grind[Set.ssubset_iff_subset_ne]
 
+@[simp]
 noncomputable def DISJOINT {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => Disjoint U V
 
 theorem DISJOINT_def {A : Type _} [Nonempty A] : (@DISJOINT A _) = (fun _32553 : A -> Prop => fun _32554 : A -> Prop => (@INTER A _ _32553 _32554) = (@EMPTY A _)) := by
-  unfold DISJOINT INTER EMPTY; two_set_align <;> expose_names
+  two_set_align <;> expose_names
   · exact Disjoint.inter_eq h
   · exact Set.disjoint_iff_inter_eq_empty.mpr h
 
+@[simp]
 noncomputable def SING {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun S => ∃ a : A, S = ({a} : Set A)
 theorem SING_def {A : Type _} [Nonempty A] : (@SING A _) = (fun _32565 : A -> Prop => ∃ x : A, _32565 = (@INSERT A _ x (@EMPTY A _))) := by
-  unfold INSERT EMPTY SING
   two_set_align <;> expose_names <;>
   ( obtain ⟨a, h⟩ := h
     rw[h]
     refine ⟨a, ?_⟩
-    funext x ; simp only [Set.mem_empty_iff_false, or_false, Set.setOf_eq_eq_singleton,
-      Set.mem_singleton_iff, eq_iff_iff]
-    trivial)
+    funext x ; simp_all only [INSERT, IN, eq_iff_iff, Set.insert]
+    subst h
+    simp_all only [Set.mem_empty_iff_false, or_false, Set.setOf_eq_eq_singleton, Set.mem_singleton_iff]
+    rfl)
 
+@[simp]
 noncomputable def FINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := Set.Finite
 theorem FINITE_def {A : Type _} [Nonempty A] : (@FINITE A _) = (fun a : A -> Prop => ∀ FINITE' : (A -> Prop) -> Prop, (∀ a' : A -> Prop, ((a' = (@EMPTY A _)) ∨ (∃ x : A, ∃ s : A -> Prop, (a' = (@INSERT A _ x s)) ∧ (FINITE' s))) -> FINITE' a') -> FINITE' a) := by
-  unfold FINITE
-  two_set_align <;> try unfold IN <;> expose_names
+  simp_all only [FINITE, EMPTY]
+  unfold INSERT Set.insert Set.Finite
+  funext U
+  apply Eq.propIntro <;> intro h
   · intro Fin_HOL h'
     have h'U := h' U
     apply h'
     refine Set.Finite.induction_on U h (Or.inl rfl) ?_
     · intro a S hSa ha hInd
       apply Or.elim hInd <;>
-      simp_all only [Set.mem_setOf_eq, forall_eq_or_imp, forall_exists_index, and_imp, insert,
+      simp_all only [forall_eq_or_imp, forall_exists_index, and_imp, insert,
         Set.insert, Set.mem_empty_iff_false, or_false, Set.setOf_eq_eq_singleton]
       · intro hS0
         refine Or.inr ⟨a,⟨(S : A → Prop),⟨by funext y ; aesop, by grind⟩⟩⟩
@@ -535,9 +548,11 @@ theorem FINITE_def {A : Type _} [Nonempty A] : (@FINITE A _) = (fun a : A -> Pro
     rw[← hS, this]
     exact Set.finite_insert.2 hU
 
+@[simp]
 noncomputable def INFINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun _32574 : A -> Prop => ¬ (@FINITE A _ _32574)
 theorem INFINITE_def {A : Type _} [Nonempty A] : (@INFINITE A _) = (fun _32574 : A -> Prop => ¬ (@FINITE A _ _32574)) := by apply Eq.refl (@INFINITE A _)
 
+@[simp]
 noncomputable def IMAGE {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> B -> Prop := fun f (S : Set A) => f '' S
 
 theorem IMAGE_def {A B : Type _} [Nonempty A] [Nonempty B] : (@IMAGE A B _ _) = (fun _32579 : A -> B => fun _32580 : A -> Prop => @GSPEC B _ (fun GEN_PVAR_7 : B => ∃ y : B, @SETSPEC B _ GEN_PVAR_7 (∃ x : A, (@IN A _ x _32580) ∧ (y = (_32579 x))) y)) := by
@@ -550,30 +565,36 @@ theorem IMAGE_def {A B : Type _} [Nonempty A] [Nonempty B] : (@IMAGE A B _ _) = 
     rw[h2]
     exact ⟨x,by grind⟩
 
+@[simp]
 def hasImage {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => f '' S ⊆ U
 
+@[simp]
 noncomputable def INJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => hasImage f S U ∧ Set.InjOn f S
 
 theorem INJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@INJ A B _ _) = (fun _32591 : A -> B => fun _32592 : A -> Prop => fun _32593 : B -> Prop => (∀ x : A, (@IN A _ x _32592) -> @IN B _ (_32591 x) _32593) ∧ (∀ x : A, ∀ y : A, ((@IN A _ x _32592) ∧ ((@IN A _ y _32592) ∧ ((_32591 x) = (_32591 y)))) -> x = y)) := by
   unfold INJ IN hasImage Set.InjOn
   grind
 
+@[simp]
 noncomputable def SURJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => hasImage f S U ∧ Set.SurjOn f S U
 
 theorem SURJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@SURJ A B _ _) = (fun _32612 : A -> B => fun _32613 : A -> Prop => fun _32614 : B -> Prop => (∀ x : A, (@IN A _ x _32613) -> @IN B _ (_32612 x) _32614) ∧ (∀ x : B, (@IN B _ x _32614) -> ∃ y : A, (@IN A _ y _32613) ∧ ((_32612 y) = x))) := by
   unfold SURJ hasImage Set.SurjOn IN
   grind
 
+@[simp]
 noncomputable def BIJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => hasImage f S U ∧ Set.BijOn f S U
 
 theorem BIJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@BIJ A B _ _) = (fun _32633 : A -> B => fun _32634 : A -> Prop => fun _32635 : B -> Prop => (@INJ A B _ _ _32633 _32634 _32635) ∧ (@SURJ A B _ _ _32633 _32634 _32635)) := by
   delta BIJ hasImage Set.BijOn Set.MapsTo SURJ INJ Set.InjOn Set.SurjOn
   grind
 
+@[simp]
 noncomputable def CHOICE {A : Type _} [Nonempty A] : (A -> Prop) -> A := fun (S : Set A) => Classical.epsilon S
 
 theorem CHOICE_def {A : Type _} [Nonempty A] : (@CHOICE A _) = (fun _32654 : A -> Prop => @Classical.epsilon A _ (fun x : A => @IN A _ x _32654)) := by rfl
 
+@[simp]
 noncomputable def REST {A : Type _} [Nonempty A] : (A -> Prop) -> A -> Prop := fun _32659 : A -> Prop => @DELETE A _ _32659 (@CHOICE A _ _32659)
 theorem REST_def {A : Type _} [Nonempty A] : (@REST A _) = (fun _32659 : A -> Prop => @DELETE A _ _32659 (@CHOICE A _ _32659)) := by apply Eq.refl (@REST A _)
 
@@ -595,6 +616,7 @@ theorem CARD_def {A : Type _} [Nonempty A] : (@CARD A _) = (fun _43314 : A -> Pr
 noncomputable def HAS_SIZE {A : Type _} [Nonempty A] : (A -> Prop) -> Nat -> Prop := fun _43489 : A -> Prop => fun _43490 : Nat => (@FINITE A _ _43489) ∧ ((@CARD A _ _43489) = _43490)
 theorem HAS_SIZE_def {A : Type _} [Nonempty A] : (@HAS_SIZE A _) = (fun _43489 : A -> Prop => fun _43490 : Nat => (@FINITE A _ _43489) ∧ ((@CARD A _ _43489) = _43490)) := by apply Eq.refl (@HAS_SIZE A _)
 
+@[simp]
 noncomputable def CROSS {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (B -> Prop) -> (prod A B) -> Prop := fun (S : Set A) (U : Set B) => Set.prod S U
 
 theorem CROSS_def {A B : Type _} [Nonempty A] [Nonempty B] : (@CROSS A B _ _) = (fun _47408 : A -> Prop => fun _47409 : B -> Prop => @GSPEC (prod A B) _ (fun GEN_PVAR_132 : prod A B => ∃ x : A, ∃ y : B, @SETSPEC (prod A B) _ GEN_PVAR_132 ((@IN A _ x _47408) ∧ (@IN B _ y _47409)) (@prod_mk A B _ _ x y))) := by
@@ -607,12 +629,14 @@ theorem CROSS_def {A B : Type _} [Nonempty A] [Nonempty B] : (@CROSS A B _ _) = 
     exact h.1
 
 -- an arbitrary element `a : A`
+@[simp]
 noncomputable def ARB {A : Type _} [Nonempty A] : A := @Classical.epsilon A _ (fun x : A => False)
 theorem ARB_def {A : Type _} [Nonempty A] : (@ARB A _) = (@Classical.epsilon A _ (fun x : A => False)) := by apply Eq.refl (@ARB A _)
 
 /--
-EXTENSIONAL returns a set of functions `f : A → B` such that for every element `a : A` not in `S`, `f a : B` is an arbitrary element. That is, set of extended functions.
+Let `S : Set A`, `EXTENSIONAL S` returns a set of functions `f : A → B` such that for every term `a : A` not in `S`, `f a : B` is an arbitrary term.
 -/
+@[simp]
 noncomputable def EXTENSIONAL {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> Prop := fun (S : Set A) => {f | ∀ a : A, ¬ S a → f a = ARB}
 theorem EXTENSIONAL_def {A B : Type _} [Nonempty A] [Nonempty B] : (@EXTENSIONAL A B _ _) = (fun _48182 : A -> Prop => @GSPEC (A -> B) _ (fun GEN_PVAR_141 : A -> B => ∃ f : A -> B, @SETSPEC (A -> B) _ GEN_PVAR_141 (∀ x : A, (¬ (@IN A _ x _48182)) -> (f x) = (@ARB B _)) f)) := by
   unfold EXTENSIONAL ARB
@@ -627,8 +651,8 @@ theorem EXTENSIONAL_def {A B : Type _} [Nonempty A] [Nonempty B] : (@EXTENSIONAL
     refine h.1 x ?_
     exact hU
 
-open Classical in
-noncomputable def RESTRICTION {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> A -> B := fun (S : Set A) f a => if h: a ∈ S then S.restrict f ⟨a,h⟩ else (@ARB B _)
+open Classical in @[simp]
+noncomputable def RESTRICTION {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> A -> B := fun (S : Set A) f a => if h : a ∈ S then S.restrict f ⟨a,h⟩ else (@ARB B _)
 
 theorem RESTRICTION_def {A B : Type _} [Nonempty A] [Nonempty B] : (@RESTRICTION A B _ _) = (fun _48234 : A -> Prop => fun _48235 : A -> B => fun _48236 : A => @COND B _ (@IN A _ _48236 _48234) (_48235 _48236) (@ARB B _)) := by
   unfold RESTRICTION COND IN
@@ -640,7 +664,8 @@ theorem RESTRICTION_def {A B : Type _} [Nonempty A] [Nonempty B] : (@RESTRICTION
 /--
 Let `S : Set K` and `F : Set (K → A)`, `cartesian_product S F` is the set of functions from `K → A` such that for every `k ∈ S`, it gives the set `F k`.
 -/
-noncomputable def cartesian_product {A K : Type _} [Nonempty A] [Nonempty K] : (K -> Prop) -> (K -> A -> Prop) -> (K -> A) -> Prop := fun S F => Set.pi {k | S k} (fun k => F k)
+@[simp]
+noncomputable def cartesian_product {A K : Type _} [Nonempty A] [Nonempty K] : (K -> Prop) -> (K -> A -> Prop) -> (K -> A) -> Prop := fun S F => ↑(Set.pi {k | S k} (fun k => F k) ∩ EXTENSIONAL S)
 theorem cartesian_product_def {A K : Type _} [Nonempty A] [Nonempty K] : (@cartesian_product A K _ _) = (fun _48429 : K -> Prop => fun _48430 : K -> A -> Prop => @GSPEC (K -> A) _ (fun GEN_PVAR_142 : K -> A => ∃ f : K -> A, @SETSPEC (K -> A) _ GEN_PVAR_142 ((@EXTENSIONAL K A _ _ _48429 f) ∧ (∀ i : K, (@IN K _ i _48429) -> @IN A _ (f i) (_48430 i))) f)) := by
   unfold cartesian_product Set.pi
   simp only [Set.mem_setOf_eq, SETSPEC, EXTENSIONAL, ARB, IN, GSPEC, id]
@@ -648,16 +673,40 @@ theorem cartesian_product_def {A K : Type _} [Nonempty A] [Nonempty K] : (@carte
   apply Eq.propIntro <;> intro h
   · refine ⟨f,⟨?_,?_⟩⟩
     · constructor
-      · sorry
-      · sorry
+      · intro a ha
+        exact h.2 a ha
+      · intro i a
+        apply h.1
+        exact a
     · grind
-  · sorry
+  · obtain ⟨f',⟨⟨h1,h2⟩,hr⟩⟩ := h
+    rw[hr]
+    subst hr
+    apply And.intro
+    · intro i a
+      apply h2
+      exact a
+    · intro a a_1
+      apply h1
+      simp_all only [not_false_eq_true]
 
 noncomputable def product_map {A B K : Type _} [Nonempty A] [Nonempty B] [Nonempty K] : (K -> Prop) -> (K -> A -> B) -> (K -> A) -> K -> B := fun _49478 : K -> Prop => fun _49479 : K -> A -> B => fun x : K -> A => @RESTRICTION K B _ _ _49478 (fun i : K => _49479 i (x i))
 theorem product_map_def {A B K : Type _} [Nonempty A] [Nonempty B] [Nonempty K] : (@product_map A B K _ _ _) = (fun _49478 : K -> Prop => fun _49479 : K -> A -> B => fun x : K -> A => @RESTRICTION K B _ _ _49478 (fun i : K => _49479 i (x i))) := by apply Eq.refl (@product_map A B K _ _ _)
 
-noncomputable def disjoint_union {A K : Type _} [Nonempty A] [Nonempty K] : (K -> Prop) -> (K -> A -> Prop) -> (prod K A) -> Prop := fun _49614 : K -> Prop => fun _49615 : K -> A -> Prop => @GSPEC (prod K A) _ (fun GEN_PVAR_145 : prod K A => ∃ i : K, ∃ x : A, @SETSPEC (prod K A) _ GEN_PVAR_145 ((@IN K _ i _49614) ∧ (@IN A _ x (_49615 i))) (@prod_mk K A _ _ i x))
-theorem disjoint_union_def {A K : Type _} [Nonempty A] [Nonempty K] : (@disjoint_union A K _ _) = (fun _49614 : K -> Prop => fun _49615 : K -> A -> Prop => @GSPEC (prod K A) _ (fun GEN_PVAR_145 : prod K A => ∃ i : K, ∃ x : A, @SETSPEC (prod K A) _ GEN_PVAR_145 ((@IN K _ i _49614) ∧ (@IN A _ x (_49615 i))) (@prod_mk K A _ _ i x))) := by apply Eq.refl (@disjoint_union A K _ _)
+@[simp]
+noncomputable def disjoint_union {A K : Type _} [Nonempty A] [Nonempty K] : (K -> Prop) -> (K -> A -> Prop) -> (prod K A) -> Prop := fun (S : Set K) F => {(i,x) | S i ∧  F i x}
+theorem disjoint_union_def {A K : Type _} [Nonempty A] [Nonempty K] : (@disjoint_union A K _ _) = (fun _49614 : K -> Prop => fun _49615 : K -> A -> Prop => @GSPEC (prod K A) _ (fun GEN_PVAR_145 : prod K A => ∃ i : K, ∃ x : A, @SETSPEC (prod K A) _ GEN_PVAR_145 ((@IN K _ i _49614) ∧ (@IN A _ x (_49615 i))) (@prod_mk K A _ _ i x))) := by
+  simp_all only [prod_def, GSPEC, SETSPEC, IN, id_eq]
+  funext S U p
+  unfold disjoint_union prod_mk
+  apply Eq.propIntro <;> intro h
+  · refine ⟨p.1,p.2,⟨?_,?_⟩⟩
+    · simp_all only [prod_def]
+      exact h
+    · rfl
+  · obtain ⟨i,x,h⟩ := h
+    rw[h.2]
+    exact ⟨h.1.1,h.1.2⟩
 
 noncomputable def set_of_list {A : Type _} [Nonempty A] : (List A) -> A -> Prop := @Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))))))) -> (List A) -> A -> Prop) _ (fun set_of_list' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))))))) -> (List A) -> A -> Prop => ∀ _56511 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))))), ((set_of_list' _56511 (@NIL A _)) = (@EMPTY A _)) ∧ (∀ h : A, ∀ t : List A, (set_of_list' _56511 (@CONS A _ h t)) = (@INSERT A _ h (set_of_list' _56511 t)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))))) _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero))))))))))))))))))
 theorem set_of_list_def {A : Type _} [Nonempty A] : (@set_of_list A _) = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))))))) -> (List A) -> A -> Prop) _ (fun set_of_list' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))))))) -> (List A) -> A -> Prop => ∀ _56511 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))))), ((set_of_list' _56511 (@NIL A _)) = (@EMPTY A _)) ∧ (∀ h : A, ∀ t : List A, (set_of_list' _56511 (@CONS A _ h t)) = (@INSERT A _ h (set_of_list' _56511 t)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))))) _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero))))))))))))))))))) := by apply Eq.refl (@set_of_list A _)
