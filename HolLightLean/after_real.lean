@@ -538,50 +538,120 @@ theorem FINITE_def {A : Type _} [Nonempty A] : (@FINITE A _) = (fun a : A -> Pro
 noncomputable def INFINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun _32574 : A -> Prop => ¬ (@FINITE A _ _32574)
 theorem INFINITE_def {A : Type _} [Nonempty A] : (@INFINITE A _) = (fun _32574 : A -> Prop => ¬ (@FINITE A _ _32574)) := by apply Eq.refl (@INFINITE A _)
 
-noncomputable def IMAGE {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> B -> Prop := fun _32579 : A -> B => fun _32580 : A -> Prop => @GSPEC B _ (fun GEN_PVAR_7 : B => ∃ y : B, @SETSPEC B _ GEN_PVAR_7 (∃ x : A, (@IN A _ x _32580) ∧ (y = (_32579 x))) y)
-theorem IMAGE_def {A B : Type _} [Nonempty A] [Nonempty B] : (@IMAGE A B _ _) = (fun _32579 : A -> B => fun _32580 : A -> Prop => @GSPEC B _ (fun GEN_PVAR_7 : B => ∃ y : B, @SETSPEC B _ GEN_PVAR_7 (∃ x : A, (@IN A _ x _32580) ∧ (y = (_32579 x))) y)) := by apply Eq.refl (@IMAGE A B _ _)
+noncomputable def IMAGE {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> B -> Prop := fun f (S : Set A) => f '' S
 
-noncomputable def INJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun _32591 : A -> B => fun _32592 : A -> Prop => fun _32593 : B -> Prop => (∀ x : A, (@IN A _ x _32592) -> @IN B _ (_32591 x) _32593) ∧ (∀ x : A, ∀ y : A, ((@IN A _ x _32592) ∧ ((@IN A _ y _32592) ∧ ((_32591 x) = (_32591 y)))) -> x = y)
-theorem INJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@INJ A B _ _) = (fun _32591 : A -> B => fun _32592 : A -> Prop => fun _32593 : B -> Prop => (∀ x : A, (@IN A _ x _32592) -> @IN B _ (_32591 x) _32593) ∧ (∀ x : A, ∀ y : A, ((@IN A _ x _32592) ∧ ((@IN A _ y _32592) ∧ ((_32591 x) = (_32591 y)))) -> x = y)) := by apply Eq.refl (@INJ A B _ _)
+theorem IMAGE_def {A B : Type _} [Nonempty A] [Nonempty B] : (@IMAGE A B _ _) = (fun _32579 : A -> B => fun _32580 : A -> Prop => @GSPEC B _ (fun GEN_PVAR_7 : B => ∃ y : B, @SETSPEC B _ GEN_PVAR_7 (∃ x : A, (@IN A _ x _32580) ∧ (y = (_32579 x))) y)) := by
+  unfold IMAGE GSPEC SETSPEC IN id
+  funext f S b
+  apply Eq.propIntro <;> intro h
+  · obtain ⟨a,_⟩ := h
+    exact ⟨b,⟨⟨a,by grind⟩,rfl⟩⟩
+  · obtain ⟨a,⟨⟨x,h1⟩,h2⟩⟩ := h
+    rw[h2]
+    exact ⟨x,by grind⟩
 
-noncomputable def SURJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun _32612 : A -> B => fun _32613 : A -> Prop => fun _32614 : B -> Prop => (∀ x : A, (@IN A _ x _32613) -> @IN B _ (_32612 x) _32614) ∧ (∀ x : B, (@IN B _ x _32614) -> ∃ y : A, (@IN A _ y _32613) ∧ ((_32612 y) = x))
-theorem SURJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@SURJ A B _ _) = (fun _32612 : A -> B => fun _32613 : A -> Prop => fun _32614 : B -> Prop => (∀ x : A, (@IN A _ x _32613) -> @IN B _ (_32612 x) _32614) ∧ (∀ x : B, (@IN B _ x _32614) -> ∃ y : A, (@IN A _ y _32613) ∧ ((_32612 y) = x))) := by apply Eq.refl (@SURJ A B _ _)
+def hasImage {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => f '' S ⊆ U
 
-noncomputable def BIJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun _32633 : A -> B => fun _32634 : A -> Prop => fun _32635 : B -> Prop => (@INJ A B _ _ _32633 _32634 _32635) ∧ (@SURJ A B _ _ _32633 _32634 _32635)
-theorem BIJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@BIJ A B _ _) = (fun _32633 : A -> B => fun _32634 : A -> Prop => fun _32635 : B -> Prop => (@INJ A B _ _ _32633 _32634 _32635) ∧ (@SURJ A B _ _ _32633 _32634 _32635)) := by apply Eq.refl (@BIJ A B _ _)
+noncomputable def INJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => hasImage f S U ∧ Set.InjOn f S
 
-noncomputable def CHOICE {A : Type _} [Nonempty A] : (A -> Prop) -> A := fun _32654 : A -> Prop => @Classical.epsilon A _ (fun x : A => @IN A _ x _32654)
-theorem CHOICE_def {A : Type _} [Nonempty A] : (@CHOICE A _) = (fun _32654 : A -> Prop => @Classical.epsilon A _ (fun x : A => @IN A _ x _32654)) := by apply Eq.refl (@CHOICE A _)
+theorem INJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@INJ A B _ _) = (fun _32591 : A -> B => fun _32592 : A -> Prop => fun _32593 : B -> Prop => (∀ x : A, (@IN A _ x _32592) -> @IN B _ (_32591 x) _32593) ∧ (∀ x : A, ∀ y : A, ((@IN A _ x _32592) ∧ ((@IN A _ y _32592) ∧ ((_32591 x) = (_32591 y)))) -> x = y)) := by
+  unfold INJ IN hasImage Set.InjOn
+  grind
+
+noncomputable def SURJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => hasImage f S U ∧ Set.SurjOn f S U
+
+theorem SURJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@SURJ A B _ _) = (fun _32612 : A -> B => fun _32613 : A -> Prop => fun _32614 : B -> Prop => (∀ x : A, (@IN A _ x _32613) -> @IN B _ (_32612 x) _32614) ∧ (∀ x : B, (@IN B _ x _32614) -> ∃ y : A, (@IN A _ y _32613) ∧ ((_32612 y) = x))) := by
+  unfold SURJ hasImage Set.SurjOn IN
+  grind
+
+noncomputable def BIJ {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B) -> (A -> Prop) -> (B -> Prop) -> Prop := fun f (S : Set A) (U : Set B) => hasImage f S U ∧ Set.BijOn f S U
+
+theorem BIJ_def {A B : Type _} [Nonempty A] [Nonempty B] : (@BIJ A B _ _) = (fun _32633 : A -> B => fun _32634 : A -> Prop => fun _32635 : B -> Prop => (@INJ A B _ _ _32633 _32634 _32635) ∧ (@SURJ A B _ _ _32633 _32634 _32635)) := by
+  delta BIJ hasImage Set.BijOn Set.MapsTo SURJ INJ Set.InjOn Set.SurjOn
+  grind
+
+noncomputable def CHOICE {A : Type _} [Nonempty A] : (A -> Prop) -> A := fun (S : Set A) => Classical.epsilon S
+
+theorem CHOICE_def {A : Type _} [Nonempty A] : (@CHOICE A _) = (fun _32654 : A -> Prop => @Classical.epsilon A _ (fun x : A => @IN A _ x _32654)) := by rfl
 
 noncomputable def REST {A : Type _} [Nonempty A] : (A -> Prop) -> A -> Prop := fun _32659 : A -> Prop => @DELETE A _ _32659 (@CHOICE A _ _32659)
 theorem REST_def {A : Type _} [Nonempty A] : (@REST A _) = (fun _32659 : A -> Prop => @DELETE A _ _32659 (@CHOICE A _ _32659)) := by apply Eq.refl (@REST A _)
 
+/--
+`FINREC (b₀, s, f)` is the inductive set defined by a base element `b₀`, a set `s` and a function `f`. The set contains the pairs of elements `(b,n)` such that
+  - `(b₀,0) ∈ FINREC(b₀,∅,f)`
+  - `(f x b, n+1) ∈ FINREC(b₀,s,f)` whenever `(b,n) ∈ FINREC(b₀,s\{x},f)`
+Intuitively, `FINREC(b₀, s, f)` is the set of all iterations of `f` for some `b₀ : B` over elements of `S`
+-/
 noncomputable def FINREC {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B -> B) -> B -> (A -> Prop) -> B -> Nat -> Prop := @Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) -> (A -> B -> B) -> B -> (A -> Prop) -> B -> Nat -> Prop) _ (fun FINREC' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) -> (A -> B -> B) -> B -> (A -> Prop) -> B -> Nat -> Prop => ∀ _42261 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))), (∀ f : A -> B -> B, ∀ s : A -> Prop, ∀ a : B, ∀ b : B, (FINREC' _42261 f b s a (NUMERAL Nat.zero)) = ((s = (@EMPTY A _)) ∧ (a = b))) ∧ (∀ b : B, ∀ s : A -> Prop, ∀ n : Nat, ∀ a : B, ∀ f : A -> B -> B, (FINREC' _42261 f b s a (Nat.succ n)) = (∃ x : A, ∃ c : B, (@IN A _ x s) ∧ ((FINREC' _42261 f b (@DELETE A _ s x) c n) ∧ (a = (f x c)))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))))))))
 theorem FINREC_def {A B : Type _} [Nonempty A] [Nonempty B] : (@FINREC A B _ _) = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) -> (A -> B -> B) -> B -> (A -> Prop) -> B -> Nat -> Prop) _ (fun FINREC' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) -> (A -> B -> B) -> B -> (A -> Prop) -> B -> Nat -> Prop => ∀ _42261 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))), (∀ f : A -> B -> B, ∀ s : A -> Prop, ∀ a : B, ∀ b : B, (FINREC' _42261 f b s a (NUMERAL Nat.zero)) = ((s = (@EMPTY A _)) ∧ (a = b))) ∧ (∀ b : B, ∀ s : A -> Prop, ∀ n : Nat, ∀ a : B, ∀ f : A -> B -> B, (FINREC' _42261 f b s a (Nat.succ n)) = (∃ x : A, ∃ c : B, (@IN A _ x s) ∧ ((FINREC' _42261 f b (@DELETE A _ s x) c n) ∧ (a = (f x c)))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))))))))) := by apply Eq.refl (@FINREC A B _ _)
 
 noncomputable def ITSET {A B : Type _} [Nonempty A] [Nonempty B] : (A -> B -> B) -> (A -> Prop) -> B -> B := fun _43111 : A -> B -> B => fun _43112 : A -> Prop => fun _43113 : B => @Classical.epsilon ((A -> Prop) -> B) _ (fun g : (A -> Prop) -> B => ((g (@EMPTY A _)) = _43113) ∧ (∀ x : A, ∀ s : A -> Prop, (@FINITE A _ s) -> (g (@INSERT A _ x s)) = (@COND B _ (@IN A _ x s) (g s) (_43111 x (g s))))) _43112
 theorem ITSET_def {A B : Type _} [Nonempty A] [Nonempty B] : (@ITSET A B _ _) = (fun _43111 : A -> B -> B => fun _43112 : A -> Prop => fun _43113 : B => @Classical.epsilon ((A -> Prop) -> B) _ (fun g : (A -> Prop) -> B => ((g (@EMPTY A _)) = _43113) ∧ (∀ x : A, ∀ s : A -> Prop, (@FINITE A _ s) -> (g (@INSERT A _ x s)) = (@COND B _ (@IN A _ x s) (g s) (_43111 x (g s))))) _43112) := by apply Eq.refl (@ITSET A B _ _)
 
-noncomputable def CARD {A : Type _} [Nonempty A] : (A -> Prop) -> Nat := fun _43314 : A -> Prop => @ITSET A Nat _ _ (fun x : A => fun n : Nat => Nat.succ n) _43314 (NUMERAL Nat.zero)
-theorem CARD_def {A : Type _} [Nonempty A] : (@CARD A _) = (fun _43314 : A -> Prop => @ITSET A Nat _ _ (fun x : A => fun n : Nat => Nat.succ n) _43314 (NUMERAL Nat.zero)) := by apply Eq.refl (@CARD A _)
+noncomputable def CARD {A : Type _} [Nonempty A] : (A -> Prop) -> Nat := fun S : Set A => S.ncard
+theorem CARD_def {A : Type _} [Nonempty A] : (@CARD A _) = (fun _43314 : A -> Prop => @ITSET A Nat _ _ (fun x : A => fun n : Nat => Nat.succ n) _43314 (NUMERAL Nat.zero)) := by sorry -- apply Eq.refl (@CARD A _)
 
 noncomputable def HAS_SIZE {A : Type _} [Nonempty A] : (A -> Prop) -> Nat -> Prop := fun _43489 : A -> Prop => fun _43490 : Nat => (@FINITE A _ _43489) ∧ ((@CARD A _ _43489) = _43490)
 theorem HAS_SIZE_def {A : Type _} [Nonempty A] : (@HAS_SIZE A _) = (fun _43489 : A -> Prop => fun _43490 : Nat => (@FINITE A _ _43489) ∧ ((@CARD A _ _43489) = _43490)) := by apply Eq.refl (@HAS_SIZE A _)
 
-noncomputable def CROSS {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (B -> Prop) -> (prod A B) -> Prop := fun _47408 : A -> Prop => fun _47409 : B -> Prop => @GSPEC (prod A B) _ (fun GEN_PVAR_132 : prod A B => ∃ x : A, ∃ y : B, @SETSPEC (prod A B) _ GEN_PVAR_132 ((@IN A _ x _47408) ∧ (@IN B _ y _47409)) (@prod_mk A B _ _ x y))
-theorem CROSS_def {A B : Type _} [Nonempty A] [Nonempty B] : (@CROSS A B _ _) = (fun _47408 : A -> Prop => fun _47409 : B -> Prop => @GSPEC (prod A B) _ (fun GEN_PVAR_132 : prod A B => ∃ x : A, ∃ y : B, @SETSPEC (prod A B) _ GEN_PVAR_132 ((@IN A _ x _47408) ∧ (@IN B _ y _47409)) (@prod_mk A B _ _ x y))) := by apply Eq.refl (@CROSS A B _ _)
+noncomputable def CROSS {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (B -> Prop) -> (prod A B) -> Prop := fun (S : Set A) (U : Set B) => Set.prod S U
 
+theorem CROSS_def {A B : Type _} [Nonempty A] [Nonempty B] : (@CROSS A B _ _) = (fun _47408 : A -> Prop => fun _47409 : B -> Prop => @GSPEC (prod A B) _ (fun GEN_PVAR_132 : prod A B => ∃ x : A, ∃ y : B, @SETSPEC (prod A B) _ GEN_PVAR_132 ((@IN A _ x _47408) ∧ (@IN B _ y _47409)) (@prod_mk A B _ _ x y))) := by
+  unfold CROSS GSPEC id SETSPEC IN prod_mk Set.prod
+  funext S U x
+  apply Eq.propIntro <;> intro h
+  · exact ⟨x.1,x.2,⟨⟨h.1,h.2⟩,rfl⟩⟩
+  · obtain ⟨x',⟨y',h⟩⟩ := h
+    rw[h.2]
+    exact h.1
+
+-- an arbitrary element `a : A`
 noncomputable def ARB {A : Type _} [Nonempty A] : A := @Classical.epsilon A _ (fun x : A => False)
 theorem ARB_def {A : Type _} [Nonempty A] : (@ARB A _) = (@Classical.epsilon A _ (fun x : A => False)) := by apply Eq.refl (@ARB A _)
 
-noncomputable def EXTENSIONAL {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> Prop := fun _48182 : A -> Prop => @GSPEC (A -> B) _ (fun GEN_PVAR_141 : A -> B => ∃ f : A -> B, @SETSPEC (A -> B) _ GEN_PVAR_141 (∀ x : A, (¬ (@IN A _ x _48182)) -> (f x) = (@ARB B _)) f)
-theorem EXTENSIONAL_def {A B : Type _} [Nonempty A] [Nonempty B] : (@EXTENSIONAL A B _ _) = (fun _48182 : A -> Prop => @GSPEC (A -> B) _ (fun GEN_PVAR_141 : A -> B => ∃ f : A -> B, @SETSPEC (A -> B) _ GEN_PVAR_141 (∀ x : A, (¬ (@IN A _ x _48182)) -> (f x) = (@ARB B _)) f)) := by apply Eq.refl (@EXTENSIONAL A B _ _)
+/--
+EXTENSIONAL returns a set of functions `f : A → B` such that for every element `a : A` not in `S`, `f a : B` is an arbitrary element. That is, set of extended functions.
+-/
+noncomputable def EXTENSIONAL {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> Prop := fun (S : Set A) => {f | ∀ a : A, ¬ S a → f a = ARB}
+theorem EXTENSIONAL_def {A B : Type _} [Nonempty A] [Nonempty B] : (@EXTENSIONAL A B _ _) = (fun _48182 : A -> Prop => @GSPEC (A -> B) _ (fun GEN_PVAR_141 : A -> B => ∃ f : A -> B, @SETSPEC (A -> B) _ GEN_PVAR_141 (∀ x : A, (¬ (@IN A _ x _48182)) -> (f x) = (@ARB B _)) f)) := by
+  unfold EXTENSIONAL ARB
+  two_set_align <;> expose_names
+  · refine ⟨V, ⟨?_,rfl⟩⟩
+    intro x hU
+    apply h
+    exact hU
+  · intro x hU
+    obtain ⟨f,h⟩ := h
+    rw[h.2]
+    refine h.1 x ?_
+    exact hU
 
-noncomputable def RESTRICTION {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> A -> B := fun _48234 : A -> Prop => fun _48235 : A -> B => fun _48236 : A => @COND B _ (@IN A _ _48236 _48234) (_48235 _48236) (@ARB B _)
-theorem RESTRICTION_def {A B : Type _} [Nonempty A] [Nonempty B] : (@RESTRICTION A B _ _) = (fun _48234 : A -> Prop => fun _48235 : A -> B => fun _48236 : A => @COND B _ (@IN A _ _48236 _48234) (_48235 _48236) (@ARB B _)) := by apply Eq.refl (@RESTRICTION A B _ _)
+open Classical in
+noncomputable def RESTRICTION {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> A -> B := fun (S : Set A) f a => if h: a ∈ S then S.restrict f ⟨a,h⟩ else (@ARB B _)
 
-noncomputable def cartesian_product {A K : Type _} [Nonempty A] [Nonempty K] : (K -> Prop) -> (K -> A -> Prop) -> (K -> A) -> Prop := fun _48429 : K -> Prop => fun _48430 : K -> A -> Prop => @GSPEC (K -> A) _ (fun GEN_PVAR_142 : K -> A => ∃ f : K -> A, @SETSPEC (K -> A) _ GEN_PVAR_142 ((@EXTENSIONAL K A _ _ _48429 f) ∧ (∀ i : K, (@IN K _ i _48429) -> @IN A _ (f i) (_48430 i))) f)
-theorem cartesian_product_def {A K : Type _} [Nonempty A] [Nonempty K] : (@cartesian_product A K _ _) = (fun _48429 : K -> Prop => fun _48430 : K -> A -> Prop => @GSPEC (K -> A) _ (fun GEN_PVAR_142 : K -> A => ∃ f : K -> A, @SETSPEC (K -> A) _ GEN_PVAR_142 ((@EXTENSIONAL K A _ _ _48429 f) ∧ (∀ i : K, (@IN K _ i _48429) -> @IN A _ (f i) (_48430 i))) f)) := by apply Eq.refl (@cartesian_product A K _ _)
+theorem RESTRICTION_def {A B : Type _} [Nonempty A] [Nonempty B] : (@RESTRICTION A B _ _) = (fun _48234 : A -> Prop => fun _48235 : A -> B => fun _48236 : A => @COND B _ (@IN A _ _48236 _48234) (_48235 _48236) (@ARB B _)) := by
+  unfold RESTRICTION COND IN
+  funext S f x
+  split_ifs <;> expose_names
+  · simp_all only [Set.restrict_apply]
+  · rfl
+
+/--
+Let `S : Set K` and `F : Set (K → A)`, `cartesian_product S F` is the set of functions from `K → A` such that for every `k ∈ S`, it gives the set `F k`.
+-/
+noncomputable def cartesian_product {A K : Type _} [Nonempty A] [Nonempty K] : (K -> Prop) -> (K -> A -> Prop) -> (K -> A) -> Prop := fun S F => Set.pi {k | S k} (fun k => F k)
+theorem cartesian_product_def {A K : Type _} [Nonempty A] [Nonempty K] : (@cartesian_product A K _ _) = (fun _48429 : K -> Prop => fun _48430 : K -> A -> Prop => @GSPEC (K -> A) _ (fun GEN_PVAR_142 : K -> A => ∃ f : K -> A, @SETSPEC (K -> A) _ GEN_PVAR_142 ((@EXTENSIONAL K A _ _ _48429 f) ∧ (∀ i : K, (@IN K _ i _48429) -> @IN A _ (f i) (_48430 i))) f)) := by
+  unfold cartesian_product Set.pi
+  simp only [Set.mem_setOf_eq, SETSPEC, EXTENSIONAL, ARB, IN, GSPEC, id]
+  funext S F f
+  apply Eq.propIntro <;> intro h
+  · refine ⟨f,⟨?_,?_⟩⟩
+    · constructor
+      · sorry
+      · sorry
+    · grind
+  · sorry
 
 noncomputable def product_map {A B K : Type _} [Nonempty A] [Nonempty B] [Nonempty K] : (K -> Prop) -> (K -> A -> B) -> (K -> A) -> K -> B := fun _49478 : K -> Prop => fun _49479 : K -> A -> B => fun x : K -> A => @RESTRICTION K B _ _ _49478 (fun i : K => _49479 i (x i))
 theorem product_map_def {A B K : Type _} [Nonempty A] [Nonempty B] [Nonempty K] : (@product_map A B K _ _ _) = (fun _49478 : K -> Prop => fun _49479 : K -> A -> B => fun x : K -> A => @RESTRICTION K B _ _ _49478 (fun i : K => _49479 i (x i))) := by apply Eq.refl (@product_map A B K _ _ _)
