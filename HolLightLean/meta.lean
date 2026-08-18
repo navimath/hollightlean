@@ -30,25 +30,64 @@ elab "epsilon_tac" : tactic =>
         | _ => throwError "Right hand side is not of the form ε P r"
     | _ => throwError "Goal is not an equality"
 
+/--
+Shared finishing step
+-/
+def partTacFinish (lemmaName : Lean.Name) (realArgs : Nat) (goalMvar : Lean.MVarId)
+    (lhs a : Lean.Expr) (leadingArgs : Array (Option Lean.Expr)) (P : Lean.Expr) :
+    Lean.Elab.Tactic.TacticM Unit := do
+  let x := lhs.getAppPrefix ((Array.size lhs.getAppArgs) - realArgs)
+  let β ← Lean.Meta.whnf (← Lean.Meta.inferType a)
+  let f := .lam `_ β x .default
+  let partial_app ← Lean.Meta.mkAppOptM lemmaName (leadingArgs ++ #[some f, P])
+  let newMvars ← goalMvar.apply partial_app
+  Lean.Elab.Term.synthesizeSyntheticMVarsNoPostponing
+  Lean.Elab.Tactic.replaceMainGoal newMvars
+
 elab "part_tac_1" Q:term : tactic =>
   Lean.Elab.Tactic.withMainContext do
-    let Q' ←  Lean.Elab.Tactic.elabTerm Q none
+    let Q' ← Lean.Elab.Tactic.elabTerm Q none
     let goalType ← Lean.Elab.Tactic.getMainTarget
     let goalMvar ← Lean.Elab.Tactic.getMainGoal
     match_expr goalType with
     | Eq _ lhs rhs =>
-      let x := lhs.getAppPrefix ((Array.size lhs.getAppArgs) - 1)
       match_expr rhs with
-        | Classical.epsilon _ _ P a S =>
-          let β ← Lean.Meta.whnf (← Lean.Meta.inferType a)
-          let f := .lam `_ β x .default
-          let partial_app ←  Lean.Meta.mkAppOptM
-            `partial_align_1 #[none, none, none, none, a, S, Q', some f, P]
-          let newMvars ← goalMvar.apply partial_app
-          Lean.Elab.Term.synthesizeSyntheticMVarsNoPostponing
-          Lean.Elab.Tactic.replaceMainGoal newMvars
-        | _ => throwError "Right hand side is not of the form ε P a r"
+      | Classical.epsilon _ _ P a S =>
+        partTacFinish `partial_align_1 1 goalMvar lhs a #[none, none, none, none, a, S, Q'] P
+      | _ => throwError "Right hand side is not of the form ε P uv0 x"
     | _ => throwError "Goal is not an equality"
+
+elab "part_tac_2" Q:term : tactic =>
+  Lean.Elab.Tactic.withMainContext do
+    let Q' ← Lean.Elab.Tactic.elabTerm Q none
+    let goalType ← Lean.Elab.Tactic.getMainTarget
+    let goalMvar ← Lean.Elab.Tactic.getMainGoal
+    match_expr goalType with
+    | Eq _ lhs rhs =>
+      match_expr rhs with
+      | Classical.epsilon _ _ P a x S =>
+        let leadingArgs : Array (Option Lean.Expr) := #[none, none, none, none, none, a, x, S, Q']
+        partTacFinish `partial_align_2 2 goalMvar lhs a leadingArgs P
+      | _ => throwError "Right hand side is not of the form ε P uv0 x y"
+    | _ => throwError "Goal is not an equality"
+
+elab "part_tac_3" Q:term : tactic =>
+  Lean.Elab.Tactic.withMainContext do
+    let Q' ← Lean.Elab.Tactic.elabTerm Q none
+    let goalType ← Lean.Elab.Tactic.getMainTarget
+    let goalMvar ← Lean.Elab.Tactic.getMainGoal
+    match_expr goalType with
+    | Eq _ lhs rhs =>
+      match_expr rhs with
+      | Classical.epsilon _ _ P a x y S =>
+        let leadingArgs : Array (Option Lean.Expr) :=
+          #[none, none, none, none, none, none, none, a, x, y, S, Q']
+        partTacFinish `partial_align_3 3 goalMvar lhs a leadingArgs P
+      | _ => throwError "Right hand side is not of the form ε P uv0 x y z"
+    | _ => throwError "Goal is not an equality"
+
+macro "part_tac" Q:term : tactic =>
+  `(tactic| first | part_tac_1 $Q | part_tac_2 $Q | part_tac_3 $Q)
 
 /- elab "one_set_align"  : tactic => do
   Lean.Elab.Tactic.evalTactic (← `(tactic|

@@ -9,42 +9,6 @@ set_option linter.style.longLine false
 open real
 
 @[reducible]
-noncomputable def _FALSITY_ : Prop := False
-theorem _FALSITY__def : _FALSITY_ = False := by apply Eq.refl _FALSITY_
-@[reducible]
-noncomputable def o {A B C : Type*} [Nonempty A] [Nonempty B] [Nonempty C] : (B -> C) -> (A -> B) -> A -> C := fun f : B -> C => fun g : A -> B => fun x : A => f (g x)
-theorem o_def {A B C : Type*} [Nonempty A] [Nonempty B] [Nonempty C] : (@o A B C _ _ _) = (fun f : B -> C => fun g : A -> B => fun x : A => f (g x)) := by apply Eq.refl (@o A B C _ _ _)
-@[reducible]
-noncomputable def I {A : Type*} [Nonempty A] : A -> A := fun x : A => x
-theorem I_def {A : Type*} [Nonempty A] : (@I A _) = (fun x : A => x) := by apply Eq.refl (@I A _)
-@[reducible]
-noncomputable def hashek : Prop := True
-theorem hashek_def : hashek = True := by apply Eq.refl hashek
-@[reducible]
-noncomputable def LET {A B : Type*} [Nonempty A] [Nonempty B] : (A -> B) -> A -> B := fun f : A -> B => fun x : A => f x
-theorem LET_def {A B : Type*} [Nonempty A] [Nonempty B] : (@LET A B _ _) = (fun f : A -> B => fun x : A => f x) := by apply Eq.refl (@LET A B _ _)
-@[reducible]
-noncomputable def LET_END {A : Type*} [Nonempty A] : A -> A := fun t : A => t
-theorem LET_END_def {A : Type*} [Nonempty A] : (@LET_END A _) = (fun t : A => t) := by apply Eq.refl (@LET_END A _)
-@[reducible]
-noncomputable def GABS {A : Type*} [Nonempty A] : (A -> Prop) -> A := fun P : A -> Prop => @Classical.epsilon A _ P
-theorem GABS_def {A : Type*} [Nonempty A] : (@GABS A _) = (fun P : A -> Prop => @Classical.epsilon A _ P) := by apply Eq.refl (@GABS A _)
-@[reducible]
-noncomputable def _SEQPATTERN {A B : Type*} [Nonempty A] [Nonempty B] : (A -> B -> Prop) -> (A -> B -> Prop) -> A -> B -> Prop := fun r : A -> B -> Prop => fun s : A -> B -> Prop => fun x : A => @COND (B -> Prop) _ (∃ y : B, r x y) (r x) (s x)
-theorem _SEQPATTERN_def {A B : Type*} [Nonempty A] [Nonempty B] : (@_SEQPATTERN A B _ _) = (fun r : A -> B -> Prop => fun s : A -> B -> Prop => fun x : A => @COND (B -> Prop) _ (∃ y : B, r x y) (r x) (s x)) := by apply Eq.refl (@_SEQPATTERN A B _ _)
-@[reducible]
-noncomputable def _UNGUARDED_PATTERN : Prop -> Prop -> Prop := fun p : Prop => fun r : Prop => p ∧ r
-theorem _UNGUARDED_PATTERN_def : _UNGUARDED_PATTERN = (fun p : Prop => fun r : Prop => p ∧ r) := by apply Eq.refl _UNGUARDED_PATTERN
-@[reducible]
-noncomputable def _GUARDED_PATTERN : Prop -> Prop -> Prop -> Prop := fun p : Prop => fun g : Prop => fun r : Prop => p ∧ (g ∧ r)
-theorem _GUARDED_PATTERN_def : _GUARDED_PATTERN = (fun p : Prop => fun g : Prop => fun r : Prop => p ∧ (g ∧ r)) := by apply Eq.refl _GUARDED_PATTERN
-@[reducible]
-noncomputable def _MATCH {A B : Type*} [Nonempty A] [Nonempty B] : A -> (A -> B -> Prop) -> B := fun e : A => fun r : A -> B -> Prop => @COND B _ (@EXISTSUNIQUE B _ (r e)) (@Classical.epsilon B _ (r e)) (@Classical.epsilon B _ (fun z : B => False))
-theorem _MATCH_def {A B : Type*} [Nonempty A] [Nonempty B] : (@_MATCH A B _ _) = (fun e : A => fun r : A -> B -> Prop => @COND B _ (@EXISTSUNIQUE B _ (r e)) (@Classical.epsilon B _ (r e)) (@Classical.epsilon B _ (fun z : B => False))) := by apply Eq.refl (@_MATCH A B _ _)
-@[reducible]
-noncomputable def _FUNCTION {A B : Type*} [Nonempty A] [Nonempty B] : (A -> B -> Prop) -> A -> B := fun r : A -> B -> Prop => fun x : A => @COND B _ (@EXISTSUNIQUE B _ (r x)) (@Classical.epsilon B _ (r x)) (@Classical.epsilon B _ (fun z : B => False))
-theorem _FUNCTION_def {A B : Type*} [Nonempty A] [Nonempty B] : (@_FUNCTION A B _ _) = (fun r : A -> B -> Prop => fun x : A => @COND B _ (@EXISTSUNIQUE B _ (r x)) (@Classical.epsilon B _ (r x)) (@Classical.epsilon B _ (fun z : B => False))) := by apply Eq.refl (@_FUNCTION A B _ _)
-@[reducible]
 noncomputable def CURRY {A B C : Type*} [Nonempty A] [Nonempty B] [Nonempty C] : ((prod A B) -> C) -> A -> B -> C := fun _1283 : (prod A B) -> C => fun _1284 : A => fun _1285 : B => _1283 (@prod_mk A B _ _ _1284 _1285)
 theorem CURRY_def {A B C : Type*} [Nonempty A] [Nonempty B] [Nonempty C] : (@CURRY A B C _ _ _) = (fun _1283 : (prod A B) -> C => fun _1284 : A => fun _1285 : B => _1283 (@prod_mk A B _ _ _1284 _1285)) := by apply Eq.refl (@CURRY A B C _ _ _)
 @[reducible]
