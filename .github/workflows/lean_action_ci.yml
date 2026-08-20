@@ -15,16 +15,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v5
-      - uses: leanprover/lean-action@v1
+#    steps:
+      #- uses: actions/checkout@v5
+      #- uses: leanprover/lean-action@v1
       # Docs are deployed to GitHub Pages, which needs `pages: write` /
       # `id-token: write`. Those permissions are not granted to pull requests
       # from forks, and a fork has no Pages site to deploy to, so restrict this
       # step to direct pushes to `main` on this repository. Every other trigger
       # (PRs, other branches, forks, workflow_dispatch) still runs the build.
-      - uses: leanprover-community/docgen-action@v1
-        if: >-
-          github.event_name == 'push'
-          && github.ref == 'refs/heads/main'
-          && !github.event.repository.fork
+      # - uses: leanprover-community/docgen-action@v1
+      #  if: >-
+      #    github.event_name == 'push'
+      #    && github.ref == 'refs/heads/main'
+      #    && !github.event.repository.fork

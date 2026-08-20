@@ -42,6 +42,9 @@ noncomputable instance instFieldReal : Field real where
   right_distrib := thm_REAL_ADD_RDISTRIB
   neg_add_cancel := thm_REAL_ADD_LINV
   exists_pair_ne := ⟨real_of_num 0, real_of_num 1, by intro h; rw[thm_REAL_OF_NUM_EQ 0 1] at h; lia⟩
+  npow := fun n a => real_pow a n
+  npow_zero := fun a => (thm_real_pow a).1
+  npow_succ := fun n a => ((thm_real_pow a).2 n).trans (thm_REAL_MUL_SYM a (real_pow a n))
   nsmul := nsmulRec
   zsmul := zsmulRec
   nnqsmul := _
@@ -563,7 +566,7 @@ theorem real_abs_def : abs = (fun _24160 : Real => @COND Real _ (real_le (real_o
 
 noncomputable def real_pow : Real →  Nat→ Real := fun x y =>
   iso_real_Real
-    (@Pow.pow real Int _
+    (@Pow.pow real Nat _
     (iso_Real_real x)
       y)
 
@@ -620,86 +623,117 @@ theorem real_sgn_def : Real.sign = (fun _26684 : Real => @COND Real _ (real_lt (
   · (expose_names; exact Real.sign_of_neg h_1)
   · simp_all ; grind
 
+/-!
+### `SQRT`
 
-/- noncomputable def real_SQRT : Real -> Real := fun x =>
-  iso_real_Real (
-    HolLightLean.hol_up_real_terms.SQRT (iso_Real_real x)
-  )
-
-theorem real_SQRT_eq : real_SQRT = Real.sqrt := by
-  funext x
-  unfold real_SQRT SQRT
-  sorry
+`SQRT` is transported from `real` to `ℝ` like the other operations, but its `_eq` lemma
+cannot be a one-line `map_*`: HOL Light defines it with `ε`, so it is not the image of a
+homomorphism.  Instead we transport `sgn`, `pow` and `abs` across the isomorphism and use
+that the specification determines its solution uniquely (`eq_of_sign_eq_of_sq_eq`).
 -/
 
+theorem iso_inj {a b : real} (h : iso_real_Real a = iso_real_Real b) : a = b :=
+  iso_real_Real.injective h
+
+theorem iso_pow (a : real) (n : Nat) : iso_real_Real (HolLightLean.hol_up_real_terms.real_pow a n) = (iso_real_Real a) ^ n :=
+  map_pow iso_real_Real a n
+
+theorem iso_abs (a : real) : iso_real_Real (HolLightLean.hol_up_real_terms.real_abs a) = |iso_real_Real a| := by
+  have h0 : iso_real_Real (0 : real) = 0 := map_zero _
+  unfold HolLightLean.hol_up_real_terms.real_abs COND
+  split_ifs with h
+  · have hge : (0:ℝ) ≤ iso_real_Real a := by
+      rw [← h0] ; exact (map_le_map_iff iso_real_Real).2 h
+    exact (abs_of_nonneg hge).symm
+  · have hlt : iso_real_Real a < 0 := by
+      rw [← h0] ; exact (map_lt_map_iff iso_real_Real).2 (lt_of_not_ge h)
+    change iso_real_Real (-a) = _
+    rw [map_neg, abs_of_neg hlt]
+
+theorem iso_sgn (a : real) : iso_real_Real (HolLightLean.hol_up_real_terms.real_sgn a) = Real.sign (iso_real_Real a) := by
+  have h0 : iso_real_Real (0 : real) = 0 := map_zero _
+  have h1 : iso_real_Real (1 : real) = 1 := map_one _
+  unfold HolLightLean.hol_up_real_terms.real_sgn COND
+  split_ifs with hp hn
+  · have hpos : (0:ℝ) < iso_real_Real a := by
+      rw [← h0] ; exact (map_lt_map_iff iso_real_Real).2 hp
+    rw [Real.sign_of_pos hpos] ; exact h1
+  · have hneg : iso_real_Real a < 0 := by
+      rw [← h0] ; exact (map_lt_map_iff iso_real_Real).2 hn
+    rw [Real.sign_of_neg hneg]
+    change iso_real_Real (-(1:real)) = -1
+    rw [map_neg, h1]
+  · have ha : a = 0 := le_antisymm (not_lt.1 hp) (not_lt.1 hn)
+    subst ha
+    change iso_real_Real (0:real) = Real.sign (iso_real_Real (0:real))
+    rw [h0, Real.sign_zero]
+
 noncomputable def SQRT_HOL := fun x : Real => if x ≥ 0 then Real.sqrt x else - (Real.sqrt (-x))
---TODO: Correct this proof
+
+theorem eq_of_sign_eq_of_sq_eq {x y : ℝ} (hs : Real.sign x = Real.sign y) (hq : x ^ 2 = y ^ 2) :
+    x = y := by
+  have habs : |x| = |y| := by
+    have h := congrArg Real.sqrt hq
+    rwa [Real.sqrt_sq_eq_abs, Real.sqrt_sq_eq_abs] at h
+  rcases abs_eq_abs.1 habs with h | h
+  · exact h
+  · subst h
+    rw [Real.sign_neg] at hs
+    have hy : Real.sign y = 0 := by linarith
+    rw [Real.sign_eq_zero_iff] at hy
+    simp [hy]
+
+theorem sqrt_hol_spec (s : ℝ) :
+    Real.sign (SQRT_HOL s) = Real.sign s ∧ (SQRT_HOL s) ^ 2 = |s| := by
+  unfold SQRT_HOL
+  rcases lt_trichotomy s 0 with h | h | h
+  · rw [if_neg (by simpa using h)]
+    refine ⟨?_, ?_⟩
+    · rw [Real.sign_neg, Real.sign_of_pos (Real.sqrt_pos.2 (neg_pos.2 h)), Real.sign_of_neg h]
+    · rw [neg_sq, Real.sq_sqrt (neg_nonneg.2 h.le), abs_of_neg h]
+  · subst h ; simp
+  · rw [if_pos h.le]
+    exact ⟨by rw [Real.sign_of_pos (Real.sqrt_pos.2 h), Real.sign_of_pos h],
+           by rw [Real.sq_sqrt h.le, abs_of_pos h]⟩
+
+noncomputable def real_SQRT : Real -> Real := fun x =>
+  iso_real_Real (HolLightLean.hol_up_real_terms.SQRT (iso_Real_real x))
+
+theorem real_SQRT_eq : real_SQRT = SQRT_HOL := by
+  have hsymm : ∀ y : Real, iso_real_Real (iso_Real_real y) = y :=
+    fun y => iso_real_Real.apply_symm_apply y
+  have hSQ : ∀ w : real, HolLightLean.hol_up_real_terms.SQRT w = Classical.epsilon (fun y : real =>
+      HolLightLean.hol_up_real_terms.real_sgn y = HolLightLean.hol_up_real_terms.real_sgn w ∧
+      HolLightLean.hol_up_real_terms.real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero))) = HolLightLean.hol_up_real_terms.real_abs w) :=
+    fun w => congrFun HolLightLean.hol_up_real_terms.SQRT_def w
+  funext x
+  have hxz : iso_real_Real (iso_Real_real x) = x := hsymm x
+  have hsat : ∃ y : real, HolLightLean.hol_up_real_terms.real_sgn y = HolLightLean.hol_up_real_terms.real_sgn (iso_Real_real x) ∧
+      HolLightLean.hol_up_real_terms.real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero))) = HolLightLean.hol_up_real_terms.real_abs (iso_Real_real x) := by
+    refine ⟨iso_Real_real (SQRT_HOL x), ?_, ?_⟩
+    · refine iso_inj ?_
+      rw [iso_sgn, iso_sgn, hsymm, hxz]
+      exact (sqrt_hol_spec x).1
+    · refine iso_inj ?_
+      rw [iso_pow, iso_abs, hsymm, hxz]
+      exact (sqrt_hol_spec x).2
+  have hspec := Classical.epsilon_spec hsat
+  rw [← hSQ (iso_Real_real x)] at hspec
+  have hs1 : Real.sign (real_SQRT x) = Real.sign x := by
+    have h := congrArg iso_real_Real hspec.1
+    rwa [iso_sgn, iso_sgn, hxz] at h
+  have hs2 : (real_SQRT x) ^ 2 = |x| := by
+    have h := congrArg iso_real_Real hspec.2
+    rwa [iso_pow, iso_abs, hxz] at h
+  exact eq_of_sign_eq_of_sq_eq (hs1.trans (sqrt_hol_spec x).1.symm)
+    (hs2.trans (sqrt_hol_spec x).2.symm)
+
 theorem SQRT_def : SQRT_HOL = (fun _27235 : Real => @Classical.epsilon Real _ (fun y : Real => ((real_sgn y) = (real_sgn _27235)) ∧ ((real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero)))) = (real_abs _27235)))) := by
-  simp only [real_sgn_eq, real_pow_eq, _root_.real_abs]
+  simp only [real_sgn_eq, real_pow_eq, _root_.real_abs, NUMERAL, BIT0, BIT1]
   funext s
+  change SQRT_HOL s = Classical.epsilon (fun y : ℝ => Real.sign y = Real.sign s ∧ y ^ 2 = |s|)
   apply align_epsilon
-  · constructor
-    · by_cases h : s < 0
-      · rw[Real.sign_of_neg h, SQRT_HOL]
-        split_ifs
-        · grind
-        · simp_all only [ge_iff_le, not_le]
-          have : √(-s) > 0 := by refine Real.sqrt_pos_of_pos ?_ ; simp_all only [Left.neg_pos_iff]
-          rw [@Real.sign_neg, Real.sign_of_pos this]
-      · simp only [not_lt] at h
-        by_cases h : s > 0
-        · simp only [SQRT_HOL, ge_iff_le]
-          split_ifs
-          · simp_all only [gt_iff_lt] ; rw[Real.sign_of_pos h, Real.sign_of_pos (Real.sqrt_pos_of_pos h)]
-          · grind
-        · simp_all only [gt_iff_lt, not_lt]
-          expose_names
-          have : s = 0 := by exact eq_of_le_of_ge h h_1
-          rw[this]
-          simp[SQRT_HOL]
-    · unfold SQRT_HOL
-      split_ifs <;>
-      simp_all[Pow.pow] <;>
-      grind
-  · rintro x ⟨h1l,h1r⟩ ⟨h2l,h2r⟩
-    have hsign := Eq.trans h1l h2l.symm
-    have hpow := Eq.trans h1r h2r.symm
-    clear h1l h1r h2l h2r
-    by_cases hx : x < 0
-    · rw[Real.sign_of_neg hx] at hsign
-      have : s < 0 := by unfold SQRT_HOL at * ;
-                          split_ifs at hsign ;
-                          · simp_all only [Pow.pow, NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero,
-                            Nat.succ_eq_add_one, zero_add, Nat.reduceAdd, ge_iff_le, ↓reduceIte,
-                            npow_eq_pow, Real.sq_sqrt]; rw[Real.sqrt_sq_eq_abs x] at hsign ; have : Real.sign (abs x) = 1 := Real.sign_of_pos (abs_pos_of_neg hx) ; rw[this] at hsign ; exfalso ; norm_num at hsign ;;
-                          · grind
-      unfold SQRT_HOL at *
-      split_ifs
-      · grind
-      · simp_all only [ge_iff_le, ↓reduceIte, Pow.pow, NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero,
-        Nat.succ_eq_add_one, zero_add, Nat.reduceAdd, npow_eq_pow, even_two, Even.neg_pow, not_le]
-        have : √(-s) ^ 2 = √(-s) * √(-s) := by grind
-        rw[this] at hpow
-        have : -s ≥ 0 := by grind
-        simp only [Real.mul_self_sqrt (this)] at hpow
-        rw[hpow]
-        have := Real.sqrt_mul_self_eq_abs x
-        grind
-    · simp_all only [NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero, Nat.succ_eq_add_one, zero_add,
-      Nat.reduceAdd, not_lt]
-      by_cases hx : x > 0
-      · unfold SQRT_HOL at *
-        rw[Real.sign_of_pos hx] at hsign
-        split_ifs at *
-        · simp[Pow.pow] at hpow
-          simp_all only [gt_iff_lt, ge_iff_le, Real.sq_sqrt, Real.sqrt_sq]
-        · simp_all only [gt_iff_lt, ge_iff_le, not_le, Real.sign, Left.neg_neg_iff, Real.sqrt_pos,
-          Left.neg_pos_iff, ↓reduceIte, Pow.pow, npow_eq_pow, even_two, Even.neg_pow,
-          Real.sqrt_nonneg, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, pow_left_inj₀] ; exfalso ; norm_num at hsign
-      · simp_all only [gt_iff_lt, not_lt]
-        expose_names
-        have : x = 0 := by exact eq_of_le_of_ge hx hx_1
-        subst this
-        simp only [Pow.pow, npow_eq_pow, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow,
-          pow_eq_zero_iff] at hpow
-        exact hpow
+  · exact sqrt_hol_spec s
+  · rintro x _ ⟨hx1, hx2⟩
+    exact eq_of_sign_eq_of_sq_eq (((sqrt_hol_spec s).1).trans hx1.symm)
+      (((sqrt_hol_spec s).2).trans hx2.symm)
