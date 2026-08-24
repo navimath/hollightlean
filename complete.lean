@@ -5705,10 +5705,13 @@ theorem dimindex_def {A : Type _} [Nonempty A] : (@dimindex A _) = (fun _94242 :
 /-!
 ## Vectors and finite index types
 
-These follow HOL Light's type-definition mechanism, as the Rocq alignment does: each index
-type is the subtype of `Nat` cut out by a range predicate, together with a proof that the
-predicate is inhabited by `1`.  `SUBTYPE`/`mk`/`dest` from `conectors.lean` then supply the
-constructor, the destructor and the two defining axioms.
+HOL Light builds its index types as subtypes of `Nat` cut out by a range predicate.  The
+Rocq alignment replaces each of them by mathcomp's ordinal type `'I_n`, so that the index
+types are honest finite types rather than opaque subtypes; the Lean counterpart is `Fin n`.
+`cart A B` then becomes the plain function type `finite_image B -> A` (Rocq wraps it in a
+mathcomp row vector to reuse that library; in Lean the function type already carries every
+Pi instance), and `tybit0` / `tybit1` become the index types they denote, embedded into
+`recspace` by a single nullary constructor.
 -/
 
 open Classical in
@@ -5719,183 +5722,242 @@ theorem one_le_dimindex {A : Type _} [Nonempty A] : 1 ≤ @dimindex A _ (@UNIV A
   · rw [if_pos h] ; haveI := h ; exact Nat.card_pos
   · rw [if_neg h]
 
-def finite_image_pred (A : Type _) [Nonempty A] : Nat -> Prop :=
-  fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero)) (@dimindex A _ (@UNIV A _)))
+/-!
+### Index types
 
-/-- It is inhabited by `1`, which is what legitimises the type definition. -/
-theorem finite_image_gen (A : Type _) [Nonempty A] : finite_image_pred A 1 :=
-  Set.mem_Icc.2 ⟨le_refl 1, one_le_dimindex⟩
+`enum_type h`, for `h : 0 < n`, is the HOL Light index type with `n` elements.  HOL Light
+numbers its indices `1 .. n` and `Fin n` numbers them `0 .. n - 1`, so the constructor
+subtracts one and the destructor adds one.  An out-of-range index is sent to `0`; HOL Light
+leaves that value unspecified, so any element of the type will do.
+-/
 
-def finite_image (A : Type _) [Nonempty A] := SUBTYPE (finite_image_gen A)
+abbrev enum_type {n : Nat} (_ : 0 < n) : Type := Fin n
 
-instance {A : Type _} [Nonempty A] : Nonempty (finite_image A) :=
-  instNonemptySUBTYPE (finite_image_gen A)
+instance {n : Nat} (h : 0 < n) : Nonempty (enum_type h) := ⟨⟨0, h⟩⟩
+
+def mk_enum {n : Nat} (h : 0 < n) (k : Nat) : enum_type h :=
+  if hk : k - 1 < n then ⟨k - 1, hk⟩ else ⟨0, h⟩
+
+def dest_enum {n : Nat} (k : Fin n) : Nat := k.val + 1
+
+theorem mk_dest_enum {n : Nat} (h : 0 < n) (k : enum_type h) :
+    mk_enum h (dest_enum k) = k := by
+  have hk : k.val + 1 - 1 < n := k.isLt
+  simp only [mk_enum, dest_enum, dif_pos hk]
+  exact Fin.ext rfl
+
+theorem dest_mk_enum {n : Nat} (h : 0 < n) (k : Nat) :
+    (@IN Nat _ k (dotdot (NUMERAL (BIT1 Nat.zero)) n)) = (dest_enum (mk_enum h k) = k) := by
+  have hmem : @IN Nat _ k (dotdot (NUMERAL (BIT1 Nat.zero)) n) ↔ (1 ≤ k ∧ k ≤ n) := Set.mem_Icc
+  apply propext
+  rw [hmem]
+  unfold dest_enum mk_enum
+  constructor
+  · rintro ⟨h1, h2⟩
+    rw [dif_pos (by omega : k - 1 < n)]
+    change k - 1 + 1 = k
+    omega
+  · intro he
+    by_cases hk : k - 1 < n
+    · rw [dif_pos hk] at he
+      have he' : k - 1 + 1 = k := he
+      omega
+    · rw [dif_neg hk] at he
+      have he' : (0 : Nat) + 1 = k := he
+      omega
+
+/-! ### `finite_image`: the index type of `A` -/
+
+theorem dimindex_pos (A : Type _) [Nonempty A] : 0 < @dimindex A _ (@UNIV A _) :=
+  one_le_dimindex
+
+noncomputable abbrev finite_image (A : Type _) [Nonempty A] :=
+  enum_type (dimindex_pos A)
+
+instance {A : Type _} [Nonempty A] : Nonempty (finite_image A) := ⟨⟨0, dimindex_pos A⟩⟩
 
 noncomputable def finite_index {A : Type _} [Nonempty A] : Nat -> finite_image A :=
-  mk (finite_image_gen A)
+  mk_enum (dimindex_pos A)
 
-def dest_finite_image {A : Type _} [Nonempty A] : (finite_image A) -> Nat :=
-  dest (finite_image_gen A)
+noncomputable def dest_finite_image {A : Type _} [Nonempty A] : (finite_image A) -> Nat :=
+  dest_enum
 
 theorem axiom_27 : ∀ {A : Type*} [Nonempty A] (a : finite_image A), (@finite_index A _ (@dest_finite_image A _ a)) = a :=
-  fun {A} _ => mk_dest (finite_image_gen A)
+  fun {A} _ => mk_dest_enum (dimindex_pos A)
 
 theorem axiom_28 : ∀ {A : Type*} [Nonempty A] (r : Nat), ((fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero)) (@dimindex A _ (@UNIV A _)))) r) = ((@dest_finite_image A _ (@finite_index A _ r)) = r) :=
-  fun {A} _ => dest_mk (finite_image_gen A)
+  fun {A} _ => dest_mk_enum (dimindex_pos A)
 
-def cart_pred (A B : Type _) [Nonempty A] [Nonempty B] : ((finite_image B) -> A) -> Prop :=
-  fun _ => True
+/-! ### `cart`: `A` to the power of the index type of `B` -/
 
-theorem cart_gen (A B : Type _) [Nonempty A] [Nonempty B] :
-    cart_pred A B (fun _ => Classical.arbitrary A) := trivial
-
-noncomputable def cart (A B : Type _) [Nonempty A] [Nonempty B] := SUBTYPE (cart_gen A B)
-
-instance {A B : Type _} [Nonempty A] [Nonempty B] : Nonempty (cart A B) :=
-  instNonemptySUBTYPE (cart_gen A B)
+noncomputable abbrev cart (A B : Type _) [Nonempty A] [Nonempty B] :=
+  (finite_image B) -> A
 
 noncomputable def mk_cart {A B : Type _} [Nonempty A] [Nonempty B] :
-    ((finite_image B) -> A) -> cart A B := mk (cart_gen A B)
+    ((finite_image B) -> A) -> cart A B := id
 
 noncomputable def dest_cart {A B : Type _} [Nonempty A] [Nonempty B] :
-    (cart A B) -> (finite_image B) -> A := dest (cart_gen A B)
+    (cart A B) -> (finite_image B) -> A := id
 
-def finite_sum_pred (A B : Type _) [Nonempty A] [Nonempty B] : Nat -> Prop :=
-  fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero))
-    (Nat.add (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))))
+theorem axiom_29 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : cart A B), (@mk_cart A B _ _ (@dest_cart A B _ _ a)) = a :=
+  fun {A B} _ _ _ => rfl
 
-theorem finite_sum_gen (A B : Type _) [Nonempty A] [Nonempty B] : finite_sum_pred A B 1 :=
-  Set.mem_Icc.2 ⟨le_refl 1, le_trans one_le_dimindex (Nat.le_add_right _ _)⟩
+theorem axiom_30 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : (finite_image B) -> A), ((fun f : (finite_image B) -> A => True) r) = ((@dest_cart A B _ _ (@mk_cart A B _ _ r)) = r) :=
+  fun {A B} _ _ r => (eq_true (rfl : (@dest_cart A B _ _ (@mk_cart A B _ _ r)) = r)).symm
 
-def finite_sum (A B : Type _) [Nonempty A] [Nonempty B] := SUBTYPE (finite_sum_gen A B)
+/-! ### Arithmetic on index types -/
+
+theorem finite_sum_pos (A B : Type _) [Nonempty A] [Nonempty B] :
+    0 < Nat.add (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _)) :=
+  Nat.lt_of_lt_of_le (dimindex_pos A) (Nat.le_add_right _ _)
+
+noncomputable abbrev finite_sum (A B : Type _) [Nonempty A] [Nonempty B] :=
+  enum_type (finite_sum_pos A B)
 
 instance {A B : Type _} [Nonempty A] [Nonempty B] : Nonempty (finite_sum A B) :=
-  instNonemptySUBTYPE (finite_sum_gen A B)
+  ⟨⟨0, finite_sum_pos A B⟩⟩
 
 noncomputable def mk_finite_sum {A B : Type _} [Nonempty A] [Nonempty B] :
-    Nat -> finite_sum A B := mk (finite_sum_gen A B)
+    Nat -> finite_sum A B := mk_enum (finite_sum_pos A B)
 
-def dest_finite_sum {A B : Type _} [Nonempty A] [Nonempty B] :
-    (finite_sum A B) -> Nat := dest (finite_sum_gen A B)
+noncomputable def dest_finite_sum {A B : Type _} [Nonempty A] [Nonempty B] :
+    (finite_sum A B) -> Nat := dest_enum
+
+theorem axiom_31 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : finite_sum A B), (@mk_finite_sum A B _ _ (@dest_finite_sum A B _ _ a)) = a :=
+  fun {A B} _ _ => mk_dest_enum (finite_sum_pos A B)
+
+theorem axiom_32 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : Nat), ((fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero)) (Nat.add (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))))) r) = ((@dest_finite_sum A B _ _ (@mk_finite_sum A B _ _ r)) = r) :=
+  fun {A B} _ _ => dest_mk_enum (finite_sum_pos A B)
+
+theorem finite_diff_pos (A B : Type _) [Nonempty A] [Nonempty B] :
+    0 < max (Nat.sub (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))) 1 :=
+  lt_of_lt_of_le Nat.zero_lt_one (le_max_right _ _)
 
 open Classical in
-def finite_diff_pred (A B : Type _) [Nonempty A] [Nonempty B] : Nat -> Prop :=
-  fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero))
+/-- HOL Light guards the subtraction with a `COND`; `max _ 1` is the same number. -/
+theorem finite_diff_bound (A B : Type _) [Nonempty A] [Nonempty B] :
     (@COND Nat _ (Nat.lt (@dimindex B _ (@UNIV B _)) (@dimindex A _ (@UNIV A _)))
       (Nat.sub (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _)))
-      (NUMERAL (BIT1 Nat.zero))))
-
-open Classical in
-theorem finite_diff_gen (A B : Type _) [Nonempty A] [Nonempty B] : finite_diff_pred A B 1 := by
-  refine Set.mem_Icc.2 ⟨le_refl 1, ?_⟩
+      (NUMERAL (BIT1 Nat.zero)))
+      = max (Nat.sub (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))) 1 := by
   unfold COND
   split_ifs with h
   · have h' : @dimindex B _ (@UNIV B _) < @dimindex A _ (@UNIV A _) := h
-    change 1 ≤ (@dimindex A _ (@UNIV A _)) - (@dimindex B _ (@UNIV B _))
+    change (@dimindex A _ (@UNIV A _)) - (@dimindex B _ (@UNIV B _))
+      = max ((@dimindex A _ (@UNIV A _)) - (@dimindex B _ (@UNIV B _))) 1
     omega
-  · exact le_refl 1
+  · have h' : ¬ (@dimindex B _ (@UNIV B _) < @dimindex A _ (@UNIV A _)) := h
+    change (1 : Nat) = max ((@dimindex A _ (@UNIV A _)) - (@dimindex B _ (@UNIV B _))) 1
+    omega
 
-def finite_diff (A B : Type _) [Nonempty A] [Nonempty B] := SUBTYPE (finite_diff_gen A B)
+noncomputable abbrev finite_diff (A B : Type _) [Nonempty A] [Nonempty B] :=
+  enum_type (finite_diff_pos A B)
 
 instance {A B : Type _} [Nonempty A] [Nonempty B] : Nonempty (finite_diff A B) :=
-  instNonemptySUBTYPE (finite_diff_gen A B)
+  ⟨⟨0, finite_diff_pos A B⟩⟩
 
 noncomputable def mk_finite_diff {A B : Type _} [Nonempty A] [Nonempty B] :
-    Nat -> finite_diff A B := mk (finite_diff_gen A B)
+    Nat -> finite_diff A B := mk_enum (finite_diff_pos A B)
 
-def dest_finite_diff {A B : Type _} [Nonempty A] [Nonempty B] :
-    (finite_diff A B) -> Nat := dest (finite_diff_gen A B)
-
-def finite_prod_pred (A B : Type _) [Nonempty A] [Nonempty B] : Nat -> Prop :=
-  fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero))
-    (Nat.mul (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))))
-
-theorem finite_prod_gen (A B : Type _) [Nonempty A] [Nonempty B] : finite_prod_pred A B 1 :=
-  Set.mem_Icc.2 ⟨le_refl 1, Nat.one_le_iff_ne_zero.2
-    (Nat.mul_ne_zero (by have := @one_le_dimindex A _ ; omega)
-                     (by have := @one_le_dimindex B _ ; omega))⟩
-
-def finite_prod (A B : Type _) [Nonempty A] [Nonempty B] := SUBTYPE (finite_prod_gen A B)
-
-instance {A B : Type _} [Nonempty A] [Nonempty B] : Nonempty (finite_prod A B) :=
-  instNonemptySUBTYPE (finite_prod_gen A B)
-
-noncomputable def mk_finite_prod {A B : Type _} [Nonempty A] [Nonempty B] :
-    Nat -> finite_prod A B := mk (finite_prod_gen A B)
-
-def dest_finite_prod {A B : Type _} [Nonempty A] [Nonempty B] :
-    (finite_prod A B) -> Nat := dest (finite_prod_gen A B)
-
-def tybit_pred (X : Type _) [Nonempty X] : (recspace X) -> Prop :=
-  fun a : recspace X => ∀ tybit' : (recspace X) -> Prop,
-    (∀ a' : recspace X, (∃ a2 : X, a' = ((fun a3 : X => @CONSTR X _ (NUMERAL Nat.zero) a3
-      (fun _ : Nat => @BOTTOM X _)) a2)) -> tybit' a') -> tybit' a
-
-theorem tybit_gen (X : Type _) [Nonempty X] :
-    tybit_pred X (@CONSTR X _ (NUMERAL Nat.zero) (Classical.arbitrary X)
-      (fun _ : Nat => @BOTTOM X _)) :=
-  fun _ h => h _ ⟨Classical.arbitrary X, rfl⟩
-
-noncomputable def tybit0 (A : Type _) [Nonempty A] := SUBTYPE (tybit_gen (finite_sum A A))
-
-instance {A : Type _} [Nonempty A] : Nonempty (tybit0 A) :=
-  instNonemptySUBTYPE (tybit_gen (finite_sum A A))
-
-noncomputable def _mk_tybit0 {A : Type _} [Nonempty A] :
-    (recspace (finite_sum A A)) -> tybit0 A := mk (tybit_gen (finite_sum A A))
-
-noncomputable def _dest_tybit0 {A : Type _} [Nonempty A] :
-    (tybit0 A) -> recspace (finite_sum A A) := dest (tybit_gen (finite_sum A A))
-
-noncomputable def tybit1 (A : Type _) [Nonempty A] :=
-  SUBTYPE (tybit_gen (finite_sum (finite_sum A A) Unit))
-
-instance {A : Type _} [Nonempty A] : Nonempty (tybit1 A) :=
-  instNonemptySUBTYPE (tybit_gen (finite_sum (finite_sum A A) Unit))
-
-noncomputable def _mk_tybit1 {A : Type _} [Nonempty A] :
-    (recspace (finite_sum (finite_sum A A) Unit)) -> tybit1 A :=
-  mk (tybit_gen (finite_sum (finite_sum A A) Unit))
-
-noncomputable def _dest_tybit1 {A : Type _} [Nonempty A] :
-    (tybit1 A) -> recspace (finite_sum (finite_sum A A) Unit) :=
-  dest (tybit_gen (finite_sum (finite_sum A A) Unit))
-
-theorem axiom_29 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : cart A B), (@mk_cart A B _ _ (@dest_cart A B _ _ a)) = a :=
-  fun {A B} _ _ => mk_dest (cart_gen A B)
-
-theorem axiom_30 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : (finite_image B) -> A), ((fun f : (finite_image B) -> A => True) r) = ((@dest_cart A B _ _ (@mk_cart A B _ _ r)) = r) :=
-  fun {A B} _ _ => dest_mk (cart_gen A B)
-
-theorem axiom_31 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : finite_sum A B), (@mk_finite_sum A B _ _ (@dest_finite_sum A B _ _ a)) = a :=
-  fun {A B} _ _ => mk_dest (finite_sum_gen A B)
-
-theorem axiom_32 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : Nat), ((fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero)) (Nat.add (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))))) r) = ((@dest_finite_sum A B _ _ (@mk_finite_sum A B _ _ r)) = r) :=
-  fun {A B} _ _ => dest_mk (finite_sum_gen A B)
+noncomputable def dest_finite_diff {A B : Type _} [Nonempty A] [Nonempty B] :
+    (finite_diff A B) -> Nat := dest_enum
 
 theorem axiom_33 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : finite_diff A B), (@mk_finite_diff A B _ _ (@dest_finite_diff A B _ _ a)) = a :=
-  fun {A B} _ _ => mk_dest (finite_diff_gen A B)
+  fun {A B} _ _ => mk_dest_enum (finite_diff_pos A B)
 
 theorem axiom_34 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : Nat), ((fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero)) (@COND Nat _ (Nat.lt (@dimindex B _ (@UNIV B _)) (@dimindex A _ (@UNIV A _))) (Nat.sub (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))) (NUMERAL (BIT1 Nat.zero))))) r) = ((@dest_finite_diff A B _ _ (@mk_finite_diff A B _ _ r)) = r) :=
-  fun {A B} _ _ => dest_mk (finite_diff_gen A B)
+  fun {A B} _ _ r => by
+    rw [finite_diff_bound A B]
+    exact dest_mk_enum (finite_diff_pos A B) r
+
+theorem finite_prod_pos (A B : Type _) [Nonempty A] [Nonempty B] :
+    0 < Nat.mul (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _)) :=
+  Nat.mul_pos (dimindex_pos A) (dimindex_pos B)
+
+noncomputable abbrev finite_prod (A B : Type _) [Nonempty A] [Nonempty B] :=
+  enum_type (finite_prod_pos A B)
+
+instance {A B : Type _} [Nonempty A] [Nonempty B] : Nonempty (finite_prod A B) :=
+  ⟨⟨0, finite_prod_pos A B⟩⟩
+
+noncomputable def mk_finite_prod {A B : Type _} [Nonempty A] [Nonempty B] :
+    Nat -> finite_prod A B := mk_enum (finite_prod_pos A B)
+
+noncomputable def dest_finite_prod {A B : Type _} [Nonempty A] [Nonempty B] :
+    (finite_prod A B) -> Nat := dest_enum
 
 theorem axiom_35 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : finite_prod A B), (@mk_finite_prod A B _ _ (@dest_finite_prod A B _ _ a)) = a :=
-  fun {A B} _ _ => mk_dest (finite_prod_gen A B)
+  fun {A B} _ _ => mk_dest_enum (finite_prod_pos A B)
 
 theorem axiom_36 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : Nat), ((fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero)) (Nat.mul (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))))) r) = ((@dest_finite_prod A B _ _ (@mk_finite_prod A B _ _ r)) = r) :=
-  fun {A B} _ _ => dest_mk (finite_prod_gen A B)
+  fun {A B} _ _ => dest_mk_enum (finite_prod_pos A B)
+
+/-! ### `tybit0` and `tybit1`
+
+HOL Light defines these as subtypes of `recspace` carved out by a single nullary
+constructor, which is just a copy of the index type they are built from.  Following the
+Rocq alignment we define them as that index type and provide the embedding separately.
+-/
+
+section CopyType
+
+variable {A : Type _} [Nonempty A]
+
+noncomputable def cp_dest (a : A) : recspace A :=
+  @CONSTR A _ (NUMERAL Nat.zero) a (fun _ : Nat => @BOTTOM A _)
+
+def cp_pred (r : recspace A) : Prop := ∃ a : A, r = cp_dest a
+
+noncomputable def cp_mk (r : recspace A) : A := Classical.epsilon (fun a => cp_dest a = r)
+
+theorem cp_dest_inj {a b : A} (h : cp_dest a = cp_dest b) : a = b :=
+  ((Iff.of_eq (CONSTR_INJ _ _ _ _ _ _)).1 h).2.1
+
+theorem cp_mk_dest (a : A) : cp_mk (cp_dest a) = a :=
+  cp_dest_inj (Classical.epsilon_spec (⟨a, rfl⟩ : ∃ b : A, cp_dest b = cp_dest a))
+
+theorem cp_dest_mk (r : recspace A) :
+    (∀ P : (recspace A) -> Prop, (∀ r' : recspace A, (∃ a : A, r' = cp_dest a) -> P r') -> P r)
+      = (cp_dest (cp_mk r) = r) := by
+  apply propext
+  constructor
+  · intro h
+    obtain ⟨a, rfl⟩ := h (fun r' => ∃ a : A, r' = cp_dest a) (fun _ hr' => hr')
+    rw [cp_mk_dest]
+  · intro h P hP
+    exact h ▸ hP (cp_dest (cp_mk r)) ⟨cp_mk r, rfl⟩
+
+end CopyType
+
+noncomputable abbrev tybit0 (A : Type _) [Nonempty A] := finite_sum A A
+
+noncomputable def _mk_tybit0 {A : Type _} [Nonempty A] :
+    (recspace (finite_sum A A)) -> tybit0 A := cp_mk
+
+noncomputable def _dest_tybit0 {A : Type _} [Nonempty A] :
+    (tybit0 A) -> recspace (finite_sum A A) := cp_dest
+
+noncomputable abbrev tybit1 (A : Type _) [Nonempty A] :=
+  finite_sum (finite_sum A A) Unit
+
+noncomputable def _mk_tybit1 {A : Type _} [Nonempty A] :
+    (recspace (finite_sum (finite_sum A A) Unit)) -> tybit1 A := cp_mk
+
+noncomputable def _dest_tybit1 {A : Type _} [Nonempty A] :
+    (tybit1 A) -> recspace (finite_sum (finite_sum A A) Unit) := cp_dest
 
 theorem axiom_37 : ∀ {A : Type*} [Nonempty A] (a : tybit0 A), (@_mk_tybit0 A _ (@_dest_tybit0 A _ a)) = a :=
-  fun {A} _ => mk_dest (tybit_gen (finite_sum A A))
+  fun {A} _ => cp_mk_dest
 
 theorem axiom_38 : ∀ {A : Type*} [Nonempty A] (r : recspace (finite_sum A A)), ((fun a : recspace (finite_sum A A) => ∀ tybit0' : (recspace (finite_sum A A)) -> Prop, (∀ a' : recspace (finite_sum A A), (∃ a'' : finite_sum A A, a' = ((fun a''' : finite_sum A A => @CONSTR (finite_sum A A) _ (NUMERAL Nat.zero) a''' (fun n : Nat => @BOTTOM (finite_sum A A) _)) a'')) -> tybit0' a') -> tybit0' a) r) = ((@_dest_tybit0 A _ (@_mk_tybit0 A _ r)) = r) :=
-  fun {A} _ => dest_mk (tybit_gen (finite_sum A A))
+  fun {A} _ => cp_dest_mk
 
 theorem axiom_39 : ∀ {A : Type*} [Nonempty A] (a : tybit1 A), (@_mk_tybit1 A _ (@_dest_tybit1 A _ a)) = a :=
-  fun {A} _ => mk_dest (tybit_gen (finite_sum (finite_sum A A) Unit))
+  fun {A} _ => cp_mk_dest
 
 theorem axiom_40 : ∀ {A : Type*} [Nonempty A] (r : recspace (finite_sum (finite_sum A A) Unit)), ((fun a : recspace (finite_sum (finite_sum A A) Unit) => ∀ tybit1' : (recspace (finite_sum (finite_sum A A) Unit)) -> Prop, (∀ a' : recspace (finite_sum (finite_sum A A) Unit), (∃ a'' : finite_sum (finite_sum A A) Unit, a' = ((fun a''' : finite_sum (finite_sum A A) Unit => @CONSTR (finite_sum (finite_sum A A) Unit) _ (NUMERAL Nat.zero) a''' (fun n : Nat => @BOTTOM (finite_sum (finite_sum A A) Unit) _)) a'')) -> tybit1' a') -> tybit1' a) r) = ((@_dest_tybit1 A _ (@_mk_tybit1 A _ r)) = r) :=
-  fun {A} _ => dest_mk (tybit_gen (finite_sum (finite_sum A A) Unit))
+  fun {A} _ => cp_dest_mk
+
 
 
 noncomputable def dollar {A N' : Type _} [Nonempty A] [Nonempty N'] : (cart A N') -> Nat -> A := fun _94652 : cart A N' => fun _94653 : Nat => @dest_cart A N' _ _ _94652 (@finite_index N' _ _94653)
@@ -5903,6 +5965,35 @@ theorem dollar_def {A N' : Type _} [Nonempty A] [Nonempty N'] : (@dollar A N' _ 
 
 noncomputable def lambda {A B : Type _} [Nonempty A] [Nonempty B] : (Nat -> A) -> cart A B := fun _94688 : Nat -> A => @Classical.epsilon (cart A B) _ (fun f : cart A B => ∀ i : Nat, ((Nat.le (NUMERAL (BIT1 Nat.zero)) i) ∧ (Nat.le i (@dimindex B _ (@UNIV B _)))) -> (@dollar A B _ _ f i) = (_94688 i))
 theorem lambda_def {A B : Type _} [Nonempty A] [Nonempty B] : (@lambda A B _ _) = (fun _94688 : Nat -> A => @Classical.epsilon (cart A B) _ (fun f : cart A B => ∀ i : Nat, ((Nat.le (NUMERAL (BIT1 Nat.zero)) i) ∧ (Nat.le i (@dimindex B _ (@UNIV B _)))) -> (@dollar A B _ _ f i) = (_94688 i))) := by apply Eq.refl (@lambda A B _ _)
+
+/-- Because `cart A B` is a function type, the `ε` in `lambda` is pinned down: `lambda f`
+is the tabulation of `f` over the index type.  Rocq proves the corresponding `map_lambda`. -/
+theorem lambda_eq {A B : Type _} [Nonempty A] [Nonempty B] (f : Nat -> A) :
+    @lambda A B _ _ f = fun k : finite_image B => f (@dest_finite_image B _ k) := by
+  unfold lambda
+  refine (align_epsilon _ _ (fun k : finite_image B => f (@dest_finite_image B _ k)) ?_ ?_).symm
+  · intro i hi
+    have hm : @IN Nat _ i (dotdot (NUMERAL (BIT1 Nat.zero)) (@dimindex B _ (@UNIV B _))) :=
+      Set.mem_Icc.2 ⟨hi.1, hi.2⟩
+    exact congrArg f ((Iff.of_eq (dest_mk_enum (dimindex_pos B) i)).1 hm)
+  · intro g _ hg
+    funext k
+    have hb : (Nat.le (NUMERAL (BIT1 Nat.zero)) (@dest_finite_image B _ k))
+        ∧ (Nat.le (@dest_finite_image B _ k) (@dimindex B _ (@UNIV B _))) :=
+      ⟨Nat.succ_le_succ (Nat.zero_le _), k.isLt⟩
+    have hk : g (@finite_index B _ (@dest_finite_image B _ k)) = f (@dest_finite_image B _ k) :=
+      hg (@dest_finite_image B _ k) hb
+    rw [show @finite_index B _ (@dest_finite_image B _ k) = k from
+      mk_dest_enum (dimindex_pos B) k] at hk
+    exact hk.symm
+
+/-- The computation rule for `lambda`, on the indices HOL Light constrains. -/
+theorem dollar_lambda {A B : Type _} [Nonempty A] [Nonempty B] (f : Nat -> A) (i : Nat)
+    (h1 : 1 ≤ i) (h2 : i ≤ @dimindex B _ (@UNIV B _)) :
+    @dollar A B _ _ (@lambda A B _ _ f) i = f i := by
+  rw [lambda_eq]
+  exact congrArg f ((Iff.of_eq (dest_mk_enum (dimindex_pos B) i)).1 (Set.mem_Icc.2 ⟨h1, h2⟩))
+
 
 noncomputable def pastecart {A M N' : Type _} [Nonempty A] [Nonempty M] [Nonempty N'] : (cart A M) -> (cart A N') -> cart A (finite_sum M N') := fun _94979 : cart A M => fun _94980 : cart A N' => @lambda A (finite_sum M N') _ _ (fun i : Nat => @COND A _ (Nat.le i (@dimindex M _ (@UNIV M _))) (@dollar A M _ _ _94979 i) (@dollar A N' _ _ _94980 (Nat.sub i (@dimindex M _ (@UNIV M _)))))
 theorem pastecart_def {A M N' : Type _} [Nonempty A] [Nonempty M] [Nonempty N'] : (@pastecart A M N' _ _ _) = (fun _94979 : cart A M => fun _94980 : cart A N' => @lambda A (finite_sum M N') _ _ (fun i : Nat => @COND A _ (Nat.le i (@dimindex M _ (@UNIV M _))) (@dollar A M _ _ _94979 i) (@dollar A N' _ _ _94980 (Nat.sub i (@dimindex M _ (@UNIV M _)))))) := by apply Eq.refl (@pastecart A M N' _ _ _)
