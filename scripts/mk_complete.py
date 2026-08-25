@@ -16,6 +16,9 @@ import re
 
 SRC = "HolLightLean"
 HAND = ["conectors", "meta", "up_to_real"]
+GEN = ["hol_up_real_terms", "hol_up_real_opam"]
+ALIGNED = ["real_align", "after_real"]
+MODULES = HAND + GEN + ALIGNED  # every module that gets flattened, in dependency order
 DROP = ("import ", "open HolLightLean.", "namespace HolLightLean.", "set_option linter.")
 GUIDELINES = "-- Writing guidelines: https://leanprover-community.github.io/contribute/style.html"
 
@@ -26,9 +29,21 @@ def body(name):
     return [l for l in lines if not l.strip().startswith(DROP) and l.strip() != GUIDELINES]
 
 
+def imports():
+    """The imports of every flattened module, deduplicated, in dependency order.
+
+    Imports of the library's own modules are left out: their contents are spliced in."""
+    kept = []
+    for name in MODULES:
+        for l in open(os.path.join(SRC, name + ".lean")).read().split("\n"):
+            if l.startswith("import ") and not l.startswith("import " + SRC + ".") and l not in kept:
+                kept.append(l)
+    return kept
+
+
 def used_axioms():
     """The `hol_up_real_opam` axioms referenced by the aligned modules."""
-    text = "".join(open(os.path.join(SRC, f + ".lean")).read() for f in ["real_align", "after_real"])
+    text = "".join(open(os.path.join(SRC, f + ".lean")).read() for f in ALIGNED)
     needed = set(re.findall(r"\bthm_[A-Za-z0-9_']+", text))
     kept = []
     for l in open(os.path.join(SRC, "hol_up_real_opam.lean")).read().split("\n"):
@@ -46,15 +61,15 @@ out = [GUIDELINES,
        "-- Flattened, self-contained version of the HolLightLean library:",
        "--   conectors -> meta -> up_to_real -> real_align -> after_real",
        "-- together with the generated declarations `real_align` depends on.",
-       "",
-       "import Mathlib",
-       "",
-       "set_option linter.style.longLine false",
-       "set_option linter.unusedVariables false",
-       "set_option linter.style.missingEnd false",
-       "set_option relaxedAutoImplicit false",
-       "set_option maxSynthPendingDepth 3",
        ""]
+out += imports()
+out += ["",
+        "set_option linter.style.longLine false",
+        "set_option linter.unusedVariables false",
+        "set_option linter.style.missingEnd false",
+        "set_option relaxedAutoImplicit false",
+        "set_option maxSynthPendingDepth 3",
+        ""]
 
 for f in HAND:
     out += [f"/-! ### {f}.lean -/", ""] + body(f) + [""]

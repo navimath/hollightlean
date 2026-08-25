@@ -1,3 +1,4 @@
+import Mathlib.Algebra.CharP.Defs
 import HolLightLean.up_to_real
 import HolLightLean.hol_up_real_opam
 import HolLightLean.hol_up_real_terms

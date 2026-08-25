@@ -4,7 +4,15 @@
 --   conectors -> meta -> up_to_real -> real_align -> after_real
 -- together with the generated declarations `real_align` depends on.
 
-import Mathlib
+import Mathlib.Algebra.Order.CompleteField
+import Mathlib.Analysis.Real.Sqrt
+import Mathlib.Data.Real.Sign
+import Mathlib.Data.Set.Card
+import Mathlib.Algebra.CharP.Defs
+import Mathlib.Algebra.EuclideanDomain.Int
+import Mathlib.RingTheory.EuclideanDomain
+import Mathlib.Data.Int.Lemmas
+import Mathlib.Algebra.Polynomial.Eval.Degree
 
 set_option linter.style.longLine false
 set_option linter.unusedVariables false
@@ -749,16 +757,6 @@ elab "part_tac_3" Q:term : tactic =>
 
 macro "part_tac" Q:term : tactic =>
   `(tactic| first | part_tac_1 $Q | part_tac_2 $Q | part_tac_3 $Q)
-
-/- elab "one_set_align"  : tactic => do
-  Lean.Elab.Tactic.evalTactic (← `(tactic|
-    unfold GSPEC SETSPEC IN id;
-    funext U x;
-    apply Eq.propIntro <;> intro h;
-    refine ⟨x, by trivial⟩;
-    obtain ⟨x', h'⟩ := h;
-    rw [h'.2];
-    exact h'.1)) -/
 
 /- structure Type' where
 type : Type*
@@ -5704,14 +5702,6 @@ theorem dimindex_def {A : Type _} [Nonempty A] : (@dimindex A _) = (fun _94242 :
 
 /-!
 ## Vectors and finite index types
-
-HOL Light builds its index types as subtypes of `Nat` cut out by a range predicate.  The
-Rocq alignment replaces each of them by mathcomp's ordinal type `'I_n`, so that the index
-types are honest finite types rather than opaque subtypes; the Lean counterpart is `Fin n`.
-`cart A B` then becomes the plain function type `finite_image B -> A` (Rocq wraps it in a
-mathcomp row vector to reuse that library; in Lean the function type already carries every
-Pi instance), and `tybit0` / `tybit1` become the index types they denote, embedded into
-`recspace` by a single nullary constructor.
 -/
 
 open Classical in
@@ -5724,11 +5714,6 @@ theorem one_le_dimindex {A : Type _} [Nonempty A] : 1 ≤ @dimindex A _ (@UNIV A
 
 /-!
 ### Index types
-
-`enum_type h`, for `h : 0 < n`, is the HOL Light index type with `n` elements.  HOL Light
-numbers its indices `1 .. n` and `Fin n` numbers them `0 .. n - 1`, so the constructor
-subtracts one and the destructor adds one.  An out-of-range index is sent to `0`; HOL Light
-leaves that value unspecified, so any element of the type will do.
 -/
 
 abbrev enum_type {n : Nat} (_ : 0 < n) : Type := Fin n
@@ -5766,7 +5751,9 @@ theorem dest_mk_enum {n : Nat} (h : 0 < n) (k : Nat) :
       have he' : (0 : Nat) + 1 = k := he
       omega
 
-/-! ### `finite_image`: the index type of `A` -/
+/-!
+### `finite_image`: the index type of `A`
+-/
 
 theorem dimindex_pos (A : Type _) [Nonempty A] : 0 < @dimindex A _ (@UNIV A _) :=
   one_le_dimindex
@@ -5805,7 +5792,9 @@ theorem axiom_29 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : cart A B), (
 theorem axiom_30 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : (finite_image B) -> A), ((fun f : (finite_image B) -> A => True) r) = ((@dest_cart A B _ _ (@mk_cart A B _ _ r)) = r) :=
   fun {A B} _ _ r => (eq_true (rfl : (@dest_cart A B _ _ (@mk_cart A B _ _ r)) = r)).symm
 
-/-! ### Arithmetic on index types -/
+/-!
+### Arithmetic on index types
+-/
 
 theorem finite_sum_pos (A B : Type _) [Nonempty A] [Nonempty B] :
     0 < Nat.add (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _)) :=
@@ -5892,11 +5881,8 @@ theorem axiom_35 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (a : finite_prod 
 theorem axiom_36 : ∀ {A B : Type*} [Nonempty A] [Nonempty B] (r : Nat), ((fun x : Nat => @IN Nat _ x (dotdot (NUMERAL (BIT1 Nat.zero)) (Nat.mul (@dimindex A _ (@UNIV A _)) (@dimindex B _ (@UNIV B _))))) r) = ((@dest_finite_prod A B _ _ (@mk_finite_prod A B _ _ r)) = r) :=
   fun {A B} _ _ => dest_mk_enum (finite_prod_pos A B)
 
-/-! ### `tybit0` and `tybit1`
-
-HOL Light defines these as subtypes of `recspace` carved out by a single nullary
-constructor, which is just a copy of the index type they are built from.  Following the
-Rocq alignment we define them as that index type and provide the embedding separately.
+/-!
+### `tybit0` and `tybit1`
 -/
 
 section CopyType
@@ -5958,16 +5944,12 @@ theorem axiom_39 : ∀ {A : Type*} [Nonempty A] (a : tybit1 A), (@_mk_tybit1 A _
 theorem axiom_40 : ∀ {A : Type*} [Nonempty A] (r : recspace (finite_sum (finite_sum A A) Unit)), ((fun a : recspace (finite_sum (finite_sum A A) Unit) => ∀ tybit1' : (recspace (finite_sum (finite_sum A A) Unit)) -> Prop, (∀ a' : recspace (finite_sum (finite_sum A A) Unit), (∃ a'' : finite_sum (finite_sum A A) Unit, a' = ((fun a''' : finite_sum (finite_sum A A) Unit => @CONSTR (finite_sum (finite_sum A A) Unit) _ (NUMERAL Nat.zero) a''' (fun n : Nat => @BOTTOM (finite_sum (finite_sum A A) Unit) _)) a'')) -> tybit1' a') -> tybit1' a) r) = ((@_dest_tybit1 A _ (@_mk_tybit1 A _ r)) = r) :=
   fun {A} _ => cp_dest_mk
 
-
-
 noncomputable def dollar {A N' : Type _} [Nonempty A] [Nonempty N'] : (cart A N') -> Nat -> A := fun _94652 : cart A N' => fun _94653 : Nat => @dest_cart A N' _ _ _94652 (@finite_index N' _ _94653)
 theorem dollar_def {A N' : Type _} [Nonempty A] [Nonempty N'] : (@dollar A N' _ _) = (fun _94652 : cart A N' => fun _94653 : Nat => @dest_cart A N' _ _ _94652 (@finite_index N' _ _94653)) := by apply Eq.refl (@dollar A N' _ _)
 
 noncomputable def lambda {A B : Type _} [Nonempty A] [Nonempty B] : (Nat -> A) -> cart A B := fun _94688 : Nat -> A => @Classical.epsilon (cart A B) _ (fun f : cart A B => ∀ i : Nat, ((Nat.le (NUMERAL (BIT1 Nat.zero)) i) ∧ (Nat.le i (@dimindex B _ (@UNIV B _)))) -> (@dollar A B _ _ f i) = (_94688 i))
 theorem lambda_def {A B : Type _} [Nonempty A] [Nonempty B] : (@lambda A B _ _) = (fun _94688 : Nat -> A => @Classical.epsilon (cart A B) _ (fun f : cart A B => ∀ i : Nat, ((Nat.le (NUMERAL (BIT1 Nat.zero)) i) ∧ (Nat.le i (@dimindex B _ (@UNIV B _)))) -> (@dollar A B _ _ f i) = (_94688 i))) := by apply Eq.refl (@lambda A B _ _)
 
-/-- Because `cart A B` is a function type, the `ε` in `lambda` is pinned down: `lambda f`
-is the tabulation of `f` over the index type.  Rocq proves the corresponding `map_lambda`. -/
 theorem lambda_eq {A B : Type _} [Nonempty A] [Nonempty B] (f : Nat -> A) :
     @lambda A B _ _ f = fun k : finite_image B => f (@dest_finite_image B _ k) := by
   unfold lambda
@@ -5987,7 +5969,6 @@ theorem lambda_eq {A B : Type _} [Nonempty A] [Nonempty B] (f : Nat -> A) :
       mk_dest_enum (dimindex_pos B) k] at hk
     exact hk.symm
 
-/-- The computation rule for `lambda`, on the indices HOL Light constrains. -/
 theorem dollar_lambda {A B : Type _} [Nonempty A] [Nonempty B] (f : Nat -> A) (i : Nat)
     (h1 : 1 ≤ i) (h2 : i ≤ @dimindex B _ (@UNIV B _)) :
     @dollar A B _ _ (@lambda A B _ _ f) i = f i := by

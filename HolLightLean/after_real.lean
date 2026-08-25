@@ -1,3 +1,7 @@
+import Mathlib.Algebra.EuclideanDomain.Int
+import Mathlib.RingTheory.EuclideanDomain
+import Mathlib.Data.Int.Lemmas
+import Mathlib.Algebra.Polynomial.Eval.Degree
 import HolLightLean.real_align
 -- import HolLightLean.hol_up_real_opam
 -- import HolLightLean.hol_up_real_terms

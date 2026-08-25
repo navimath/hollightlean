@@ -89,16 +89,6 @@ elab "part_tac_3" Q:term : tactic =>
 macro "part_tac" Q:term : tactic =>
   `(tactic| first | part_tac_1 $Q | part_tac_2 $Q | part_tac_3 $Q)
 
-/- elab "one_set_align"  : tactic => do
-  Lean.Elab.Tactic.evalTactic (← `(tactic|
-    unfold GSPEC SETSPEC IN id;
-    funext U x;
-    apply Eq.propIntro <;> intro h;
-    refine ⟨x, by trivial⟩;
-    obtain ⟨x', h'⟩ := h;
-    rw [h'.2];
-    exact h'.1)) -/
-
 /- structure Type' where
 type : Type*
 el : type
