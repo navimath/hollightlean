@@ -1,6 +1,6 @@
 /- Record fully parametrizing the translation from Lambdapi (lp) to Lean.
-   Every HOL-Light type, constant, definition and theorem of the standard
-   library is a field; proof terms and definitional bodies are erased. -/
+   Every HOL-Light type, constant and definition of the standard
+   library is a field. -/
 
 set_option maxHeartbeats 0
 set_option maxRecDepth 100000
@@ -8,6 +8,12 @@ set_option genInjectivity false
 set_option linter.unusedVariables false
 
 instance {A B : Type} [h : Nonempty B] : Nonempty (A -> B) := Nonempty.intro (fun _ => Classical.choice h)
+
+def imp (p q : Prop) : Prop := p -> q
+
+def FORALL {A : Type} [Nonempty A] (P : A -> Prop) : Prop := ∀ x : A, P x
+
+def EXISTS {A : Type} [Nonempty A] (P : A -> Prop) : Prop := ∃ x : A, P x
 
 class HOLTheory where
   hol_eq : ∀ {A : Type} [Nonempty A], A -> A -> Prop
@@ -23,16 +29,14 @@ class HOLTheory where
   not : Prop -> Prop
   hfalse : Prop
   hor : Prop -> Prop -> Prop
-  hexists : ∀ {A : Type} [Nonempty A], (A -> Prop) -> Prop
-  hforall : ∀ {A : Type} [Nonempty A], (A -> Prop) -> Prop
-  himpl : Prop -> Prop -> Prop
+--  EXISTS : ∀ {A : Type} [Nonempty A], (A -> Prop) -> Prop
   hand : Prop -> Prop -> Prop
   htrue : Prop
   htrue_intro : htrue
   hand_intro : ∀ {p : Prop}, p -> ∀ {q : Prop}, q -> hand p q
   hand_elim_left : ∀ {p q : Prop}, (hand p q) -> p
   hand_elim_right : ∀ {p q : Prop}, (hand p q) -> q
-  hexists_intro : ∀ {a : Type} [Nonempty a] (p : a -> Prop) t, (p t) -> hexists p
+  hexists_intro : ∀ {a : Type} [Nonempty a] (p : a -> Prop) t, (p t) -> EXISTS p
   hexists_elim : ∀ {a : Type} [Nonempty a] {p : a -> Prop}, (∃ x, p x) -> ∀ {r : Prop}, (∀ x : a, (p x) -> r) -> r
   hor_intro_left : ∀ {p : Prop}, p -> ∀ q : Prop, hor p q
   hor_intro_right : ∀ (p : Prop) {q : Prop}, q -> hor p q
@@ -44,7 +48,7 @@ class HOLTheory where
   ind : Type
   [ne_ind : Nonempty ind]
   num : Type
-  [ne_num : Nonempty num]
+  ne_num : Nonempty num
   recspace : Type -> Type
   [ne_recspace : ∀ (a0 : Type), Nonempty (recspace a0)]
   SUM : Type -> Type -> Type
@@ -79,13 +83,13 @@ class HOLTheory where
   [ne_tybit1 : ∀ (a0 : Type), Nonempty (tybit1 a0)]
   htrue_def : hol_eq htrue (hol_eq (fun p : Prop => p) (fun p : Prop => p))
   hand_def : hol_eq hand (fun p : Prop => fun q : Prop => hol_eq (fun f : Prop -> Prop -> Prop => f p q) (fun f : Prop -> Prop -> Prop => f htrue htrue))
-  himpl_def : hol_eq himpl (fun p : Prop => fun q : Prop => hol_eq (hand p q) p)
-  hforall_def : ∀ {A : Type} [Nonempty A], hol_eq (@hforall A _) (fun P : A -> Prop => hol_eq P (fun x : A => htrue))
-  hexists_def : ∀ {A : Type} [Nonempty A], hol_eq (@hexists A _) (fun P : A -> Prop => ∀ q : Prop, (∀ x : A, (P x) -> q) -> q)
+  himpl_def : hol_eq imp (fun p : Prop => fun q : Prop => hol_eq (hand p q) p)
+  hforall_def : ∀ {A : Type} [Nonempty A], hol_eq (@FORALL A _) (fun P : A -> Prop => hol_eq P (fun x : A => htrue))
+  hexists_def : ∀ {A : Type} [Nonempty A], hol_eq (@EXISTS A _) (fun P : A -> Prop => ∀ q : Prop, (∀ x : A, (P x) -> q) -> q)
   hor_def : hol_eq hor (fun p : Prop => fun q : Prop => ∀ r : Prop, (p -> r) -> (q -> r) -> r)
   hfalse_def : hol_eq hfalse (∀ p : Prop, p)
   not_def : hol_eq not (fun p : Prop => p -> hfalse)
-  hexists_one_def : ∀ {A : Type} [Nonempty A], hol_eq (@hexists_one A _) (fun P : A -> Prop => hand (hexists P) (∀ x : A, ∀ y : A, (hand (P x) (P y)) -> hol_eq x y))
+  hexists_one_def : ∀ {A : Type} [Nonempty A], hol_eq (@hexists_one A _) (fun P : A -> Prop => hand (EXISTS P) (∀ x : A, ∀ y : A, (hand (P x) (P y)) -> hol_eq x y))
   _FALSITY_ : Prop
   _FALSITY__def : hol_eq _FALSITY_ hfalse
   COND {A : Type} [Nonempty A] : Prop -> A -> A -> A
@@ -675,7 +679,9 @@ class HOLTheory where
   axiom_40 : ∀ {A : Type} [Nonempty A] (r : recspace (finite_sum (finite_sum A A) unit)), hol_eq ((fun a : recspace (finite_sum (finite_sum A A) unit) => ∀ tybit1' : (recspace (finite_sum (finite_sum A A) unit)) -> Prop, (∀ a' : recspace (finite_sum (finite_sum A A) unit), (∃ a'' : finite_sum (finite_sum A A) unit, hol_eq a' ((fun a''' : finite_sum (finite_sum A A) unit => @CONSTR (finite_sum (finite_sum A A) unit) _ (NUMERAL _0) a''' (fun n : num => @BOTTOM (finite_sum (finite_sum A A) unit) _)) a'')) -> tybit1' a') -> tybit1' a) r) (hol_eq (@_dest_tybit1 A _ (@_mk_tybit1 A _ r)) r)
 
 -- make the Nonempty witnesses usable by instance search outside the class
-instance instNeUnit [T : HOLTheory] : Nonempty (HOLTheory.unit) := HOLTheory.ne_unit
+attribute [instance] HOLTheory.ne_unit
+variable [T : HOLTheory]
+#synth Nonempty (HOLTheory.unit)
 instance instNeProd [T : HOLTheory] (a0 a1 : Type) : Nonempty (HOLTheory.prod a0 a1) := HOLTheory.ne_prod a0 a1
 instance instNeInd [T : HOLTheory] : Nonempty (HOLTheory.ind) := HOLTheory.ne_ind
 instance instNeNum [T : HOLTheory] : Nonempty (HOLTheory.num) := HOLTheory.ne_num

@@ -11,7 +11,7 @@ import HolLightLean.real_align
 set_option linter.style.longLine false
 set_option linter.unusedVariables false
 
-
+#check Rat
 -- noncomputable def DECIMAL : Nat -> Nat -> Real := fun _27914 : Nat => fun _27915 : Nat => real_div (real_of_num _27914) (real_of_num _27915)
 -- theorem DECIMAL_def : DECIMAL = (fun _27914 : Nat => fun _27915 : Nat => real_div (real_of_num _27914) (real_of_num _27915)) := by apply Eq.refl DECIMAL
 

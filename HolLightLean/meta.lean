@@ -88,7 +88,6 @@ elab "part_tac_3" Q:term : tactic =>
 
 macro "part_tac" Q:term : tactic =>
   `(tactic| first | part_tac_1 $Q | part_tac_2 $Q | part_tac_3 $Q)
-
 /- structure Type' where
 type : Type*
 el : type
