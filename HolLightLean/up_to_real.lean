@@ -289,48 +289,21 @@ theorem PRE_def : Eq Nat.pred (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> 
 (@prod_mk Nat (Prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))
 (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))
 (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))))) := by
-  epsilon_tac
-  · simp
-  · intros f _ h
-    funext n m;
-    induction m
-    · simp_all
-    · simp_all +arith
+  epsilon_align_nat
 
 theorem add_def : Eq Nat.add (@Classical.epsilon (Nat -> Nat -> Nat -> Nat) _
 (fun add' : Nat -> Nat -> Nat -> Nat => ∀ _2155 : Nat,
 And (∀ n : Nat, Eq (add' _2155 (NUMERAL Nat.zero) n) n)
 (∀ m : Nat, ∀ n : Nat, Eq (add' _2155 (Nat.succ m) n) (Nat.succ (add' _2155 m n))))
 (NUMERAL (BIT1 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) := by
-  epsilon_tac
-  · intro n ; constructor
-    · simp
-    · lia
-  · intros f _ _
-    funext _ m _
-    induction m <;> simp_all
+  epsilon_align_nat
 
 theorem mul_def : Eq Nat.mul (@Classical.epsilon (Nat -> Nat -> Nat -> Nat) _
 (fun mul' : Nat -> Nat -> Nat -> Nat => ∀ _2186 : Nat,
 And (∀ n : Nat, Eq (mul' _2186 (NUMERAL Nat.zero) n) (NUMERAL Nat.zero)) (∀ m : Nat, ∀ n : Nat,
 Eq (mul' _2186 (Nat.succ m) n) (Nat.add (mul' _2186 m n) n)))
 (NUMERAL (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) := by
-  epsilon_tac
-  · intro n ; constructor
-    · simp
-    · lia
-  · intros f _ h
-    simp_all +arith only [NUMERAL, Nat.zero_eq, Nat.mul_eq, zero_mul, implies_true,
-      Nat.succ_eq_add_one, Nat.add_eq, true_and, forall_const]
-    funext n m k;
-    induction m
-    · simp_all
-    · simp_all +arith only [Nat.succ_eq_add_one]
-      rename Nat => m
-      rename _ => hi
-      have h_aux := (h n).right m k
-      rw [← hi] at h_aux
-      grind
+  epsilon_align_nat
 
 theorem EXP_def : Eq Nat.pow (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> Nat -> Nat -> Nat) _
 (fun EXP' : (Prod Nat (Prod Nat Nat)) -> Nat -> Nat -> Nat => ∀ _2224 : Prod Nat (Prod Nat Nat),
@@ -339,18 +312,7 @@ And (∀ m : Nat, Eq (EXP' _2224 m (NUMERAL Nat.zero)) (NUMERAL (BIT1 Nat.zero))
 (@prod_mk Nat (Prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
 (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero))))))))
 (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))))) := by
-  epsilon_tac
-  · simp_all +arith only [Nat.zero_eq, Nat.pow_eq, Nat.succ_eq_add_one, Nat.mul_eq, forall_const]
-    apply And.intro
-    · simp_all
-    · grind
-  · intros f _ h
-    simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
-    funext n m k;
-    induction k
-    · simp_all +arith
-    · simp_all +arith only [Nat.pow_eq, Nat.mul_eq, forall_const, Prod.forall, Nat.succ_eq_add_one]
-
+  epsilon_align_nat
 
 theorem le_def : Eq Nat.le (@Classical.epsilon ((Prod Nat Nat) -> Nat -> Nat -> Prop) _
 (fun le' : (Prod Nat Nat) -> Nat -> Nat -> Prop => ∀ _2241 : Prod Nat Nat, And
@@ -360,35 +322,14 @@ theorem le_def : Eq Nat.le (@Classical.epsilon ((Prod Nat Nat) -> Nat -> Nat -> 
 (le' _2241 m n))))
 (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 Nat.zero)))))))
 (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 Nat.zero))))))))) := by
-  epsilon_tac
-  · simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one, forall_const]
-    apply And.intro
-    · simp
-    · lia
-  · intros f _ _
-    simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
-    funext n m k;
-    induction k
-    · simp_all +arith
-    · simp_all +arith only [forall_const, Prod.forall]
+  epsilon_align_nat
 
 theorem lt_def : Eq Nat.lt (@Classical.epsilon (Nat -> Nat -> Nat -> Prop) _
 (fun lt : Nat -> Nat -> Nat -> Prop =>
 ∀ _2248 : Nat, And (∀ m : Nat, Eq (lt _2248 m (NUMERAL Nat.zero)) False) (∀ m : Nat, ∀ n : Nat,
 Eq (lt _2248 m (Nat.succ n)) (Or (Eq m n) (lt _2248 m n))))
 (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) := by
-  epsilon_tac
-  · simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one, forall_const]
-    apply And.intro
-    · simp
-    · unfold Nat.lt
-      lia
-  · intros f _ _
-    simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
-    funext n m k;
-    induction k
-    · simp_all +arith
-    · simp_all +arith only [forall_const]
+  epsilon_align_nat
 
 theorem ge_def : Eq GE.ge (fun _2249 : Nat => fun _2250 : Nat => Nat.le _2250 _2249) := by
   unfold GE.ge
@@ -419,19 +360,7 @@ theorem minus_def : Eq Nat.sub (@Classical.epsilon (Nat -> Nat -> Nat -> Nat) _
 And (∀ m : Nat, Eq (minus' _2766 m (NUMERAL Nat.zero)) m) (∀ m : Nat, ∀ n : Nat,
 Eq (minus' _2766 m (Nat.succ n)) (Nat.pred (minus' _2766 m n))))
 (NUMERAL (BIT1 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) := by
-  epsilon_tac
-  · simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one, forall_const]
-    apply And.intro
-    · simp
-    · intros _ _
-      simp
-      grind
-  · intros f _ _
-    simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
-    funext n m k;
-    induction k
-    · simp_all +arith
-    · simp_all +arith only [forall_const]
+  epsilon_align_nat
 
 theorem FACT_def : Eq Nat.factorial (@Classical.epsilon ((Prod Nat (Prod Nat (Prod Nat Nat))) -> Nat -> Nat) _ (fun FACT' : (Prod Nat (Prod Nat (Prod Nat Nat))) -> Nat -> Nat => ∀ _2944 : Prod Nat
 (Prod Nat (Prod Nat Nat)), And (Eq (FACT' _2944 (NUMERAL Nat.zero)) (NUMERAL (BIT1 Nat.zero))) (∀ n : Nat, Eq (FACT' _2944 (Nat.succ n)) (Nat.mul (Nat.succ n) (FACT' _2944 n))))
@@ -440,19 +369,7 @@ theorem FACT_def : Eq Nat.factorial (@Classical.epsilon ((Prod Nat (Prod Nat (Pr
 (@prod_mk Nat (Prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
 (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
 (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))))))) := by
-  epsilon_tac
-  · simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one, forall_const]
-    apply And.intro
-    · rfl
-    · intros n
-      unfold Nat.factorial
-      simp only [Nat.succ_eq_add_one, Nat.mul_eq, mul_eq_mul_left_iff,
-                Nat.add_eq_zero_iff, one_ne_zero, and_false, or_false]
-      exact Nat.factorial.eq_def n
-  · intros f h1 h2
-    simp_all +arith only [Nat.zero_eq, Nat.succ_eq_add_one]
-    funext n m;
-    induction m <;> simp_all +arith
+  epsilon_align_nat
 
 theorem DIV_def : Eq Nat.div (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> Nat -> Nat -> Nat) _
 (fun q : (Prod Nat (Prod Nat Nat)) -> Nat -> Nat -> Nat => ∀ _3086 : Prod Nat (Prod Nat Nat),
@@ -493,8 +410,6 @@ theorem DIV_def : Eq Nat.div (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> N
     clear hd hm h1_1
     cases k
     · simp_all
-      rewrite [COND_True] at h1 h2
-      grind
     · simp_all +arith only [Nat.succ_eq_add_one, NUMERAL, Nat.add_eq_zero_iff, one_ne_zero,
       and_false, Prod.mk.eta, Order.lt_add_one_iff]
       rewrite [COND_False] at h1 h2
@@ -548,8 +463,6 @@ theorem MOD_def : Eq Nat.mod (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> N
     clear hd hm h1_1
     cases k
     · simp_all
-      rewrite [COND_True] at h1 h2
-      grind
     · simp_all only [NUMERAL, Nat.succ_eq_add_one, Nat.add_eq_zero_iff, one_ne_zero,
                       and_false, Prod.mk.eta]
       rewrite [COND_False] at h1 h2
@@ -582,23 +495,7 @@ theorem EVEN_def : Eq EVEN (@Classical.epsilon ((Prod Nat (Prod Nat (Prod Nat Na
    (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
    (NUMERAL (BIT0 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))))))) := by
   unfold EVEN
-  epsilon_tac
-  intros q
-  · apply And.intro
-    · simp
-    · simp only [Nat.succ_eq_add_one, Nat.not_even_iff_odd, eq_iff_iff]
-      intro n
-      grind
-  · intros f h1 h2
-    funext t n;
-    have h1_t := h1 t
-    have h2_t := h2 t
-    clear h1 h2
-    induction n
-    · simp_all only [NUMERAL, eq_iff_iff, iff_true, Nat.succ_eq_add_one, Nat.not_even_iff_odd]
-    · expose_names
-      rw [h1_t.right, h2_t.right]
-      exact congrArg (fun P => ¬ P ) h
+  epsilon_align_nat
 
 @[simp]
 def ODD := @Odd Nat _
@@ -613,24 +510,7 @@ theorem ODD_def : Eq ODD (@Classical.epsilon ((Prod Nat (Prod Nat Nat)) -> Nat -
   (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
   (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))))) := by
   unfold ODD
-  epsilon_tac
-  intros q
-  · apply And.intro
-    · simp
-    · simp only [Nat.succ_eq_add_one, eq_iff_iff]
-      intro n
-      grind
-  · intros f h1 h2
-    funext t n;
-    have h1_t := h1 t
-    have h2_t := h2 t
-    clear h1 h2
-    induction n
-    · simp_all only [NUMERAL, Nat.zero_eq, Nat.not_odd_zero,
-        Nat.succ_eq_add_one, Nat.not_odd_iff_even, eq_iff_iff, true_and, iff_false]
-    · expose_names
-      rw [h1_t.right, h2_t.right]
-      exact congrArg (fun P => ¬ P ) h
+  epsilon_align_nat
 
 /-!
 # well founded alignment
@@ -2263,7 +2143,7 @@ open Classical in noncomputable def ALLPAIRS {A B : Type*} [Nonempty A] [Nonempt
 theorem ALLPAIRS_def {A B : Type*} [Nonempty A] [Nonempty B] : Eq (@ALLPAIRS A B _ _) (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> (A -> B -> Prop) -> (List A) -> (List B) -> Prop) _ (fun ALLPAIRS' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> (A -> B -> Prop) -> (List A) -> (List B) -> Prop => ∀ _18213 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))), And (∀ f : A -> B -> Prop, ∀ l : List B, Eq (ALLPAIRS' _18213 f (@NIL A _) l) True) (∀ h : A, ∀ f : A -> B -> Prop, ∀ t : List A, ∀ l : List B, Eq (ALLPAIRS' _18213 f (@List.cons A h t) l) (And (@ALL B _ (f h) l) (ALLPAIRS' _18213 f t l)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))))))))))) := by
   epsilon_tac
   · intro r
-    refine ⟨fun f l => ?_, fun h f t l => ?_⟩
+    constructor
     · simp [ALLPAIRS, NIL]
     · simp [ALLPAIRS, ALL, List.all_cons, Bool.and_eq_true]
   · intro g hA hg

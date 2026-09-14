@@ -1,5 +1,11 @@
 import HolLightLean.conectors
 
+macro "finisher_tacs" : tactic =>
+  `(tactic |
+  first
+    | rfl | lia | grind | (aesop; done) | done
+  )
+
 elab "epsilon_tac" : tactic =>
   Lean.Elab.Tactic.withMainContext do
     Lean.Elab.Tactic.evalTactic (← `(tactic|try unfold NUMERAL BIT0 BIT1 at *))
@@ -29,6 +35,62 @@ elab "epsilon_tac" : tactic =>
           Lean.Elab.Tactic.replaceMainGoal newMvars
         | _ => throwError "Right hand side is not of the form ε P r"
     | _ => throwError "Goal is not an equality"
+
+/--
+After epsilon_tac, prove that λ_,f satisfies the total recursive inductive predicate.
+These have the form
+
+∀ N : ℕᵈ,(∀ a : ℕᵐ, (λ_,f) N (NUMERAL 0) m = ...) ∧ (∀ a : ℕ, b : ℕᵐ)
+-/
+elab "epsilon_align_1_total_rec_nat"  : tactic => do
+  Lean.Elab.Tactic.evalTactic (← `(tactic|
+  intro;
+  constructor <;> (
+  (try intros)
+  simp_all +arith;
+  finisher_tacs
+    )
+  ))
+
+elab "ind_on_2_of2" : tactic => do
+Lean.Elab.Tactic.evalTactic (← `(tactic|
+funext n m;
+induction m <;>
+finisher_tacs
+))
+
+elab "ind_on_2_of3" : tactic => do
+Lean.Elab.Tactic.evalTactic (← `(tactic|
+funext n m k;
+induction m <;>
+finisher_tacs
+))
+
+elab "ind_on_3" : tactic => do
+Lean.Elab.Tactic.evalTactic (← `(tactic|
+funext n m k;
+induction k <;>
+finisher_tacs
+))
+
+/--
+Now prove that λ_,f is the unique term satisfying P
+
+∀ x, P x → P (λ_, f) → x = λ_,f
+-/
+elab "epsilon_align_2_total_rec_nat"  : tactic => do
+  Lean.Elab.Tactic.evalTactic (← `(tactic|
+  intros;
+  first
+  | ind_on_2_of2
+  | ind_on_2_of3
+  | ind_on_3
+  ))
+
+macro "epsilon_align_nat" : tactic => `(tactic | (
+  epsilon_tac ;
+  epsilon_align_1_total_rec_nat;
+  epsilon_align_2_total_rec_nat))
 
 /--
 Shared finishing step

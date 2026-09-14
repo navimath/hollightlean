@@ -243,9 +243,11 @@ f uv x' y' z' = f' uv x' y' z') -> f uv0 x y z = Classical.epsilon P uv0 x y z :
 # COND aligning
 -/
 
-open Classical in noncomputable def COND {α : Type*} [Nonempty α] (P : Prop) (x y : α) := if P then x else y
+open Classical in @[simp]
+noncomputable def COND {α : Type*} [Nonempty α] (P : Prop) (x y : α) := if P then x else y
 
-open Classical in theorem COND_def {α : Type*} [Nonempty α] : (@COND α _) =
+open Classical in @[simp]
+theorem COND_def {α : Type*} [Nonempty α] : (@COND α _) =
 (fun P : Prop => fun x : α => fun y : α => epsilon (fun z : α => And ((P = True) -> z = x) ((P = False) -> z = y) )) := by
     funext P x y
     unfold COND
@@ -257,9 +259,11 @@ open Classical in theorem COND_def {α : Type*} [Nonempty α] : (@COND α _) =
         split <;>
         next h => simp_all only [forall_const]
 
+@[simp]
 theorem COND_True {α : Type*} [Nonempty α] (x y : α) : COND True x y = x := by
   unfold COND ; simp
 
+@[simp]
 theorem COND_False {α : Type*} [Nonempty α] (x y : α) : COND False x y = y := by
   unfold COND ; simp
 
