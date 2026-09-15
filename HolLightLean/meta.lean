@@ -6,7 +6,7 @@ macro "finisher_tacs" : tactic =>
     | rfl | lia | grind | (aesop; done) | done
   )
 
-elab "epsilon_tac" : tactic =>
+elab "epsilon_elim" : tactic =>
   Lean.Elab.Tactic.withMainContext do
     Lean.Elab.Tactic.evalTactic (← `(tactic|try unfold NUMERAL BIT0 BIT1 at *))
     let goalType ← Lean.Elab.Tactic.getMainTarget
@@ -54,21 +54,21 @@ elab "epsilon_align_1_total_rec_nat"  : tactic => do
 
 elab "ind_on_2_of2" : tactic => do
 Lean.Elab.Tactic.evalTactic (← `(tactic|
-funext n m;
+funext m;
 induction m <;>
 finisher_tacs
 ))
 
 elab "ind_on_2_of3" : tactic => do
 Lean.Elab.Tactic.evalTactic (← `(tactic|
-funext n m k;
+funext m k;
 induction m <;>
 finisher_tacs
 ))
 
 elab "ind_on_3" : tactic => do
 Lean.Elab.Tactic.evalTactic (← `(tactic|
-funext n m k;
+funext m k;
 induction k <;>
 finisher_tacs
 ))
@@ -80,15 +80,18 @@ Now prove that λ_,f is the unique term satisfying P
 -/
 elab "epsilon_align_2_total_rec_nat"  : tactic => do
   Lean.Elab.Tactic.evalTactic (← `(tactic|
-  intros;
+  intros _ hP hPf;
+  funext N;
+  specialize hP N;
+  specialize hPf N;
   first
   | ind_on_2_of2
   | ind_on_2_of3
   | ind_on_3
   ))
 
-macro "epsilon_align_nat" : tactic => `(tactic | (
-  epsilon_tac ;
+macro "epsilon_align_total" : tactic => `(tactic | (
+  epsilon_elim ;
   epsilon_align_1_total_rec_nat;
   epsilon_align_2_total_rec_nat))
 
@@ -148,7 +151,7 @@ elab "part_tac_3" Q:term : tactic =>
       | _ => throwError "Right hand side is not of the form ε P uv0 x y z"
     | _ => throwError "Goal is not an equality"
 
-macro "part_tac" Q:term : tactic =>
+macro "epsilon_part_elim" Q:term : tactic =>
   `(tactic| first | part_tac_1 $Q | part_tac_2 $Q | part_tac_3 $Q)
 /- structure Type' where
 type : Type*
