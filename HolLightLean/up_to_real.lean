@@ -108,41 +108,18 @@ theorem IND_SUC_neq_0 i : IND_SUC i ≠ IND_0 := by
 # Alignment of Nat
 -/
 
+@[grind]
 noncomputable def NUM_REP : ind -> Prop := fun a : ind => ∀ NUM_REP' : ind -> Prop, (∀ a' : ind, (Or (Eq a' IND_0) (∃ i : ind, And (Eq a' (IND_SUC i)) (NUM_REP' i))) -> NUM_REP' a') -> NUM_REP' a
 
 theorem NUM_REP_def : Eq NUM_REP (fun a : ind => ∀ NUM_REP' : ind -> Prop,
 (∀ a' : ind, (Or (Eq a' IND_0) (∃ i : ind, And (Eq a' (IND_SUC i)) (NUM_REP' i))) -> NUM_REP' a') -> NUM_REP' a) := Eq.refl NUM_REP
 
+@[grind intro]
 inductive NUM_REP_id : ind -> Prop where
 | NUM_REP_id_0 : NUM_REP_id IND_0
 | NUM_REP_id_SUC i : NUM_REP_id i -> NUM_REP_id (IND_SUC i)
 
-theorem NUM_REP_eq_id : NUM_REP = NUM_REP_id := by
-  funext x
-  apply Eq.propIntro
-  · intro h
-    apply h
-    intros n h1
-    obtain ⟨a,b⟩ := h1
-    · exact NUM_REP_id.NUM_REP_id_0
-    · expose_names
-      obtain ⟨i,p⟩ := h_1
-      rw [p.left]
-      apply NUM_REP_id.NUM_REP_id_SUC i
-      exact p.right
-  · intro h
-    induction h
-    · unfold NUM_REP
-      intros P h1
-      have h1 := h1 IND_0
-      simp only [true_or, forall_const] at h1
-      exact h1
-    · expose_names
-      unfold NUM_REP at *; intros P h1
-      have hp := a_ih P
-      apply h1
-      refine Or.symm (or_intro1 ?_ (IND_SUC i = IND_0))
-      exact ⟨i,⟨rfl, hp h1⟩⟩
+theorem NUM_REP_eq_id : NUM_REP = NUM_REP_id := by ind_align
 
 noncomputable def dest_num : Nat -> ind
 | 0 => IND_0
@@ -813,6 +790,7 @@ noncomputable def ZBOT {A : Type*} [Nonempty A] : Nat -> A -> Prop := @INJP A _ 
 
 theorem ZBOT_def {A : Type*} [Nonempty A] : Eq (@ZBOT A _) (@INJP A _ (@INJN A _ (NUMERAL Nat.zero)) (@Classical.epsilon (Nat -> A -> Prop) _ (fun z : Nat -> A -> Prop => True))) := Eq.refl (@ZBOT A _)
 
+@[grind intro]
 inductive _ZRECSPACE {α : Type*} [Nonempty α] : (Nat -> α -> Prop) -> Prop
 | ZRECSPACE0 : _ZRECSPACE ZBOT
 | ZRECSPACE1 c i r : (forall n, _ZRECSPACE (r n)) -> _ZRECSPACE (ZCONSTR c i r)
@@ -822,35 +800,8 @@ open _ZRECSPACE
 def ZRECSPACE {α : Type*} [Nonempty α] := @_ZRECSPACE α _
 
 theorem ZRECSPACE_def {A : Type*} [Nonempty A] : Eq (@ZRECSPACE A _) (fun a : Nat -> A -> Prop => ∀ ZRECSPACE' : (Nat -> A -> Prop) -> Prop, (∀ a' : Nat -> A -> Prop, (Or (Eq a' (@ZBOT A _)) (∃ c : Nat, ∃ i : A, ∃ r : Nat -> Nat -> A -> Prop, And (Eq a' (@ZCONSTR A _ c i r)) (∀ n : Nat, ZRECSPACE' (r n)))) -> ZRECSPACE' a') -> ZRECSPACE' a) := by
-  funext x
-  expose_names
-  apply Eq.propIntro
-  · intro h
-    induction h
-    · intros h1 h2
-      apply h2
-      apply Or.intro_left
-      rfl
-    · intros h1 h2
-      expose_names
-      apply h2
-      apply Or.intro_right
-      exists c, i, r
-      apply And.intro
-      · rfl
-      · intro n
-        exact a_ih n h1 h2
-  · intros h1
-    apply h1
-    intros a h_or
-    obtain ⟨h_r,h_l⟩ := h_or
-    · exact _ZRECSPACE.ZRECSPACE0
-    · rename _ => h_aux
-      obtain ⟨c,⟨i,⟨r,h_and⟩⟩⟩ := h_aux
-      obtain ⟨h_r,h_l⟩ := h_and
-      subst a
-      apply _ZRECSPACE.ZRECSPACE1
-      exact h_l
+  unfold ZRECSPACE
+  ind_align
 
 def recspace := fun (α : Type*) [Nonempty α] => SUBTYPE (@ZRECSPACE0 α _)
 
@@ -1041,6 +992,14 @@ theorem FNIL_def {A : Type*} [Nonempty A] : Eq (@FNIL A _) (fun _17624 : Nat => 
 -/
 
 axiom CHAR : Type
+
+axiom _mk_char : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> CHAR
+axiom _dest_char : CHAR -> recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))
+
+axiom axiom_17 : ∀ (a : CHAR), Eq (_mk_char (_dest_char a)) a
+axiom axiom_18 : ∀ (r : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))), Eq ((fun a : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) => ∀ char' : (recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))))) -> Prop, (∀ a' : recspace (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))), (∃ a0 : Prop, ∃ a1 : Prop, ∃ a2 : Prop, ∃ a3 : Prop, ∃ a4 : Prop, ∃ a5 : Prop, ∃ a6 : Prop, ∃ a7 : Prop, Eq a' ((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) _ (NUMERAL Nat.zero) (@prod_mk Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) _ _ a0' (@prod_mk Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) _ _ a1' (@prod_mk Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) _ _ a2' (@prod_mk Prop (prod Prop (prod Prop (prod Prop Prop))) _ _ a3' (@prod_mk Prop (prod Prop (prod Prop Prop)) _ _ a4' (@prod_mk Prop (prod Prop Prop) _ _ a5' (@prod_mk Prop Prop _ _ a6' a7'))))))) (fun n : Nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) _)) a0 a1 a2 a3 a4 a5 a6 a7)) -> char' a') -> char' a) r) (Eq (_dest_char (_mk_char r)) r)
+
+instance : Nonempty CHAR := ⟨_mk_char Classical.ofNonempty⟩
 
 
 /-!

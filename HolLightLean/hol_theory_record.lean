@@ -7,6 +7,10 @@ set_option maxRecDepth 100000
 set_option genInjectivity false
 set_option linter.unusedVariables false
 
+-- Kept in the `HOLTheory` namespace so this file can be imported next to
+-- `HolLightLean.conectors`, which defines the same helpers at the root.
+namespace HOLTheory
+
 instance {A B : Type} [h : Nonempty B] : Nonempty (A -> B) := Nonempty.intro (fun _ => Classical.choice h)
 
 def imp (p q : Prop) : Prop := p -> q
@@ -14,6 +18,10 @@ def imp (p q : Prop) : Prop := p -> q
 def FORALL {A : Type} [Nonempty A] (P : A -> Prop) : Prop := ∀ x : A, P x
 
 def EXISTS {A : Type} [Nonempty A] (P : A -> Prop) : Prop := ∃ x : A, P x
+
+end HOLTheory
+
+open HOLTheory
 
 class HOLTheory where
   hol_eq : ∀ {A : Type} [Nonempty A], A -> A -> Prop
@@ -40,23 +48,23 @@ class HOLTheory where
   hexists_elim : ∀ {a : Type} [Nonempty a] {p : a -> Prop}, (∃ x, p x) -> ∀ {r : Prop}, (∀ x : a, (p x) -> r) -> r
   hor_intro_left : ∀ {p : Prop}, p -> ∀ q : Prop, hor p q
   hor_intro_right : ∀ (p : Prop) {q : Prop}, q -> hor p q
-  hor_elim : ∀ {p q : Prop}, (hor p q) -> ∀ {r}, (p -> r) -> (q -> r) -> r
+  hor_elim : ∀ {p q : Prop}, (hor p q) -> ∀ {r : Prop}, (p -> r) -> (q -> r) -> r
   unit : Type
   [ne_unit : Nonempty unit]
-  prod : Type -> Type -> Type
-  [ne_prod : ∀ (a0 a1 : Type), Nonempty (prod a0 a1)]
+  prod : (a0 a1 : Type) -> [Nonempty a0] -> [Nonempty a1] -> Type
+  [ne_prod : ∀ (a0 a1 : Type) [Nonempty a0] [Nonempty a1], Nonempty (prod a0 a1)]
   ind : Type
   [ne_ind : Nonempty ind]
   num : Type
   ne_num : Nonempty num
-  recspace : Type -> Type
-  [ne_recspace : ∀ (a0 : Type), Nonempty (recspace a0)]
-  SUM : Type -> Type -> Type
-  [ne_SUM : ∀ (a0 a1 : Type), Nonempty (SUM a0 a1)]
-  option : Type -> Type
-  [ne_option : ∀ (a0 : Type), Nonempty (option a0)]
-  list : Type -> Type
-  [ne_list : ∀ (a0 : Type), Nonempty (list a0)]
+  recspace : (a0 : Type) -> [Nonempty a0] -> Type
+  [ne_recspace : ∀ (a0 : Type) [Nonempty a0], Nonempty (recspace a0)]
+  SUM : (a0 a1 : Type) -> [Nonempty a0] -> [Nonempty a1] -> Type
+  [ne_SUM : ∀ (a0 a1 : Type) [Nonempty a0] [Nonempty a1], Nonempty (SUM a0 a1)]
+  option : (a0 : Type) -> [Nonempty a0] -> Type
+  [ne_option : ∀ (a0 : Type) [Nonempty a0], Nonempty (option a0)]
+  list : (a0 : Type) -> [Nonempty a0] -> Type
+  [ne_list : ∀ (a0 : Type) [Nonempty a0], Nonempty (list a0)]
   char : Type
   [ne_char : Nonempty char]
   nadd : Type
@@ -67,20 +75,20 @@ class HOLTheory where
   [ne_Real : Nonempty Real]
   int : Type
   [ne_int : Nonempty int]
-  finite_image : Type -> Type
-  [ne_finite_image : ∀ (a0 : Type), Nonempty (finite_image a0)]
-  cart : Type -> Type -> Type
-  [ne_cart : ∀ (a0 a1 : Type), Nonempty (cart a0 a1)]
-  finite_sum : Type -> Type -> Type
-  [ne_finite_sum : ∀ (a0 a1 : Type), Nonempty (finite_sum a0 a1)]
-  finite_diff : Type -> Type -> Type
-  [ne_finite_diff : ∀ (a0 a1 : Type), Nonempty (finite_diff a0 a1)]
-  finite_prod : Type -> Type -> Type
-  [ne_finite_prod : ∀ (a0 a1 : Type), Nonempty (finite_prod a0 a1)]
-  tybit0 : Type -> Type
-  [ne_tybit0 : ∀ (a0 : Type), Nonempty (tybit0 a0)]
-  tybit1 : Type -> Type
-  [ne_tybit1 : ∀ (a0 : Type), Nonempty (tybit1 a0)]
+  finite_image : (a0 : Type) -> [Nonempty a0] -> Type
+  [ne_finite_image : ∀ (a0 : Type) [Nonempty a0], Nonempty (finite_image a0)]
+  cart : (a0 a1 : Type) -> [Nonempty a0] -> [Nonempty a1] -> Type
+  [ne_cart : ∀ (a0 a1 : Type) [Nonempty a0] [Nonempty a1], Nonempty (cart a0 a1)]
+  finite_sum : (a0 a1 : Type) -> [Nonempty a0] -> [Nonempty a1] -> Type
+  [ne_finite_sum : ∀ (a0 a1 : Type) [Nonempty a0] [Nonempty a1], Nonempty (finite_sum a0 a1)]
+  finite_diff : (a0 a1 : Type) -> [Nonempty a0] -> [Nonempty a1] -> Type
+  [ne_finite_diff : ∀ (a0 a1 : Type) [Nonempty a0] [Nonempty a1], Nonempty (finite_diff a0 a1)]
+  finite_prod : (a0 a1 : Type) -> [Nonempty a0] -> [Nonempty a1] -> Type
+  [ne_finite_prod : ∀ (a0 a1 : Type) [Nonempty a0] [Nonempty a1], Nonempty (finite_prod a0 a1)]
+  tybit0 : (a0 : Type) -> [Nonempty a0] -> Type
+  [ne_tybit0 : ∀ (a0 : Type) [Nonempty a0], Nonempty (tybit0 a0)]
+  tybit1 : (a0 : Type) -> [Nonempty a0] -> Type
+  [ne_tybit1 : ∀ (a0 : Type) [Nonempty a0], Nonempty (tybit1 a0)]
   htrue_def : hol_eq htrue (hol_eq (fun p : Prop => p) (fun p : Prop => p))
   hand_def : hol_eq hand (fun p : Prop => fun q : Prop => hol_eq (fun f : Prop -> Prop -> Prop => f p q) (fun f : Prop -> Prop -> Prop => f htrue htrue))
   himpl_def : hol_eq imp (fun p : Prop => fun q : Prop => hol_eq (hand p q) p)
@@ -682,22 +690,22 @@ class HOLTheory where
 attribute [instance] HOLTheory.ne_unit
 variable [T : HOLTheory]
 #synth Nonempty (HOLTheory.unit)
-instance instNeProd [T : HOLTheory] (a0 a1 : Type) : Nonempty (HOLTheory.prod a0 a1) := HOLTheory.ne_prod a0 a1
+instance instNeProd [T : HOLTheory] (a0 a1 : Type) [Nonempty a0] [Nonempty a1] : Nonempty (HOLTheory.prod a0 a1) := HOLTheory.ne_prod a0 a1
 instance instNeInd [T : HOLTheory] : Nonempty (HOLTheory.ind) := HOLTheory.ne_ind
 instance instNeNum [T : HOLTheory] : Nonempty (HOLTheory.num) := HOLTheory.ne_num
-instance instNeRecspace [T : HOLTheory] (a0 : Type) : Nonempty (HOLTheory.recspace a0) := HOLTheory.ne_recspace a0
-instance instNeSUM [T : HOLTheory] (a0 a1 : Type) : Nonempty (HOLTheory.SUM a0 a1) := HOLTheory.ne_SUM a0 a1
-instance instNeOption [T : HOLTheory] (a0 : Type) : Nonempty (HOLTheory.option a0) := HOLTheory.ne_option a0
-instance instNeList [T : HOLTheory] (a0 : Type) : Nonempty (HOLTheory.list a0) := HOLTheory.ne_list a0
+instance instNeRecspace [T : HOLTheory] (a0 : Type) [Nonempty a0] : Nonempty (HOLTheory.recspace a0) := HOLTheory.ne_recspace a0
+instance instNeSUM [T : HOLTheory] (a0 a1 : Type) [Nonempty a0] [Nonempty a1] : Nonempty (HOLTheory.SUM a0 a1) := HOLTheory.ne_SUM a0 a1
+instance instNeOption [T : HOLTheory] (a0 : Type) [Nonempty a0] : Nonempty (HOLTheory.option a0) := HOLTheory.ne_option a0
+instance instNeList [T : HOLTheory] (a0 : Type) [Nonempty a0] : Nonempty (HOLTheory.list a0) := HOLTheory.ne_list a0
 instance instNeChar [T : HOLTheory] : Nonempty (HOLTheory.char) := HOLTheory.ne_char
 instance instNeNadd [T : HOLTheory] : Nonempty (HOLTheory.nadd) := HOLTheory.ne_nadd
 instance instNeHreal [T : HOLTheory] : Nonempty (HOLTheory.hreal) := HOLTheory.ne_hreal
 instance instNeReal [T : HOLTheory] : Nonempty (HOLTheory.Real) := HOLTheory.ne_Real
 instance instNeInt [T : HOLTheory] : Nonempty (HOLTheory.int) := HOLTheory.ne_int
-instance instNeFiniteImage [T : HOLTheory] (a0 : Type) : Nonempty (HOLTheory.finite_image a0) := HOLTheory.ne_finite_image a0
-instance instNeCart [T : HOLTheory] (a0 a1 : Type) : Nonempty (HOLTheory.cart a0 a1) := HOLTheory.ne_cart a0 a1
-instance instNeFiniteSum [T : HOLTheory] (a0 a1 : Type) : Nonempty (HOLTheory.finite_sum a0 a1) := HOLTheory.ne_finite_sum a0 a1
-instance instNeFiniteDiff [T : HOLTheory] (a0 a1 : Type) : Nonempty (HOLTheory.finite_diff a0 a1) := HOLTheory.ne_finite_diff a0 a1
-instance instNeFiniteProd [T : HOLTheory] (a0 a1 : Type) : Nonempty (HOLTheory.finite_prod a0 a1) := HOLTheory.ne_finite_prod a0 a1
-instance instNeTybit0 [T : HOLTheory] (a0 : Type) : Nonempty (HOLTheory.tybit0 a0) := HOLTheory.ne_tybit0 a0
-instance instNeTybit1 [T : HOLTheory] (a0 : Type) : Nonempty (HOLTheory.tybit1 a0) := HOLTheory.ne_tybit1 a0
+instance instNeFiniteImage [T : HOLTheory] (a0 : Type) [Nonempty a0] : Nonempty (HOLTheory.finite_image a0) := HOLTheory.ne_finite_image a0
+instance instNeCart [T : HOLTheory] (a0 a1 : Type) [Nonempty a0] [Nonempty a1] : Nonempty (HOLTheory.cart a0 a1) := HOLTheory.ne_cart a0 a1
+instance instNeFiniteSum [T : HOLTheory] (a0 a1 : Type) [Nonempty a0] [Nonempty a1] : Nonempty (HOLTheory.finite_sum a0 a1) := HOLTheory.ne_finite_sum a0 a1
+instance instNeFiniteDiff [T : HOLTheory] (a0 a1 : Type) [Nonempty a0] [Nonempty a1] : Nonempty (HOLTheory.finite_diff a0 a1) := HOLTheory.ne_finite_diff a0 a1
+instance instNeFiniteProd [T : HOLTheory] (a0 a1 : Type) [Nonempty a0] [Nonempty a1] : Nonempty (HOLTheory.finite_prod a0 a1) := HOLTheory.ne_finite_prod a0 a1
+instance instNeTybit0 [T : HOLTheory] (a0 : Type) [Nonempty a0] : Nonempty (HOLTheory.tybit0 a0) := HOLTheory.ne_tybit0 a0
+instance instNeTybit1 [T : HOLTheory] (a0 : Type) [Nonempty a0] : Nonempty (HOLTheory.tybit1 a0) := HOLTheory.ne_tybit1 a0

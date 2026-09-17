@@ -153,6 +153,27 @@ elab "part_tac_3" Q:term : tactic =>
 
 macro "epsilon_part_elim" Q:term : tactic =>
   `(tactic| first | part_tac_1 $Q | part_tac_2 $Q | part_tac_3 $Q)
+
+/-- Proves the HOL-Light fixpoint characterisation
+`C = fun a => ∀ P, (∀ a', clauses a' → P a') → P a`
+of an inductive predicate `C`, in either orientation.
+
+`ind_align using e` uses `e` as the eliminator instead of the structural one, e.g.
+`ind_align using Set.Finite.induction_on`. -/
+syntax (name := holInd) "ind_align" (" using " term)? : tactic
+
+macro_rules
+  | `(tactic| ind_align $[using $e]?) =>
+    `(tactic|
+      (funext x
+       apply Eq.propIntro <;>
+         first
+           | (intro h P hP
+              (first
+                | induction h $[using $e]?
+                | induction x, h $[using $e]?) <;> finisher_tacs)
+           | (intro h; apply h; intro a hc; finisher_tacs)))
+
 /- structure Type' where
 type : Type*
 el : type
