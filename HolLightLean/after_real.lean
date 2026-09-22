@@ -412,12 +412,12 @@ theorem INSERT_def {A : Type _} [Nonempty A] : (@INSERT A _) = (fun _32459 : A =
   unfold INSERT IN Set.insert
   grind
 
-/-- Bridges between the HOL-Light set constants and the `Set` ones they are defined as.
-They are `@[simp]` so that `finisher_tacs` (and hence `ind`) can cross the boundary. -/
-@[simp] theorem EMPTY_eq {A : Type _} [Nonempty A] : (@EMPTY A _) = (∅ : Set A) := rfl
+@[simp]
+theorem EMPTY_eq {A : Type _} [Nonempty A] : (@EMPTY A _) = (∅ : Set A) := rfl
 
-@[simp] theorem INSERT_eq {A : Type _} [Nonempty A] (a : A) (S : Set A) :
-    (@INSERT A _ a S) = insert a S := rfl
+@[simp]
+theorem INSERT_eq {A : Type _} [Nonempty A] (a : A) (S : Set A) :
+  (@INSERT A _ a S) = insert a S := rfl
 
 /--
 Closes a goal of the form
@@ -438,11 +438,18 @@ elab "gspec_align" : tactic => do
       | (rintro ⟨_, ⟨hx, heq⟩⟩; subst heq; first | exact hx | simp_all | grind)
       | (rintro ⟨_, _, ⟨hx, heq⟩⟩; subst heq; first | exact hx | simp_all | grind))))
 
-elab "two_set_align"  : tactic => do
+/--
+Closes the goal `<HOL-Light set constant> = <its HOL-side body>` for a constant
+whose Lean definition is a `Set` operation: normalises, then takes the goal apart by
+extensionality in each argument (arities 1 to 3) and proves both directions with
+`grind` / `solve_by_elim`.  Goals in `GSPEC` set-builder form are handed to `gspec_align`.
+-/
+elab "set_align"  : tactic => do
   Lean.Elab.Tactic.evalTactic (← `(tactic|
   (try simp_all);
   first
   | done
+  | gspec_align
   | (funext U V x;
           apply Eq.propIntro <;> intro h;
           refine ⟨x, by try trivial⟩;
@@ -456,8 +463,7 @@ elab "two_set_align"  : tactic => do
   | (funext U;
      apply Eq.propIntro <;> intro h <;>
      try grind <;> try solve_by_elim;
-     );
-  | gspec_align
+     )
     )
   )
 
@@ -469,7 +475,7 @@ theorem UNIV_def {A : Type _} [Nonempty A] : (@UNIV A _) = (fun x : A => True) :
 noncomputable def UNION {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => (U ∪ V: Set A)
 theorem UNION_def {A : Type _} [Nonempty A] : (@UNION A _) = (fun _32471 : A -> Prop => fun _32472 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_0 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_0 ((@IN A _ x _32471) ∨ (@IN A _ x _32472)) x)) := by
   unfold UNION
-  two_set_align
+  set_align
 
 @[simp]
 noncomputable def UNIONS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun F : Set (Set A) => ⋃₀ F
@@ -483,7 +489,7 @@ theorem UNIONS_def {A : Type _} [Nonempty A] : (@UNIONS A _) = (fun _32483 : (A 
 noncomputable def INTER {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> A -> Prop := fun (U V : Set A) => (U ∩ V : Set A)
 
 theorem INTER_def {A : Type _} [Nonempty A] : (@INTER A _) = (fun _32488 : A -> Prop => fun _32489 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_2 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_2 ((@IN A _ x _32488) ∧ (@IN A _ x _32489)) x)) := by
-  unfold INTER ; two_set_align
+  unfold INTER ; set_align
 
 @[simp]
 noncomputable def INTERS {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> A -> Prop := fun F : Set (Set A) => ⋂₀ F
@@ -497,12 +503,12 @@ noncomputable def DIFF {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) ->
 
 theorem DIFF_def {A : Type _} [Nonempty A] : (@DIFF A _) = (fun _32505 : A -> Prop => fun _32506 : A -> Prop => @GSPEC A _ (fun GEN_PVAR_4 : A => ∃ x : A, @SETSPEC A _ GEN_PVAR_4 ((@IN A _ x _32505) ∧ (¬ (@IN A _ x _32506))) x)) := by
   unfold DIFF
-  two_set_align
+  set_align
 
 @[simp]
 noncomputable def DELETE {A : Type _} [Nonempty A] : (A -> Prop) -> A -> A -> Prop := fun (S : Set A) (a : A) => S \ ({a} : Set A)
 theorem DELETE_def {A : Type _} [Nonempty A] : (@DELETE A _) = (fun _32517 : A -> Prop => fun _32518 : A => @GSPEC A _ (fun GEN_PVAR_6 : A => ∃ y : A, @SETSPEC A _ GEN_PVAR_6 ((@IN A _ y _32517) ∧ (¬ (y = _32518))) y)) := by
-  unfold DELETE ; two_set_align
+  unfold DELETE ; set_align
 
 @[simp]
 noncomputable def SUBSET {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => U ⊆ V
@@ -519,14 +525,14 @@ theorem PSUBSET_def {A : Type _} [Nonempty A] : (@PSUBSET A _) = (fun _32541 : A
 noncomputable def DISJOINT {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Prop) -> Prop := fun (U V : Set A) => Disjoint U V
 
 theorem DISJOINT_def {A : Type _} [Nonempty A] : (@DISJOINT A _) = (fun _32553 : A -> Prop => fun _32554 : A -> Prop => (@INTER A _ _32553 _32554) = (@EMPTY A _)) := by
-  two_set_align <;> expose_names
+  set_align <;> expose_names
   · exact Disjoint.inter_eq h
   · exact Set.disjoint_iff_inter_eq_empty.mpr h
 
 @[simp]
 noncomputable def SING {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun S => ∃ a : A, S = ({a} : Set A)
 theorem SING_def {A : Type _} [Nonempty A] : (@SING A _) = (fun _32565 : A -> Prop => ∃ x : A, _32565 = (@INSERT A _ x (@EMPTY A _))) := by
-  two_set_align <;> assumption
+  set_align <;> assumption
 
 @[simp]
 noncomputable def FINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := Set.Finite
@@ -589,7 +595,7 @@ noncomputable def CROSS {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -
 
 theorem CROSS_def {A B : Type _} [Nonempty A] [Nonempty B] : (@CROSS A B _ _) = (fun _47408 : A -> Prop => fun _47409 : B -> Prop => @GSPEC (prod A B) _ (fun GEN_PVAR_132 : prod A B => ∃ x : A, ∃ y : B, @SETSPEC (prod A B) _ GEN_PVAR_132 ((@IN A _ x _47408) ∧ (@IN B _ y _47409)) (@prod_mk A B _ _ x y))) := by
   unfold CROSS
-  two_set_align
+  set_align
 
 -- an arbitrary element `a : A`
 @[simp]
@@ -603,26 +609,13 @@ Let `S : Set A`, `EXTENSIONAL S` returns a set of functions `f : A → B` such t
 noncomputable def EXTENSIONAL {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> Prop := fun (S : Set A) => {f | ∀ a : A, ¬ S a → f a = ARB}
 theorem EXTENSIONAL_def {A B : Type _} [Nonempty A] [Nonempty B] : (@EXTENSIONAL A B _ _) = (fun _48182 : A -> Prop => @GSPEC (A -> B) _ (fun GEN_PVAR_141 : A -> B => ∃ f : A -> B, @SETSPEC (A -> B) _ GEN_PVAR_141 (∀ x : A, (¬ (@IN A _ x _48182)) -> (f x) = (@ARB B _)) f)) := by
   unfold EXTENSIONAL ARB
-  two_set_align <;> expose_names
-  · refine ⟨V, ⟨?_,rfl⟩⟩
-    intro x hU
-    apply h
-    exact hU
-  · intro x hU
-    obtain ⟨f,h⟩ := h
-    rw[h.2]
-    refine h.1 x ?_
-    exact hU
+  set_align
 
 open Classical in @[simp]
 noncomputable def RESTRICTION {A B : Type _} [Nonempty A] [Nonempty B] : (A -> Prop) -> (A -> B) -> A -> B := fun (S : Set A) f a => if h : a ∈ S then S.restrict f ⟨a,h⟩ else (@ARB B _)
 
 theorem RESTRICTION_def {A B : Type _} [Nonempty A] [Nonempty B] : (@RESTRICTION A B _ _) = (fun _48234 : A -> Prop => fun _48235 : A -> B => fun _48236 : A => @COND B _ (@IN A _ _48236 _48234) (_48235 _48236) (@ARB B _)) := by
-  unfold RESTRICTION COND IN
-  funext S f x
-  split_ifs <;> expose_names
-  · simp_all only [Set.restrict_apply]
-  · rfl
+  rfl
 
 /--
 Let `S : Set K` and `F : Set (K → A)`, `cartesian_product S F` is the set of functions from `K → A` such that for every `k ∈ S`, it gives the set `F k`.
@@ -659,17 +652,7 @@ theorem product_map_def {A B K : Type _} [Nonempty A] [Nonempty B] [Nonempty K] 
 @[simp]
 noncomputable def disjoint_union {A K : Type _} [Nonempty A] [Nonempty K] : (K -> Prop) -> (K -> A -> Prop) -> (prod K A) -> Prop := fun (S : Set K) F => {(i,x) | S i ∧  F i x}
 theorem disjoint_union_def {A K : Type _} [Nonempty A] [Nonempty K] : (@disjoint_union A K _ _) = (fun _49614 : K -> Prop => fun _49615 : K -> A -> Prop => @GSPEC (prod K A) _ (fun GEN_PVAR_145 : prod K A => ∃ i : K, ∃ x : A, @SETSPEC (prod K A) _ GEN_PVAR_145 ((@IN K _ i _49614) ∧ (@IN A _ x (_49615 i))) (@prod_mk K A _ _ i x))) := by
-  simp_all only [prod_def, GSPEC, SETSPEC, IN, id_eq]
-  funext S U p
-  unfold disjoint_union prod_mk
-  apply Eq.propIntro <;> intro h
-  · refine ⟨p.1,p.2,⟨?_,?_⟩⟩
-    · simp_all only [prod_def]
-      exact h
-    · rfl
-  · obtain ⟨i,x,h⟩ := h
-    rw[h.2]
-    exact ⟨h.1.1,h.1.2⟩
+  set_align
 
 open Classical in
 noncomputable def set_of_list {A : Type _} [Nonempty A] : (List A) -> A -> Prop := fun L => (L.toFinset : Set A)
@@ -702,12 +685,10 @@ theorem pairwise_def {A : Type _} [Nonempty A] : (@pairwise A _) = (fun _56702 :
 
 noncomputable def UNION_OF {A : Type _} [Nonempty A] : (((A -> Prop) -> Prop) -> Prop) -> ((A -> Prop) -> Prop) -> (A -> Prop) -> Prop := fun (P : Set (Set (Set A))) (Q : Set (Set A)) => { s | ∃ u ∈ P, u ⊆ Q ∧ ⋃₀ u = s }
 theorem UNION_OF_def {A : Type _} [Nonempty A] : (@UNION_OF A _) = (fun _57415 : ((A -> Prop) -> Prop) -> Prop => fun _57416 : (A -> Prop) -> Prop => fun s : A -> Prop => ∃ u : (A -> Prop) -> Prop, (_57415 u) ∧ ((∀ c : A -> Prop, (@IN (A -> Prop) _ c u) -> _57416 c) ∧ ((@UNIONS A _ u) = s))) := by
-  unfold UNION_OF UNIONS IN
   rfl
 
 noncomputable def INTERSECTION_OF {A : Type _} [Nonempty A] : (((A -> Prop) -> Prop) -> Prop) -> ((A -> Prop) -> Prop) -> (A -> Prop) -> Prop := fun (P : Set (Set (Set A))) (Q : Set (Set A)) => { s | ∃ u ∈ P, u ⊆ Q ∧ ⋂₀ u = s }
 theorem INTERSECTION_OF_def {A : Type _} [Nonempty A] : (@INTERSECTION_OF A _) = (fun _57427 : ((A -> Prop) -> Prop) -> Prop => fun _57428 : (A -> Prop) -> Prop => fun s : A -> Prop => ∃ u : (A -> Prop) -> Prop, (_57427 u) ∧ ((∀ c : A -> Prop, (@IN (A -> Prop) _ c u) -> _57428 c) ∧ ((@INTERS A _ u) = s))) := by
-  unfold INTERSECTION_OF INTERS IN
   rfl
 
 noncomputable def ARBITRARY {A : Type _} [Nonempty A] : ((A -> Prop) -> Prop) -> Prop := fun _57563 : (A -> Prop) -> Prop => True
@@ -926,10 +907,7 @@ theorem le_c_def {A B : Type _} [Nonempty A] [Nonempty B] : (@le_c A B _ _) = (f
 noncomputable def lt_c {A : Type u} {B : Type v} [Nonempty A] [Nonempty B] : (A -> Prop) -> (B -> Prop) -> Prop :=
   fun (s : Set A) (t : Set B) => Cardinal.lift.{v} (Cardinal.mk ↥s) < Cardinal.lift.{u} (Cardinal.mk ↥t)
 theorem lt_c_def {A B : Type _} [Nonempty A] [Nonempty B] : (@lt_c A B _ _) = (fun _64169 : A -> Prop => fun _64170 : B -> Prop => (@le_c A B _ _ _64169 _64170) ∧ (¬ (@le_c B A _ _ _64170 _64169))) := by
-  funext s t
-  apply propext
-  unfold lt_c le_c
-  exact lt_iff_le_not_ge
+  rfl
 
 noncomputable def eq_c {A : Type u} {B : Type v} [Nonempty A] [Nonempty B] : (A -> Prop) -> (B -> Prop) -> Prop :=
   fun (s : Set A) (t : Set B) => Cardinal.lift.{v} (Cardinal.mk ↥s) = Cardinal.lift.{u} (Cardinal.mk ↥t)
@@ -1072,7 +1050,7 @@ theorem has_sup_def : has_sup = (fun _66582 : Real -> Prop => fun _66583 : Real 
 noncomputable def dotdot : Nat -> Nat -> Nat -> Prop := fun n m => (Set.Icc n m : Set ℕ)
 theorem dotdot_def : dotdot = (fun _67008 : Nat => fun _67009 : Nat => @GSPEC Nat _ (fun GEN_PVAR_231 : Nat => ∃ x : Nat, @SETSPEC Nat _ GEN_PVAR_231 ((Nat.le _67008 x) ∧ (Nat.le x _67009)) x)) := by
   unfold dotdot
-  two_set_align
+  set_align
 
 noncomputable def neutral {A : Type _} [Nonempty A] : (A -> A -> A) -> A := fun _68920 : A -> A -> A => @Classical.epsilon A _ (fun x : A => ∀ y : A, ((_68920 x y) = y) ∧ ((_68920 y x) = y))
 theorem neutral_def {A : Type _} [Nonempty A] : (@neutral A _) = (fun _68920 : A -> A -> A => @Classical.epsilon A _ (fun x : A => ∀ y : A, ((_68920 x y) = y) ∧ ((_68920 y x) = y))) := by apply Eq.refl (@neutral A _)

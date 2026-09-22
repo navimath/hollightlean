@@ -1007,8 +1007,8 @@ instance : Nonempty CHAR := ⟨_mk_char Classical.ofNonempty⟩
 -/
 
 def SUM (α β : Type*) [Nonempty α] [Nonempty β] := Sum α β
-def INL {α β : Type*} [Nonempty α] [Nonempty β] := @Sum.inl α β
-def INR {α β : Type*} [Nonempty α] [Nonempty β] := @Sum.inr α β
+@[simp] def INL {α β : Type*} [Nonempty α] [Nonempty β] := @Sum.inl α β
+@[simp] def INR {α β : Type*} [Nonempty α] [Nonempty β] := @Sum.inr α β
 
 instance {A B : Type*} [h : Nonempty A] [Nonempty B] : Nonempty (SUM A B) := ⟨INL h.some⟩
 
@@ -1113,22 +1113,8 @@ noncomputable def OUTL {A B : Type*} [Nonempty A] [Nonempty B] : (SUM A B) -> A 
 
 open Classical in theorem OUTL_def {A B : Type*} [Nonempty A] [Nonempty B] : (@OUTL A B _ _) = (@OUTL_HOL A B _ _) := by
   unfold OUTL_HOL
-  set P := (fun OUTL' : prod ℕ ( prod ℕ (prod ℕ ℕ)) → SUM A B → A ↦ ∀ (_17649 : prod ℕ (prod ℕ (prod ℕ ℕ))) (x : A), OUTL' _17649 (INL x) = x)
   funext S
-  epsilon_part_elim (fun S : SUM A B => ∃ b : B, S = INR b)
-  · unfold P ; simp only [forall_const] ; intro x ; rfl
-  · rintro S1 ⟨b, Sr⟩
-    rw[Sr] ; unfold OUTL INR OUTL_HOL ; rfl
-  · intros f n S' hP hf hTriv
-    unfold P at hP hf
-    specialize hP n
-    specialize hf n
-    specialize hTriv S'
-    cases S' <;> rename_i val
-    · specialize hf val
-      unfold INL at hf ; rw[hf]
-      rfl
-    · exact hTriv ⟨val, by rfl⟩
+  epsilon_align_partial (fun S : SUM A B => ∃ b : B, S = INR b)
 
 noncomputable def OUTR_HOL {A B : Type*} [Nonempty A] [Nonempty B] : (SUM A B) -> B := @Classical.epsilon ((prod Nat (prod Nat (prod Nat Nat))) -> (SUM A B) -> B) _ (fun OUTR' : (prod Nat (prod Nat (prod Nat Nat))) -> (SUM A B) -> B => ∀ _17651 : prod Nat (prod Nat (prod Nat Nat)), ∀ y : B, Eq (OUTR' _17651 (@INR A B _ _ y)) y) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))))))
 
@@ -1137,24 +1123,9 @@ noncomputable def OUTR {A B : Type*} [Nonempty A] [Nonempty B] : (SUM A B) -> B 
 | Sum.inr b => b
 
 theorem OUTR_def {A B : Type*} [h1 : Nonempty A] [h2 : Nonempty B] : (@OUTR A B _ _) = (@OUTR_HOL A B _ _) := by
---  funext S
   unfold OUTR_HOL
-  set P := (fun OUTR' : prod ℕ ( prod ℕ (prod ℕ ℕ)) → SUM A B → B ↦ ∀ (_17651 : prod ℕ (prod ℕ (prod ℕ ℕ))) (y : B), OUTR' _17651 (INR y) = y)
   funext S
-  epsilon_part_elim (fun S : SUM A B => ∃ a : A, S = INL a)
-  · unfold P ; simp only [forall_const] ; intro x ; rfl
-  · rintro S1 ⟨b, Sr⟩
-    rw[Sr] ; unfold OUTR INL OUTR_HOL ; rfl
-  · intros f n S' hP hf hTriv
-    unfold P at hP hf
-    specialize hP n
-    specialize hf n
-    specialize hTriv S'
-    cases S' <;> rename_i val
-    · exact hTriv ⟨val, by rfl⟩
-    · specialize hf val
-      unfold INR at hf ; rw[hf]
-      rfl
+  epsilon_align_partial (fun S : SUM A B => ∃ a : A, S = INL a)
 
 /-!
 # Option Alignment
@@ -1436,24 +1407,7 @@ List.headD l (HD_HOL [])
 theorem HD_def {A : Type*} [Nonempty A] : (@HD A _) = (@HD_HOL A _) := by
   unfold HD_HOL
   funext l
-  epsilon_part_elim (fun l : List A => l = [])
-  · simp_all only [forall_const]
-    intro h t
-    rfl
-  · intros l' h
-    unfold HD HD_HOL
-    subst h
-    simp_all only [NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero, Nat.succ_eq_add_one, zero_add, Nat.reduceAdd, List.headD_eq_head?_getD, List.head?_nil, Option.getD_none]
-    rfl
-  · intros f a' l' h1 h2 h3
-    specialize h1 a'
-    specialize h2 a'
-    cases l'
-    · exact h3 [] (rfl)
-    · rename_i hd t
-      specialize h1 t hd
-      specialize h2 t hd
-      simp_all only [forall_eq]
+  epsilon_align_partial (fun l : List A => l = [])
 
 noncomputable def TL_HOL {A : Type*} [Nonempty A] := @Classical.epsilon ((prod Nat Nat) -> (List A) -> List A) _ (fun TL' : (prod Nat Nat) -> (List A) -> List A => ∀ _18094 : prod Nat Nat, ∀ h : A, ∀ t : List A, Eq (TL' _18094 (@List.cons A h t)) t) (@prod_mk Nat Nat _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))))
 
@@ -1465,25 +1419,7 @@ match l with
 theorem TL_def {A : Type*} [Nonempty A] : Eq (@TL A _) (@TL_HOL A _) := by
   unfold TL_HOL
   funext l
-  epsilon_part_elim (fun l : List A => l = [])
-  · simp_all only [forall_const]
-    intro h t
-    rfl
-  · intros l' h
-    unfold TL TL_HOL
-    subst h
-    simp_all only [NUMERAL, BIT0, BIT1, Nat.zero_eq, add_zero, Nat.succ_eq_add_one, zero_add,
-      Nat.reduceAdd]
-    rfl
-  · intros f a' l' h1 h2 h3
-    specialize h1 a'
-    specialize h2 a'
-    cases l'
-    · exact h3 [] (rfl)
-    · rename_i hd t
-      specialize h1 hd t
-      specialize h2 hd t
-      simp_all only [forall_eq]
+  epsilon_align_partial (fun l : List A => l = [])
 
 noncomputable def LAST_HOL {A : Type*} [Nonempty A] : (List A) -> A := @Classical.epsilon ((prod Nat (prod Nat (prod Nat Nat))) -> (List A) -> A) _ (fun LAST' : (prod Nat (prod Nat (prod Nat Nat))) -> (List A) -> A => ∀ _18117 : prod Nat (prod Nat (prod Nat Nat)), ∀ h : A, ∀ t : List A, Eq (LAST' _18117 (@List.cons A h t)) (@COND A _ (Eq t (@NIL A _)) h (LAST' _18117 t))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (NUMERAL (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero)))))))))))
 
@@ -1493,35 +1429,7 @@ List.getLastD l (LAST_HOL [])
 theorem LAST_def {A : Type*} [Nonempty A] : (@LAST A _) = (@LAST_HOL A _) := by
   unfold LAST_HOL
   funext l
-  epsilon_part_elim (fun l : List A => l = [])
-  · intros r hd t
-    simp only
-    by_cases h1 : t = NIL
-    · subst h1
-      unfold LAST NIL COND
-      simp only [List.getLastD_eq_getLast?, List.getLast?_singleton, Option.getD_some, ↓reduceIte]
-    · simp only [h1]
-      unfold LAST COND
-      simp only [↓reduceIte]
-      rw[← Ne.eq_def] at h1
-      have h_aux : ∀ a b : A, ∀ t : List A, t ≠ [] → (a::t).getLastD b = t.getLastD b := by intros a1 b1 t1 h' ; cases t1 ; try contradiction ; simp_all only [ne_eq,
-        reduceCtorEq, not_false_eq_true, List.getLastD_eq_getLast?, List.getLast?_cons_cons]
-      apply h_aux
-      exact h1
-  · intros l' h
-    unfold LAST LAST_HOL
-    subst h
-    simp_all only [Nat.zero_eq]
-    rfl
-  · intros f a' l' h1 h2 h3
-    specialize h1 a'
-    specialize h2 a'
-    induction l'
-    · exact h3 [] (rfl)
-    · rename_i hd t ih
-      specialize h1 hd t
-      specialize h2 hd t
-      simp_all only [forall_eq]
+  epsilon_align_partial (fun l : List A => l = [])
 
 def REPLICATE {A : Type*} [Nonempty A] : Nat -> A -> List A := List.replicate
 
@@ -1748,17 +1656,9 @@ open Classical in noncomputable def ASSOC {A B : Type*} [Nonempty A] [Nonempty B
 theorem ASSOC_def {A B : Type*} [Nonempty A] [Nonempty B] : (@ASSOC A B _ _) = (@ASSOC_HOL A B _ _) := by
   unfold ASSOC_HOL
   funext a l
-  set P := (fun ASSOC' : prod ℕ (prod ℕ (prod ℕ (prod ℕ ℕ))) → A → List (prod A B) → B ↦
-        ∀ (_18192 : prod ℕ (prod ℕ (prod ℕ (prod ℕ ℕ)))) (h : prod A B) (a : A) (t : List (prod A B)),
-          ASSOC' _18192 a (h :: t) = COND (prod_fst h = a) (prod_snd h) (ASSOC' _18192 a t))
-  set R := (prod_mk (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
-        (prod_mk (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))
-          (prod_mk (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 (BIT0 (BIT1 Nat.zero))))))))
-            (prod_mk (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT0 (BIT1 Nat.zero))))))))
-              (NUMERAL (BIT1 (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 Nat.zero))))))))))))
-  epsilon_part_elim (fun l : List (prod A B) => l = [])
-  · unfold P
-    intros r p hd t
+  epsilon_align_partial (fun l : List (prod A B) => l = [])
+  -- the specification of `ASSOC`, and its uniqueness, are left to be proved by hand
+  · intros r p hd t
     simp only
     by_cases h1 : (prod_fst p = hd)
     · subst h1
@@ -1772,12 +1672,7 @@ theorem ASSOC_def {A B : Type*} [Nonempty A] [Nonempty B] : (@ASSOC A B _ _) = (
       cases p ; unfold prod_fst at h1 ; simp only at h1 ; cases t <;> have h := by simpa [eq_comm] using h1
       · simp [h, ASSOC, ASSOC_HOL]
       · simp only [h, ↓reduceIte] ; rfl
-  · intros a' l h
-    unfold ASSOC ASSOC_HOL
-    simp_all only [P]
-    rfl
   · intros f r a' l' h1 h2 h3
-    unfold P at h1 h2
     specialize h1 r
     specialize h2 r
     induction l'

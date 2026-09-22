@@ -38,9 +38,6 @@ elab "epsilon_elim" : tactic =>
 
 /--
 After epsilon_tac, prove that λ_,f satisfies the total recursive inductive predicate.
-These have the form
-
-∀ N : ℕᵈ,(∀ a : ℕᵐ, (λ_,f) N (NUMERAL 0) m = ...) ∧ (∀ a : ℕ, b : ℕᵐ)
 -/
 elab "epsilon_align_1_total_rec_nat"  : tactic => do
   Lean.Elab.Tactic.evalTactic (← `(tactic|
@@ -154,7 +151,51 @@ elab "part_tac_3" Q:term : tactic =>
 macro "epsilon_part_elim" Q:term : tactic =>
   `(tactic| first | part_tac_1 $Q | part_tac_2 $Q | part_tac_3 $Q)
 
-/-- Proves the HOL-Light fixpoint characterisation
+/-
+Once `epsilon_part_elim` has run, there are three goals left:
+
+  1. `P f`, the Lean function satisfies the HOL specification.
+  2.  The equality holds inside the predicate `Q`.
+  3.  Uniqueness.
+-/
+
+macro "epsilon_part_g1" τ:term : tactic =>
+  `(tactic| ((try intros)
+             (try casesm* Prod _ _, prod _ _)
+             first
+               | (finisher_tacs; done)
+               | (induction ‹$τ› <;> simp_all; done)
+               | (induction ‹$τ› <;> finisher_tacs; done)))
+
+macro "epsilon_part_g2" : tactic =>
+  `(tactic| (intros
+             (try casesm* Exists _, _ ∧ _)
+             (try subst_vars)
+             finisher_tacs))
+
+macro "epsilon_part_g3" τ:term : tactic =>
+  `(tactic| (intros
+             (try casesm* Prod _ _, prod _ _)
+             first
+               | (induction ‹$τ› <;> simp_all; done)
+               | (induction ‹$τ› <;> finisher_tacs; done)))
+
+/--
+Partial alignment of a HOL-Light constant defined by `Classical.epsilon`, for the part of
+the domain outside `Q`.
+The induction is derived from the binder type on the predicate `Q` when is in its lambda form.
+-/
+syntax "epsilon_align_partial" term : tactic
+
+macro_rules
+  | `(tactic| epsilon_align_partial (fun $x : $τ => $b)) =>
+    `(tactic| (epsilon_part_elim (fun $x : $τ => $b)
+               on_goal 3 => (try epsilon_part_g3 $τ)
+               on_goal 2 => (try epsilon_part_g2)
+               on_goal 1 => (try epsilon_part_g1 $τ)))
+
+
+/-- Proves the HOL-Light characterisation of inductive predicates
 `C = fun a => ∀ P, (∀ a', clauses a' → P a') → P a`
 of an inductive predicate `C`, in either orientation.
 
