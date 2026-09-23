@@ -2,8 +2,7 @@ import HolLightLean.conectors
 
 macro "finisher_tacs" : tactic =>
   `(tactic |
-  first
-    | rfl | lia | grind | (aesop; done) | done
+    first | rfl | lia | grind | (aesop; done) | done
   )
 
 elab "epsilon_elim" : tactic =>
@@ -11,13 +10,12 @@ elab "epsilon_elim" : tactic =>
     Lean.Elab.Tactic.evalTactic (← `(tactic|try unfold NUMERAL BIT0 BIT1 at *))
     let goalType ← Lean.Elab.Tactic.getMainTarget
     let goalMvar ← Lean.Elab.Tactic.getMainGoal
-    match_expr goalType with
-    | Eq _ lhs rhs =>
+    let some (_, lhs, rhs) := goalType.eq? | throwError "Goal is not an equality"
       let β ← Lean.Meta.inferType lhs
       let srtv ← Lean.Meta.whnf (← Lean.Meta.inferType β)
       let v := srtv.sortLevel!
-      match_expr rhs with
-      | Classical.epsilon _ _ _ a =>
+      let_expr Classical.epsilon _ _ _ a := rhs
+        | throwError "Right hand side is not of the form ε P r"
         let α' ← Lean.Meta.inferType a
         let α := .forallE `x α' β .default
         let srtu ← Lean.Meta.whnf (← Lean.Meta.inferType α)
@@ -33,8 +31,6 @@ elab "epsilon_elim" : tactic =>
           let newMvars ← newGoal.apply (.const ``align_epsilon [w])
           Lean.Elab.Term.synthesizeSyntheticMVarsNoPostponing
           Lean.Elab.Tactic.replaceMainGoal newMvars
-        | _ => throwError "Right hand side is not of the form ε P r"
-    | _ => throwError "Goal is not an equality"
 
 /--
 After epsilon_tac, prove that λ_,f satisfies the total recursive inductive predicate.
@@ -95,7 +91,7 @@ macro "epsilon_align_total" : tactic => `(tactic | (
 /--
 Shared finishing step
 -/
-def partTacFinish (lemmaName : Lean.Name) (realArgs : Nat) (goalMvar : Lean.MVarId)
+opaque partTacFinish (lemmaName : Lean.Name) (realArgs : Nat) (goalMvar : Lean.MVarId)
     (lhs a : Lean.Expr) (leadingArgs : Array (Option Lean.Expr)) (P : Lean.Expr) :
     Lean.Elab.Tactic.TacticM Unit := do
   let x := lhs.getAppPrefix ((Array.size lhs.getAppArgs) - realArgs)
@@ -180,11 +176,6 @@ macro "epsilon_part_g3" τ:term : tactic =>
                | (induction ‹$τ› <;> simp_all; done)
                | (induction ‹$τ› <;> finisher_tacs; done)))
 
-/--
-Partial alignment of a HOL-Light constant defined by `Classical.epsilon`, for the part of
-the domain outside `Q`.
-The induction is derived from the binder type on the predicate `Q` when is in its lambda form.
--/
 syntax "epsilon_align_partial" term : tactic
 
 macro_rules
@@ -194,13 +185,6 @@ macro_rules
                on_goal 2 => (try epsilon_part_g2)
                on_goal 1 => (try epsilon_part_g1 $τ)))
 
-
-/-- Proves the HOL-Light characterisation of inductive predicates
-`C = fun a => ∀ P, (∀ a', clauses a' → P a') → P a`
-of an inductive predicate `C`, in either orientation.
-
-`ind_align using e` uses `e` as the eliminator instead of the structural one, e.g.
-`ind_align using Set.Finite.induction_on`. -/
 syntax (name := holInd) "ind_align" (" using " term)? : tactic
 
 macro_rules
@@ -214,6 +198,31 @@ macro_rules
                 | induction h $[using $e]?
                 | induction x, h $[using $e]?) <;> finisher_tacs)
            | (intro h; apply h; intro a hc; finisher_tacs)))
+
+macro "gspec_align" : tactic =>
+  `(tactic|
+    (try unfold GSPEC SETSPEC id IN
+     repeat funext _
+     apply Eq.propIntro
+     · intro h
+       first
+         | refine ⟨_, ?_, rfl⟩
+         | refine ⟨_, _, ?_, rfl⟩
+       first | exact h | finisher_tacs
+     · first
+         | (rintro ⟨_, h, heq⟩; subst heq)
+         | (rintro ⟨_, _, h, heq⟩; subst heq)
+       first | exact h | finisher_tacs))
+
+macro "set_align" : tactic =>
+  `(tactic|
+    (try simp_all
+     first
+       | done
+       | gspec_align
+       | (repeat funext _
+          apply Eq.propIntro <;> intro h <;>
+            first | finisher_tacs | solve_by_elim | skip)))
 
 /- structure Type' where
 type : Type*

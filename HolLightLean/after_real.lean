@@ -12,7 +12,7 @@ set_option linter.style.header false
 set_option linter.style.longLine false
 set_option linter.unusedVariables false
 
-#check Rat
+-- #check Rat
 -- noncomputable def DECIMAL : Nat -> Nat -> Real := fun _27914 : Nat => fun _27915 : Nat => real_div (real_of_num _27914) (real_of_num _27915)
 -- theorem DECIMAL_def : DECIMAL = (fun _27914 : Nat => fun _27915 : Nat => real_div (real_of_num _27914) (real_of_num _27915)) := by apply Eq.refl DECIMAL
 
@@ -419,54 +419,6 @@ theorem EMPTY_eq {A : Type _} [Nonempty A] : (@EMPTY A _) = (∅ : Set A) := rfl
 theorem INSERT_eq {A : Type _} [Nonempty A] (a : A) (S : Set A) :
   (@INSERT A _ a S) = insert a S := rfl
 
-/--
-Closes a goal of the form
-`<lean set> = GSPEC (fun v => ∃ x, SETSPEC v (Q x) x)`
--/
-elab "gspec_align" : tactic => do
-  Lean.Elab.Tactic.evalTactic (← `(tactic|
-    (try unfold GSPEC SETSPEC id IN);
-    (first | funext a b c d | funext a b c | funext a b | funext a);
-    (try apply propext);
-    apply Iff.intro;
-    (first
-      | (intro h; exact ⟨_, ⟨h, rfl⟩⟩)
-      | (intro h; refine ⟨_, ⟨?_, rfl⟩⟩; first | assumption | simp_all | grind)
-      | (intro h; exact ⟨_, _, ⟨h, rfl⟩⟩)
-      | (intro h; refine ⟨_, _, ⟨?_, rfl⟩⟩; first | assumption | simp_all | grind));
-    (first
-      | (rintro ⟨_, ⟨hx, heq⟩⟩; subst heq; first | exact hx | simp_all | grind)
-      | (rintro ⟨_, _, ⟨hx, heq⟩⟩; subst heq; first | exact hx | simp_all | grind))))
-
-/--
-Closes the goal `<HOL-Light set constant> = <its HOL-side body>` for a constant
-whose Lean definition is a `Set` operation: normalises, then takes the goal apart by
-extensionality in each argument (arities 1 to 3) and proves both directions with
-`grind` / `solve_by_elim`.  Goals in `GSPEC` set-builder form are handed to `gspec_align`.
--/
-elab "set_align"  : tactic => do
-  Lean.Elab.Tactic.evalTactic (← `(tactic|
-  (try simp_all);
-  first
-  | done
-  | gspec_align
-  | (funext U V x;
-          apply Eq.propIntro <;> intro h;
-          refine ⟨x, by try trivial⟩;
-          obtain ⟨x', h'⟩ := h;
-          rw [h'.2];
-          exact h'.1)
-  | (funext U V;
-     apply Eq.propIntro <;> intro h <;>
-     try grind <;> try solve_by_elim;
-     );
-  | (funext U;
-     apply Eq.propIntro <;> intro h <;>
-     try grind <;> try solve_by_elim;
-     )
-    )
-  )
-
 @[simp]
 noncomputable def UNIV {A : Type _} [Nonempty A] : A -> Prop := Set.univ
 theorem UNIV_def {A : Type _} [Nonempty A] : (@UNIV A _) = (fun x : A => True) := by apply Eq.refl (@UNIV A _)
@@ -532,7 +484,7 @@ theorem DISJOINT_def {A : Type _} [Nonempty A] : (@DISJOINT A _) = (fun _32553 :
 @[simp]
 noncomputable def SING {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := fun S => ∃ a : A, S = ({a} : Set A)
 theorem SING_def {A : Type _} [Nonempty A] : (@SING A _) = (fun _32565 : A -> Prop => ∃ x : A, _32565 = (@INSERT A _ x (@EMPTY A _))) := by
-  set_align <;> assumption
+  set_align
 
 @[simp]
 noncomputable def FINITE {A : Type _} [Nonempty A] : (A -> Prop) -> Prop := Set.Finite
