@@ -1,5 +1,5 @@
 // map for renaming dk/lp identifiers (on the right)
-// to Coq expressions (on the left)
+// to Lean expressions (on the left)
 
 builtin "whileterm" ≔ while;
 
@@ -117,7 +117,6 @@ builtin "addadd_def" ≔ ++_def;
 builtin "mulmul" ≔ **;
 builtin "mulmul_def" ≔ **_def;
 
-builtin "ltle" ≔ <<=;
 builtin "ltle_def" ≔ <<=_def;
 
 // Multivariate

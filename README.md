@@ -88,12 +88,27 @@ Create a fresh folder outside `$HOLLIGHT_DIR` and copy inside the `encoding.lp`,
 hol2dk config hol_up_real.ml HolUptoReal complete.lean --mapping mapping.lp --renaming renaming.lp
 make split && make -j$(nproc) lp
 make hol_up_real_opam.lp           # create theorem statements
-make lean                          # creates HolUptoReal/ and translates the .lp files inside
+make lean
 ```
+
+> Make sure Lean and Mathlib point to v4.31.0
+> In the `lakefile.toml` file of the project change these lines
+> ```toml
+>[[require]]
+>name = "mathlib"
+>scope = "leanprover-community"
+>rev = "v4.31.0"
+>```
+> Finally, in the project folder run
+> ```bash
+> echo "leanprover/lean4:v4.31.0" > lean-toolchain 
+> lake update
+> ```
+
 
 ### 4. Add the alignment files
 
-Copy to the generated Lean folder `hol_up_real_{terms,opam}.lean` from `HolLightLean/`, replacing their imports with the corresponding header.
+Copy to the generated Lean folder `hol_up_real_{terms,opam}.lean` from `HolLightLean/`, replacing their imports with the corresponding header `<projectname>.<name_of_fragment_file>`, in this case is `HolUptoReal.hol_up_real`.
 
 ### 5. Check the translation
 

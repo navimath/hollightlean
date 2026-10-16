@@ -2,8 +2,6 @@
 The declarations of dk/lp symbols are removed and their occurrences are
 replaced by the given Lean expressions. */
 
-// builtin "<lean_exp>" = <lp_symbol> 
-
 // primitive types
 builtin "Type _" ≔ Set;
 builtin "el" ≔ el;
@@ -28,7 +26,7 @@ builtin "and_def" ≔ ∧_def;
 builtin "EXISTS" ≔ ∃;
 builtin "exists_def" ≔ ∃_def;
 
-builtin "Not" ≔ ¬; //propositional negation
+builtin "Not" ≔ ¬;
 builtin "not_def" ≔ ¬_def;
 
 builtin "True" ≔ ⊤;
@@ -65,15 +63,29 @@ builtin "axiom_1" ≔ axiom_1;
 builtin "funext" ≔ fun_ext;
 builtin "Eq.propIntro" ≔ prop_ext;
 
-
 // miscellaneous
 builtin "COND" ≔ COND;
 builtin "COND_def" ≔ COND_def;
-builtin "GEQ" ≔ GEQ; 
+builtin "GEQ" ≔ GEQ;
 builtin "GEQ_def" ≔ GEQ_def;
 builtin "ISO" ≔ ISO;
 builtin "ISO_def" ≔ ISO_def;
-
+builtin "GABS" ≔ GABS;
+builtin "GABS_def" ≔ GABS_def;
+builtin "_UNGUARDED_PATTERN" ≔ _UNGUARDED_PATTERN;
+builtin "_UNGUARDED_PATTERN_def" ≔ _UNGUARDED_PATTERN_def;
+builtin "_FALSITY_" ≔ _FALSITY_;
+builtin "_FALSITY__def" ≔ _FALSITY__def;
+builtin "hashek" ≔ hashek;
+builtin "hashek_def" ≔ hashek_def;
+builtin "LET" ≔ LET;
+builtin "LET_def" ≔ LET_def;
+builtin "LET_END" ≔ LET_END;
+builtin "LET_END_def" ≔ LET_END_def;
+builtin "HolLightLean.hol_up_real_terms.MEASURE" ≔ MEASURE;
+builtin "HolLightLean.hol_up_real_terms.MEASURE_def" ≔ MEASURE_def;
+builtin "o" ≔ o;
+builtin "o_def" ≔ o_def;
 
 // unit type
 builtin "Unit" ≔ unit;
@@ -83,7 +95,6 @@ builtin "axiom_2" ≔ axiom_2;
 builtin "axiom_3" ≔ axiom_3;
 builtin "()" ≔ one;
 builtin "one_def" ≔ one_def;
-
 
 // product type
 builtin "mk_pair" ≔ mk_pair;
@@ -100,7 +111,6 @@ builtin "FST_def" ≔ FST_def;
 builtin "prod_snd" ≔ SND;
 builtin "SND_def" ≔ SND_def;
 
-
 // infinite type ind
 builtin "ind" ≔ ind;
 builtin "ONE_ONE" ≔ ONE_ONE;
@@ -112,13 +122,6 @@ builtin "IND_SUC" ≔ IND_SUC;
 builtin "IND_SUC_def" ≔ IND_SUC_def;
 builtin "IND_0" ≔ IND_0;
 builtin "IND_0_def" ≔ IND_0_def;
-
-
-// type of natural numbers
-builtin "Nat" ≔ num;
- builtin "Nat.zero" ≔ _0;
-builtin "Nat.succ" ≔ SUC;
-
 
 // type of natural numbers
 builtin "Nat" ≔ num;
@@ -132,7 +135,6 @@ builtin "Nat.zero" ≔ _0;
 builtin "_0_def" ≔ _0_def;
 builtin "Nat.succ" ≔ SUC;
 builtin "SUC_def" ≔ SUC_def;
-
 
 // usual mathematical functions on natural numbers
 builtin "NUMERAL" ≔ NUMERAL;
@@ -169,27 +171,14 @@ builtin "Nat.div" ≔ DIV;
 builtin "DIV_def" ≔ DIV_def;
 builtin "Nat.mod" ≔ MOD;
 builtin "MOD_def" ≔ MOD_def;
-
-
 builtin "EVEN" ≔ EVEN;
 builtin "EVEN_def" ≔ EVEN_def;
 builtin "ODD" ≔ ODD;
 builtin "ODD_def" ≔ ODD_def;
 
-
 // wf
 builtin "WF" ≔ WF;
 builtin "WF_def" ≔ WF_def;
-
-// NUMPAIR, NUMSUM, NUMFST and NUMSND
-builtin "NUMPAIR" ≔ NUMPAIR;
-builtin "NUMPAIR_def" ≔ NUMPAIR_def;
-builtin "NUMSUM" ≔ NUMSUM;
-builtin "NUMSUM_def" ≔ NUMSUM_def;
-builtin "NUMFST" ≔ NUMFST;
-builtin "NUMFST_def" ≔ NUMFST_def;
-builtin "NUMSND" ≔ NUMSND;
-builtin "NUMSND_def" ≔ NUMSND_def;
 
 // indtypes
 builtin "NUMLEFT" ≔ NUMLEFT;
@@ -209,20 +198,6 @@ builtin "BOTTOM" ≔ BOTTOM;
 builtin "BOTTOM_def" ≔ BOTTOM_def;
 builtin "CONSTR" ≔ CONSTR;
 builtin "CONSTR_def" ≔ CONSTR_def;
-builtin "ZBOT" ≔  ZBOT;
-builtin "ZBOT_def" ≔  ZBOT_def;
-builtin "ZCONSTR" ≔  ZCONSTR;
-builtin "ZCONSTR_def" ≔  ZCONSTR_def;
-builtin "INJN" ≔  INJN;
-builtin "INJN_def" ≔  INJN_def;
-builtin "INJA" ≔  INJA;
-builtin "INJA_def" ≔  INJA_def;
-builtin "INJF" ≔  INJF;
-builtin "INJF_def" ≔  INJF_def;
-builtin "INJP" ≔  INJP;
-builtin "INJP_def" ≔  INJP_def;
-builtin "FNIL" ≔  FNIL;
-builtin "FNIL_def" ≔  FNIL_def;
 
 // option
 builtin "Option" ≔ option;
@@ -245,11 +220,6 @@ builtin "INL" ≔ INL;
 builtin "INL_def" ≔ INL_def;
 builtin "INR" ≔ INR;
 builtin "INR_def" ≔ INR_def;
-builtin "OUTL" ≔ OUTL;
-builtin "OUTL_def" ≔ OUTL_def;
-builtin "OUTR" ≔ OUTR;
-builtin "OUTR_def" ≔ OUTR_def;
-
 
 // lists
 builtin "List" ≔ list;
@@ -291,33 +261,31 @@ builtin "NULL" ≔ NULL;
 builtin "NULL_def" ≔ NULL_def;
 builtin "EX" ≔ EX;
 builtin "EX_def" ≔ EX_def;
-/* builtin "ALL2" ≔ ALL2;
-builtin "ALL2_def" ≔ ALL2_def; */
+builtin "ALL2" ≔ ALL2;
+builtin "ALL2_def" ≔ ALL2_def;
 builtin "LAST" ≔ LAST;
 builtin "LAST_def" ≔ LAST_def;
-/* builtin "MAP2" ≔ MAP2;
-builtin "MAP2_def" ≔ MAP2_def; */
-/* builtin "EL" ≔ EL;
-builtin "EL_def" ≔ EL_def; */
+builtin "MAP2" ≔ MAP2;
+builtin "MAP2_def" ≔ MAP2_def;
+builtin "EL" ≔ EL;
+builtin "EL_def" ≔ EL_def;
 builtin "ASSOC" ≔ ASSOC;
 builtin "ASSOC_def" ≔ ASSOC_def;
-/* builtin "ZIP" ≔ ZIP;
+builtin "ZIP" ≔ ZIP;
 builtin "ZIP_def" ≔ ZIP_def;
 builtin "ALLPAIRS" ≔ ALLPAIRS;
 builtin "ALLPAIRS_def" ≔ ALLPAIRS_def;
 builtin "list_of_seq" ≔ list_of_seq;
 builtin "list_of_seq_def" ≔ list_of_seq_def;
 builtin "ITLIST2" ≔ ITLIST2;
-builtin "ITLIST2_def" ≔ ITLIST2_def; */
+builtin "ITLIST2_def" ≔ ITLIST2_def;
 
 // char
 builtin "CHAR" ≔ char;
-/* 
 builtin "_dest_char" ≔ _dest_char;
 builtin "_mk_char" ≔ _mk_char;
 builtin "axiom_17" ≔ axiom_17;
-builtin "axiom_18" ≔ axiom_18; 
-*/
+builtin "axiom_18" ≔ axiom_18;
 
 // realax
 builtin "DIST" ≔ dist;
@@ -377,8 +345,205 @@ builtin "treal_inv_def" ≔ treal_inv_def;
 builtin "treal_neg" ≔ treal_neg;
 builtin "treal_neg_def" ≔ treal_neg_def;
 
-builtin "real" ≔ Real;
+builtin "Real" ≔ Real;
 builtin "mk_real" ≔ mk_real;
 builtin "dest_real" ≔ dest_real;
 builtin "axiom_23" ≔ axiom_23;
 builtin "axiom_24" ≔ axiom_24;
+
+builtin "real_le" ≔ real_le;
+builtin "real_le_def" ≔ real_le_def;
+builtin "real_add" ≔ real_add;
+builtin "real_add_def" ≔ real_add_def;
+builtin "real_mul" ≔ real_mul;
+builtin "real_mul_def" ≔ real_mul_def;
+builtin "real_inv" ≔ real_inv;
+builtin "real_inv_def" ≔ real_inv_def;
+builtin "real_neg" ≔ real_neg;
+builtin "real_neg_def" ≔ real_neg_def;
+builtin "real_of_num" ≔ real_of_num;
+builtin "real_of_num_def" ≔ real_of_num_def;
+builtin "real_pow" ≔ real_pow;
+builtin "real_pow_def" ≔ real_pow_def;
+builtin "real_abs" ≔ real_abs;
+builtin "real_abs_def" ≔ real_abs_def;
+builtin "real_div" ≔ real_div;
+builtin "real_div_def" ≔ real_div_def;
+builtin "real_sub" ≔ real_sub;
+builtin "real_sub_def" ≔ real_sub_def;
+builtin "real_ge" ≔ real_ge;
+builtin "real_ge_def" ≔ real_ge_def;
+builtin "real_gt" ≔ real_gt;
+builtin "real_gt_def" ≔ real_gt_def;
+builtin "real_lt" ≔ real_lt;
+builtin "real_lt_def" ≔ real_lt_def;
+builtin "real_max" ≔ real_max;
+builtin "real_max_def" ≔ real_max_def;
+builtin "real_min" ≔ real_min;
+builtin "real_min_def" ≔ real_min_def;
+builtin "real_sgn" ≔ real_sgn;
+builtin "real_sgn_def" ≔ real_sgn_def;
+builtin "SQRT_HOL" ≔ sqrt;
+builtin "SQRT_def" ≔ sqrt_def;
+builtin "real_mod" ≔ real_mod;
+builtin "real_mod_def" ≔ real_mod_def;
+
+// integers
+builtin "Int" ≔ int;
+builtin "real_of_int" ≔ real_of_int;
+builtin "int_of_real" ≔ int_of_real;
+builtin "integer" ≔ integer;
+builtin "integer_def" ≔ integer_def;
+builtin "axiom_25" ≔ axiom_25;
+builtin "axiom_26" ≔ axiom_26;
+builtin "int_of_num" ≔ int_of_num;
+builtin "int_of_num_def" ≔ int_of_num_def;
+builtin "int_le" ≔ int_le;
+builtin "int_le_def" ≔ int_le_def;
+builtin "int_lt" ≔ int_lt;
+builtin "int_lt_def" ≔ int_lt_def;
+builtin "int_ge" ≔ int_ge;
+builtin "int_ge_def" ≔ int_ge_def;
+builtin "int_gt" ≔ int_gt;
+builtin "int_gt_def" ≔ int_gt_def;
+builtin "int_neg" ≔ int_neg;
+builtin "int_neg_def" ≔ int_neg_def;
+builtin "int_add" ≔ int_add;
+builtin "int_add_def" ≔ int_add_def;
+builtin "int_sub" ≔ int_sub;
+builtin "int_sub_def" ≔ int_sub_def;
+builtin "int_mul" ≔ int_mul;
+builtin "int_mul_def" ≔ int_mul_def;
+builtin "int_abs" ≔ int_abs;
+builtin "int_abs_def" ≔ int_abs_def;
+builtin "int_sgn" ≔ int_sgn;
+builtin "int_sgn_def" ≔ int_sgn_def;
+builtin "int_max" ≔ int_max;
+builtin "int_max_def" ≔ int_max_def;
+builtin "int_min" ≔ int_min;
+builtin "int_min_def" ≔ int_min_def;
+builtin "int_pow" ≔ int_pow;
+builtin "int_pow_def" ≔ int_pow_def;
+builtin "div" ≔ div;
+builtin "div_def" ≔ div_def;
+builtin "rem" ≔ rem;
+builtin "rem_def" ≔ rem_def;
+builtin "int_divides" ≔ int_divides;
+builtin "int_divides_def" ≔ int_divides_def;
+builtin "int_coprime" ≔ int_coprime;
+builtin "int_coprime_def" ≔ int_coprime_def;
+builtin "int_gcd" ≔ int_gcd;
+builtin "int_gcd_def" ≔ int_gcd_def;
+builtin "int_lcm" ≔ int_lcm;
+builtin "int_lcm_def" ≔ int_lcm_def;
+
+// sets
+builtin "IN" ≔ IN;
+builtin "IN_def" ≔ IN_def;
+builtin "EMPTY" ≔ EMPTY;
+builtin "EMPTY_def" ≔ EMPTY_def;
+builtin "INSERT" ≔ INSERT;
+builtin "INSERT_def" ≔ INSERT_def;
+builtin "UNIV_def" ≔ UNIV_def;
+builtin "UNIV" ≔ UNIV;
+builtin "GSPEC" ≔ GSPEC;
+builtin "GSPEC_def" ≔ GSPEC_def;
+builtin "SETSPEC" ≔ SETSPEC;
+builtin "SETSPEC_def" ≔ SETSPEC_def;
+builtin "SUBSET" ≔ SUBSET;
+builtin "SUBSET_def" ≔ SUBSET_def;
+builtin "UNION" ≔ UNION;
+builtin "UNION_def" ≔ UNION_def;
+builtin "INTER" ≔ INTER;
+builtin "INTER_def" ≔ INTER_def;
+builtin "UNIONS" ≔ UNIONS;
+builtin "UNIONS_def" ≔ UNIONS_def;
+builtin "INTERS" ≔ INTERS;
+builtin "INTERS_def" ≔ INTERS_def;
+builtin "IMAGE" ≔ IMAGE;
+builtin "IMAGE_def" ≔ IMAGE_def;
+builtin "DIFF" ≔ DIFF;
+builtin "DIFF_def" ≔ DIFF_def;
+builtin "DELETE" ≔ DELETE;
+builtin "DELETE_def" ≔ DELETE_def;
+builtin "PSUBSET" ≔ PSUBSET;
+builtin "PSUBSET_def" ≔ PSUBSET_def;
+builtin "DISJOINT" ≔ DISJOINT;
+builtin "DISJOINT_def" ≔ DISJOINT_def;
+builtin "SING" ≔ SING;
+builtin "SING_def" ≔ SING_def;
+
+// finite sets
+builtin "FINITE" ≔ FINITE;
+builtin "FINITE_def" ≔ FINITE_def;
+builtin "ITSET" ≔ ITSET;
+builtin "ITSET_def" ≔ ITSET_def;
+builtin "CARD" ≔ CARD;
+builtin "CARD_def" ≔ CARD_def;
+builtin "dimindex" ≔ dimindex;
+builtin "dimindex_def" ≔ dimindex_def;
+builtin "set_of_list" ≔ set_of_list;
+builtin "set_of_list_def" ≔ set_of_list_def;
+builtin "list_of_set" ≔ list_of_set;
+builtin "list_of_set_def" ≔ list_of_set_def;
+
+// finite_image
+builtin "dotdot" ≔ …;
+builtin "dotdot_def" ≔ …_def;
+builtin "finite_image" ≔ finite_image;
+builtin "finite_index" ≔ finite_index;
+builtin "dest_finite_image" ≔ dest_finite_image;
+builtin "axiom_27" ≔ axiom_27;
+builtin "axiom_28" ≔ axiom_28;
+
+// cart + iterate
+builtin "cart" ≔ cart;
+builtin "mk_cart" ≔ mk_cart;
+builtin "dest_cart" ≔ dest_cart;
+builtin "axiom_29" ≔ axiom_29;
+builtin "axiom_30" ≔ axiom_30;
+builtin "neutral" ≔ neutral;
+builtin "neutral_def" ≔ neutral_def;
+builtin "support" ≔ support;
+builtin "support_def" ≔ support_def;
+builtin "iterate" ≔ iterate;
+builtin "iterate_def" ≔ iterate_def;
+builtin "sum" ≔ sum;
+builtin "sum_def" ≔ sum_def;
+builtin "dollar" ≔ ﹩;
+builtin "dollar_def" ≔ ﹩_def;
+
+// finite_sum
+builtin "finite_sum" ≔ finite_sum;
+builtin "mk_finite_sum" ≔ mk_finite_sum;
+builtin "dest_finite_sum" ≔ dest_finite_sum;
+builtin "axiom_31" ≔ axiom_31;
+builtin "axiom_32" ≔ axiom_32;
+
+// finite_diff
+builtin "finite_diff" ≔ finite_diff;
+builtin "mk_finite_diff" ≔ mk_finite_diff;
+builtin "dest_finite_diff" ≔ dest_finite_diff;
+builtin "axiom_33" ≔ axiom_33;
+builtin "axiom_34" ≔ axiom_34;
+
+// finite_prod
+builtin "finite_prod" ≔ finite_prod;
+builtin "mk_finite_prod" ≔ mk_finite_prod;
+builtin "dest_finite_prod" ≔ dest_finite_prod;
+builtin "axiom_35" ≔ axiom_35;
+builtin "axiom_36" ≔ axiom_36;
+
+// tybit0
+builtin "tybit0" ≔ tybit0;
+builtin "_mk_tybit0" ≔ _mk_tybit0;
+builtin "_dest_tybit0" ≔ _dest_tybit0;
+builtin "axiom_37" ≔ axiom_37;
+builtin "axiom_38" ≔ axiom_38;
+
+// tybit1
+builtin "tybit1" ≔ tybit1;
+builtin "_mk_tybit1" ≔ _mk_tybit1;
+builtin "_dest_tybit1" ≔ _dest_tybit1;
+builtin "axiom_39" ≔ axiom_39;
+builtin "axiom_40" ≔ axiom_40;

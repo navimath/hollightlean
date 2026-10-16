@@ -903,14 +903,14 @@ from HolTheory instance and exported theorems
   - Hence the attribute will require and argument: A class instance
 - Then, apply syntatic sugars (e.g, real_add → +) to make it (human) readable
 
-Usage: `@[hol_readable holTheoryInst]` or `@[hol_readable holTheoryInst [real_add_eq]]`,
+Usage: `@[hol_readable holTheoryInst]` or `@[hol_readable holTheoryInst [real_add]]`,
 where the optional list adds sugar lemmas to the `hol_sugar` simp set.
 The attribute can only be used in files importing this one; in this file use the
 command `hol_readable thm_<name> using <instance> [<sugar lemmas>]` (see the MWE below).
 -/
 syntax (name := holReadable) "hol_readable " term:max (" [" ident,* "]")? : attr
 
--- simp set of syntactic sugars, e.g. `real_add_eq : real_add = @Add.add ℝ _`
+-- simp set of syntactic sugars, e.g. `real_add : real_add = @Add.add ℝ _`
 register_simp_attr hol_sugar
 
 section HolReadable
@@ -1005,7 +1005,7 @@ class MiniHOL where
 /-- An alignment of `num_add`, like `real_add` in `real_align`. -/
 def nat_add (m n : ℕ) : ℕ := m + n
 
-/-- Its syntactic sugar, like `real_add_eq`. -/
+/-- Its syntactic sugar, like `real_add`. -/
 theorem nat_add_eq : nat_add = (· + ·) := rfl
 
 instance miniInst : MiniHOL where
@@ -3768,84 +3768,53 @@ theorem real_symm_apply_eq (x : real) (y : Real) : iso_real_Real x = y ↔ x = i
   · simp_all only [OrderRingIso.apply_symm_apply]
 
 
-noncomputable def real_le : Real -> Real -> Prop := fun x : Real => fun y : Real =>
-        (@LE.le real _
-        (iso_Real_real x) (iso_Real_real y)
-        )
-
-theorem real_le_eq : _root_.real_le = @LE.le ℝ _ := by
-  funext x y
-  unfold _root_.real_le
-  simp only [iso_Real_real]
-  ext ; constructor <;>
-  intro a <;>
-  simp_all only [map_le_map_iff]
+noncomputable def real_le : Real -> Real -> Prop := @LE.le ℝ _
 
 theorem real_le_def : @LE.le ℝ _ = (fun x1 : Real => fun y1 : Real => @Classical.epsilon Prop _ (fun u : Prop => ∃ x1' : prod hreal hreal, ∃ y1' : prod hreal hreal, ((treal_le x1' y1') = u) ∧ ((dest_real x1 x1') ∧ (dest_real y1 y1')))) := by
-  rw[← real_le_eq]
-  unfold _root_.real_le
+  have h : (fun x y : Real => @LE.le real _ (iso_Real_real x) (iso_Real_real y)) = @LE.le ℝ _ := by
+    funext x y
+    simp only [iso_Real_real]
+    ext ; constructor <;>
+    intro a <;>
+    simp_all only [map_le_map_iff]
+  rw [← h]
   funext x y
   simp only [dest_real, Function.comp_apply]
   generalize iso_Real_real x = a
   generalize iso_Real_real y = b
   rfl
 
-noncomputable def real_add : Real -> Real -> Real := fun x : Real => fun y : Real =>
-    iso_real_Real
-        (@Add.add real _
-        (iso_Real_real x) (iso_Real_real y)
-        )
+noncomputable def real_add : Real -> Real -> Real := @Add.add ℝ _
 
-theorem real_add_eq : _root_.real_add = @Add.add ℝ _ := by
+theorem real_add_def : @Add.add ℝ _ = fun x1 : Real => fun y1 : Real => mk_real (fun u : prod hreal hreal => ∃ x1' : prod hreal hreal, ∃ y1' : prod hreal hreal, (treal_eq (treal_add x1' y1') u) ∧ ((dest_real x1 x1') ∧ (dest_real y1 y1'))) := by
+  have h : (fun x y : Real => iso_real_Real (@Add.add real _ (iso_Real_real x) (iso_Real_real y))) = @Add.add ℝ _ := by
     funext r s
-    unfold _root_.real_add
     simp only [iso_Real_real, real_symm_apply_eq]
     symm
     exact iso_real_Real.symm.map_add r s
-
-theorem real_add_def : @Add.add ℝ _ = fun x1 : Real => fun y1 : Real => mk_real (fun u : prod hreal hreal => ∃ x1' : prod hreal hreal, ∃ y1' : prod hreal hreal, (treal_eq (treal_add x1' y1') u) ∧ ((dest_real x1 x1') ∧ (dest_real y1 y1'))) := by
-  rw[← real_add_eq]
+  rw [← h]
   funext x y
-  unfold _root_.real_add
   simp only [iso_Real_real,real_symm_apply_eq]
   unfold mk_real
   simp only [Function.comp_apply, OrderRingIso.symm_apply_apply]
   congr
 
-noncomputable def real_mul : Real -> Real -> Real := fun x y : Real =>
-    iso_real_Real
-        (@Mul.mul real _
-        (iso_Real_real x) (iso_Real_real y)
-        )
+noncomputable def real_mul : Real -> Real -> Real := @Mul.mul ℝ _
 
-theorem real_mul_eq : _root_.real_mul = @Mul.mul Real _ := by
+theorem real_mul_def : @Mul.mul Real _ = (fun x1 : Real => fun y1 : Real => mk_real (fun u : prod hreal hreal => ∃ x1' : prod hreal hreal, ∃ y1' : prod hreal hreal, (treal_eq (treal_mul x1' y1') u) ∧ ((dest_real x1 x1') ∧ (dest_real y1 y1')))) := by
+  have h : (fun x y : Real => iso_real_Real (@Mul.mul real _ (iso_Real_real x) (iso_Real_real y))) = @Mul.mul ℝ _ := by
     funext r s
-    unfold _root_.real_mul
     simp only [iso_Real_real, real_symm_apply_eq]
     symm
     exact iso_real_Real.symm.map_mul r s
-
-theorem real_mul_def : @Mul.mul Real _ = (fun x1 : Real => fun y1 : Real => mk_real (fun u : prod hreal hreal => ∃ x1' : prod hreal hreal, ∃ y1' : prod hreal hreal, (treal_eq (treal_mul x1' y1') u) ∧ ((dest_real x1 x1') ∧ (dest_real y1 y1')))) := by
-  rw[← real_mul_eq]
+  rw [← h]
   funext x y
-  unfold _root_.real_mul
   simp only [iso_Real_real,real_symm_apply_eq]
   unfold mk_real
   simp only [Function.comp_apply, OrderRingIso.symm_apply_apply]
   congr
 
-noncomputable def real_neg : Real → Real := fun x : Real =>
-  iso_real_Real
-    (@Neg.neg real _
-      (iso_Real_real x)
-    )
-
-theorem real_neg_eq : _root_.real_neg = @Neg.neg Real _ := by
-  funext r
-  unfold _root_.real_neg
-  simp only [iso_Real_real, real_symm_apply_eq]
-  symm
-  exact iso_real_Real.symm.map_neg r
+noncomputable def real_neg : Real → Real := @Neg.neg ℝ _
 
 theorem real_neg_def :
     @Neg.neg Real _ =
@@ -3854,26 +3823,19 @@ theorem real_neg_def :
           ∃ x1' : prod hreal hreal,
             (treal_eq (treal_neg x1') u) ∧
             (dest_real x1 x1'))) := by
-  rw [← real_neg_eq]
+  have h : (fun x : Real => iso_real_Real (@Neg.neg real _ (iso_Real_real x))) = @Neg.neg ℝ _ := by
+    funext r
+    simp only [iso_Real_real, real_symm_apply_eq]
+    symm
+    exact iso_real_Real.symm.map_neg r
+  rw [← h]
   funext x
-  unfold _root_.real_neg
   simp only [iso_Real_real, real_symm_apply_eq]
   unfold mk_real
   simp only [Function.comp_apply, OrderRingIso.symm_apply_apply]
   congr
 
-noncomputable def real_inv : Real → Real := fun x : Real =>
-  iso_real_Real
-    (@Inv.inv real _
-      (iso_Real_real x)
-    )
-
-theorem real_inv_eq : _root_.real_inv = @Inv.inv Real _ := by
-  funext r
-  unfold _root_.real_inv
-  simp only [iso_Real_real, real_symm_apply_eq]
-  symm
-  exact map_inv₀ iso_real_Real.symm r
+noncomputable def real_inv : Real → Real := @Inv.inv ℝ _
 
 theorem real_inv_def :
     @Inv.inv Real _ =
@@ -3882,86 +3844,61 @@ theorem real_inv_def :
           ∃ x' : prod hreal hreal,
             (treal_eq (treal_inv x') u) ∧
             (dest_real x x'))) := by
-  rw [← real_inv_eq]
+  have h : (fun x : Real => iso_real_Real (@Inv.inv real _ (iso_Real_real x))) = @Inv.inv ℝ _ := by
+    funext r
+    simp only [iso_Real_real, real_symm_apply_eq]
+    symm
+    exact map_inv₀ iso_real_Real.symm r
+  rw [← h]
   funext x
-  unfold _root_.real_inv
   simp only [iso_Real_real, real_symm_apply_eq]
   unfold mk_real
   simp only [Function.comp_apply, OrderRingIso.symm_apply_apply]
   congr
 
-noncomputable def real_sub : Real → Real → Real := fun x y =>
-  iso_real_Real
-    (@Sub.sub real _
-      (iso_Real_real x)
-      (iso_Real_real y))
-
-theorem real_sub_eq : _root_.real_sub = @Sub.sub Real _ := by
-  funext r s
-  unfold _root_.real_sub
-  simp only [iso_Real_real, real_symm_apply_eq]
-  symm
-  exact iso_real_Real.symm.map_sub r s
+noncomputable def real_sub : Real → Real → Real := @Sub.sub ℝ _
 
 theorem real_sub_def : @Sub.sub Real _ = fun _24112 : Real => fun _24113 : Real => real_add _24112 (real_neg _24113) := by
-  rw [← real_sub_eq]
   funext x y
-  unfold _root_.real_sub
-  simp only [iso_Real_real, real_symm_apply_eq]
-  unfold _root_.real_add _root_.real_neg
-  simp only [OrderRingIso.symm_apply_apply, iso_Real_real]
-  rfl
+  exact sub_eq_add_neg x y
 
-noncomputable def real_lt : Real → Real → Prop := fun x y : Real =>
-        (@LT.lt real _
-        (iso_Real_real x) (iso_Real_real y)
-        )
-
-theorem real_lt_eq : _root_.real_lt = @LT.lt Real _ := by
-  funext x y
-  unfold _root_.real_lt
-  simp only [eq_iff_iff]
-  exact map_lt_map_iff (iso_Real_real)
+noncomputable def real_lt : Real → Real → Prop := @LT.lt ℝ _
 
 theorem real_lt_def :
     @LT.lt Real _ =
       (fun x y : Real => ¬ (real_le y x)) := by
   funext x y
   unfold LT.lt
-  rw [real_le_eq]
+  rw [_root_.real_le]
   simp_all only [not_le, eq_iff_iff]
   rfl
 
-def real_ge : ℝ → ℝ → Prop := (fun x y : Real => real_le y x)
+def real_ge : ℝ → ℝ → Prop := @GE.ge ℝ _
 
 theorem real_ge_def :
     @GE.ge Real _ =
       (fun x y : Real => real_le y x) := by
   funext x y
   unfold GE.ge
-  rw [real_le_eq]
+  rw [_root_.real_le]
 
-def real_gt : ℝ → ℝ → Prop := (fun x y : Real => real_lt y x)
+def real_gt : ℝ → ℝ → Prop := @GT.gt ℝ _
 
 theorem real_gt_def :
     @GT.gt Real _ =
-      (fun x y : Real => real_lt y x) := by
-  funext x y
-  unfold GT.gt _root_.real_lt
-  ext ; symm
-  exact map_lt_map_iff (iso_real_Real.symm)
+      (fun x y : Real => real_lt y x) := rfl
 
-noncomputable def real_div : Real → Real → Real := (fun x y : Real => real_mul x (real_inv y))
+noncomputable def real_div : Real → Real → Real := @Div.div ℝ _
 
 theorem real_div_def :
     @Div.div Real _ =
       (fun x y : Real => real_mul x (real_inv y)) := by
   funext x y
   unfold Div.div
-  rw [_root_.real_mul_eq, _root_.real_inv_eq]
+  rw [_root_.real_mul, _root_.real_inv]
   rfl
 
-noncomputable def real_max : ℝ → ℝ → ℝ := (fun x y : Real => @COND Real _ (real_le x y) y x)
+noncomputable def real_max : ℝ → ℝ → ℝ := @max ℝ _
 
 theorem real_max_def :
     max =
@@ -3969,11 +3906,11 @@ theorem real_max_def :
         @COND Real _ (real_le x y) y x) := by
   funext x y
   unfold max
-  rw [_root_.real_le_eq]
+  rw [_root_.real_le]
   unfold COND
   split_ifs <;> grind
 
-noncomputable def real_min : ℝ → ℝ → ℝ := (fun x y : Real => @COND Real _ (real_le x y) x y)
+noncomputable def real_min : ℝ → ℝ → ℝ := @min ℝ _
 
 theorem real_min_def :
     min =
@@ -3981,16 +3918,17 @@ theorem real_min_def :
         @COND Real _ (real_le x y) x y) := by
   funext x y
   unfold min
-  rw [_root_.real_le_eq]
+  rw [_root_.real_le]
   unfold COND
   split_ifs <;> grind
 
-noncomputable def real_of_num : Nat -> Real := fun m : Nat => mk_real (fun u : prod hreal hreal =>
-    treal_eq (treal_of_num m) u)
+noncomputable def real_of_num : Nat -> Real := @Nat.cast ℝ _
 
-theorem real_of_num_def : _root_.real_of_num = @Nat.cast ℝ _ := by
+theorem real_of_num_def : @Nat.cast ℝ _ = fun m : Nat => mk_real (fun u : prod hreal hreal =>
+    treal_eq (treal_of_num m) u) := by
+    symm
     funext n
-    unfold _root_.real_of_num mk_real
+    unfold mk_real
     simp only [Function.comp_apply]
     induction n
     · simp ; rfl
@@ -4008,35 +3946,24 @@ def real_abs : Real → Real := abs
 theorem real_abs_def : abs = (fun _24160 : Real => @COND Real _ (real_le (real_of_num (NUMERAL Nat.zero)) _24160) _24160 (real_neg _24160)) := by
   funext x
   unfold abs
-  rw [_root_.real_le_eq, _root_.real_of_num_def, _root_.real_neg_eq]
+  rw [_root_.real_le, _root_.real_of_num, _root_.real_neg]
   unfold COND
   split_ifs <;> simp_all only [NUMERAL, Nat.zero_eq, CharP.cast_eq_zero, neg_le_self_iff,
     sup_of_le_left] ; grind
 
 
-noncomputable def real_pow : Real →  Nat→ Real := fun x y =>
-  iso_real_Real
-    (@Pow.pow real Nat _
-    (iso_Real_real x)
-      y)
-
-theorem real_pow_eq : _root_.real_pow = @Pow.pow Real Nat _ := by
-  funext r s
-  unfold _root_.real_pow
-  simp only [iso_Real_real, real_symm_apply_eq]
-  symm
-  exact map_pow (iso_real_Real.symm) r s
+noncomputable def real_pow : Real → Nat → Real := @Pow.pow Real Nat _
 
 theorem real_pow_def : @Pow.pow Real Nat _ = (@Classical.epsilon ((prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real) _ (fun real_pow' : (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))))) -> Real -> Nat -> Real => ∀ _24171 : prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))), (∀ x : Real, (real_pow' _24171 x (NUMERAL Nat.zero)) = (_root_.real_of_num (NUMERAL (BIT1 Nat.zero)))) ∧ (∀ x : Real, ∀ n : Nat, (real_pow' _24171 x (Nat.succ n)) = (real_mul x (real_pow' _24171 x n)))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))))) _ _ (NUMERAL (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat))))) _ _ (NUMERAL (BIT1 (BIT0 (BIT1 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat (prod Nat Nat)))) _ _ (NUMERAL (BIT1 (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat (prod Nat Nat))) _ _ (NUMERAL (BIT0 (BIT0 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat (prod Nat Nat)) _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 Nat.zero)))))))) (@prod_mk Nat (prod Nat Nat) _ _ (NUMERAL (BIT0 (BIT0 (BIT0 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))) (@prod_mk Nat Nat _ _ (NUMERAL (BIT1 (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 Nat.zero)))))))) (NUMERAL (BIT1 (BIT1 (BIT1 (BIT0 (BIT1 (BIT1 (BIT1 Nat.zero)))))))))))))))) := by
   epsilon_elim
   · intros r
     constructor
     · intro x
-      simp only [NUMERAL, Nat.zero_eq, _root_.real_of_num_def, BIT1, BIT0, add_zero,
+      simp only [NUMERAL, Nat.zero_eq, _root_.real_of_num, BIT1, BIT0, add_zero,
         Nat.succ_eq_add_one, zero_add, Nat.cast_one]
       rfl
     · intro x n ;
-      simp[_root_.real_mul_eq, Pow.pow, Mul.mul, pow_succ'] ; rfl
+      simp[_root_.real_mul, Pow.pow, Mul.mul, pow_succ'] ; rfl
   · intros HOL_POW h h1
     funext r x n
     specialize h r
@@ -4046,28 +3973,13 @@ theorem real_pow_def : @Pow.pow Real Nat _ = (@Classical.epsilon ((prod Nat (pro
     · grind
     · grind
 
-noncomputable def real_sgn : Real -> Real := fun x => x / abs x
-
-theorem real_sgn_eq : _root_.real_sgn = Real.sign := by
-  funext x
-  unfold _root_.real_sgn
-  by_cases h : x ≤ 0
-  · by_cases h : x < 0
-    · rw[Real.sign_of_neg h, abs_of_neg h]
-      grind
-    · simp_all
-      have : x = 0 := by grind
-      subst this
-      simp_all only [Std.le_refl, abs_zero, div_zero, Real.sign_zero]
-  · simp_all only [not_le]
-    rw[Real.sign_of_pos h, abs_of_pos h]
-    grind
+noncomputable def real_sgn : Real -> Real := Real.sign
 
 
 theorem real_sgn_def : Real.sign = (fun _26684 : Real => @COND Real _ (real_lt (real_of_num (NUMERAL Nat.zero)) _26684) (real_of_num (NUMERAL (BIT1 Nat.zero))) (@COND Real _ (real_lt _26684 (real_of_num (NUMERAL Nat.zero))) (real_neg (real_of_num (NUMERAL (BIT1 Nat.zero)))) (real_of_num (NUMERAL Nat.zero)))) := by
   funext x
-  simp only [COND, real_lt_eq, _root_.real_of_num_def, NUMERAL, Nat.zero_eq, CharP.cast_eq_zero,
-    BIT1, BIT0, add_zero, Nat.succ_eq_add_one, zero_add, Nat.cast_one, real_neg_eq]
+  simp only [COND, _root_.real_lt, _root_.real_of_num, NUMERAL, Nat.zero_eq, CharP.cast_eq_zero,
+    BIT1, BIT0, add_zero, Nat.succ_eq_add_one, zero_add, Nat.cast_one, _root_.real_neg]
   split_ifs
   · (expose_names; exact Real.sign_of_pos h)
   · (expose_names; exact Real.sign_of_neg h_1)
@@ -4179,7 +4091,7 @@ theorem real_SQRT_eq : real_SQRT = SQRT_HOL := by
     (hs2.trans (sqrt_hol_spec x).2.symm)
 
 theorem SQRT_def : SQRT_HOL = (fun _27235 : Real => @Classical.epsilon Real _ (fun y : Real => ((real_sgn y) = (real_sgn _27235)) ∧ ((real_pow y (NUMERAL (BIT0 (BIT1 Nat.zero)))) = (real_abs _27235)))) := by
-  simp only [real_sgn_eq, real_pow_eq, _root_.real_abs, NUMERAL, BIT0, BIT1]
+  simp only [_root_.real_sgn, _root_.real_pow, _root_.real_abs, NUMERAL, BIT0, BIT1]
   funext s
   change SQRT_HOL s = Classical.epsilon (fun y : ℝ => Real.sign y = Real.sign s ∧ y ^ 2 = |s|)
   apply align_epsilon
@@ -4221,7 +4133,7 @@ theorem Int_of_integer : ∀ a : ℝ, integer a → int_pred_of_real a := by
   intro a h
   unfold int_pred_of_real
   unfold integer real_abs at h
-  rw[real_of_num_def] at h
+  rw[real_of_num] at h
   obtain ⟨n,h⟩ := h
   by_cases ha : a ≤ 0
   · rw[abs_of_nonpos ha] at h
@@ -4261,7 +4173,7 @@ theorem axiom_26 : ∀ (r : Real), ((fun x : Real => integer x) r) = ((real_of_i
     · expose_names
       obtain ⟨k,h_1⟩ := h_1
       rw[h_1, @Int.floor_intCast]
-  · unfold integer real_abs ; rw[real_of_num_def]
+  · unfold integer real_abs ; rw[real_of_num]
     unfold real_of_int int_of_real at h
     have := Int_of_floor_eq r h
     apply Or.elim this <;> rintro ⟨k,h'⟩
@@ -4278,7 +4190,7 @@ def int_le := @LE.le ℤ _
 
 theorem int_le_def : int_le = (fun _28827 : ℤ => fun _28828 : ℤ => real_le (real_of_int _28827) (real_of_int _28828)) := by
   funext x y
-  rw[int_le, real_le_eq]
+  rw[int_le, real_le]
   simp_all only [real_of_int, Int.cast_le]
 
 @[simp]
@@ -4286,7 +4198,7 @@ def int_lt := @LT.lt ℤ _
 
 theorem int_lt_def : int_lt = (fun _28839 : ℤ => fun _28840 : ℤ => real_lt (real_of_int _28839) (real_of_int _28840)) := by
   funext x y
-  rw[int_lt, real_lt_eq]
+  rw[int_lt, real_lt]
   simp_all only [real_of_int, Int.cast_lt]
 
 @[simp]
@@ -4296,7 +4208,6 @@ theorem int_ge_def :
     int_ge = (fun x : ℤ => fun y : ℤ => real_ge (real_of_int x) (real_of_int y)) := by
   funext x y
   unfold int_ge real_ge
-  rw[real_le_eq]
   simp_all only [ge_iff_le, real_of_int, Int.cast_le]
 
 @[simp]
@@ -4306,7 +4217,6 @@ theorem int_gt_def :
     int_gt = (fun x : ℤ => fun y : ℤ => real_gt (real_of_int x) (real_of_int y)) := by
   funext x y
   unfold int_gt real_gt
-  rw[real_lt_eq]
   simp_all only [gt_iff_lt, real_of_int, Int.cast_lt]
 
 @[simp]
@@ -4314,14 +4224,14 @@ def int_of_num : Nat -> ℤ := Int.ofNat
 
 theorem int_of_num_def : int_of_num = (fun _28875 : Nat => int_of_real (real_of_num _28875)) := by
   funext n
-  simp only [int_of_num, Int.ofNat_eq_natCast, int_of_real, real_of_num_def, Int.floor_natCast]
+  simp only [int_of_num, Int.ofNat_eq_natCast, int_of_real, real_of_num, Int.floor_natCast]
 
 @[simp]
 noncomputable def int_neg : ℤ -> ℤ := Int.neg
 
 theorem int_neg_def : int_neg = (fun _28880 : ℤ => int_of_real (real_neg (real_of_int _28880))) := by
   funext z
-  simp only [int_neg, int_of_real, real_neg_eq, real_of_int]
+  simp only [int_neg, int_of_real, real_neg, real_of_int]
   norm_cast
   rw[Int.floor_intCast]
   rfl
@@ -4331,7 +4241,7 @@ noncomputable def int_add : ℤ -> ℤ -> ℤ := Int.add
 
 theorem int_add_def : int_add = (fun _28889 : ℤ => fun _28890 : ℤ => int_of_real (real_add (real_of_int _28889) (real_of_int _28890))) := by
   funext x y
-  simp only [int_add, Int.add_def, int_of_real, real_add_eq, real_of_int]
+  simp only [int_add, Int.add_def, int_of_real, real_add, real_of_int]
   rw[← @Int.floor_intCast ℝ _ _ _ _ (x+y)]
   have : @Add.add ℝ _ ↑x ↑y = ↑(x + y) := by norm_num ; rfl
   rw[this]
@@ -4341,7 +4251,7 @@ noncomputable def int_sub : ℤ -> ℤ -> ℤ := Int.sub
 
 theorem int_sub_def : int_sub = (fun _28921 : ℤ => fun _28922 : ℤ => int_of_real (real_sub (real_of_int _28921) (real_of_int _28922))) := by
   funext x y
-  simp only [int_sub, int_of_real, real_sub_eq, real_of_int]
+  simp only [int_sub, int_of_real, real_sub, real_of_int]
   rw[← @Int.floor_intCast ℝ _ _ _ _ (x.sub y)]
   have : @Sub.sub ℝ _ ↑x ↑y = ↑(x - y) := by norm_num ; rfl
   rw[this] ; rfl
@@ -4354,7 +4264,7 @@ theorem int_mul_def :
       (fun x : ℤ => fun y : ℤ =>
         int_of_real (real_mul (real_of_int x) (real_of_int y))) := by
   funext x y
-  simp only [int_mul, Int.mul_def, int_of_real, real_mul_eq, real_of_int]
+  simp only [int_mul, Int.mul_def, int_of_real, real_mul, real_of_int]
   rw [← @Int.floor_intCast ℝ _ _ _ _ (x * y)]
   have : @Mul.mul ℝ _ ↑x ↑y = ↑(x * y) := by
     norm_num
@@ -4375,7 +4285,7 @@ noncomputable def int_sgn : ℤ → ℤ := Int.sign
 
 theorem int_sgn_def : int_sgn = (fun x : ℤ => int_of_real (real_sgn (real_of_int x))) := by
   funext x
-  simp only [int_sgn, int_of_real, real_sgn_eq, real_of_int]
+  simp only [int_sgn, int_of_real, real_sgn, real_of_int]
   rw[Real.sign_intCast]
   rw [@Int.floor_intCast ℝ _ _ _ _ (x.sign)]
 
@@ -4412,7 +4322,7 @@ theorem int_pow_def :
       (fun x : ℤ => fun n : Nat =>
         int_of_real (real_pow (real_of_int x) n)) := by
   funext x n
-  simp only [int_pow, Int.pow_eq, int_of_real, real_pow_eq, real_of_int]
+  simp only [int_pow, Int.pow_eq, int_of_real, real_pow, real_of_int]
   rw [← @Int.floor_intCast ℝ _ _ _ _ (x ^ n)]
   have : @Pow.pow ℝ _ _ ↑x n = ↑(x ^ n) := by
     norm_num
@@ -5130,10 +5040,10 @@ theorem sup_def : sup = (fun _64361 : Real -> Prop => @Classical.epsilon Real _ 
   by_cases h : Set.Nonempty S ∧ BddAbove S
   · rw [if_pos h]
     apply align_epsilon
-    · simp only [real_le_eq, IN]
+    · simp only [real_le, IN]
       exact ⟨fun x hx => le_csSup h.2 hx, fun b hb => csSup_le h.1 hb⟩
     · intro y hP hy
-      simp only [real_le_eq, IN] at hP hy
+      simp only [real_le, IN] at hP hy
       exact le_antisymm (hP.2 y hy.1) (hy.2 _ hP.1)
   · rw [if_neg h]
 
@@ -5149,17 +5059,17 @@ theorem inf_def : inf = (fun _65220 : Real -> Prop => @Classical.epsilon Real _ 
   by_cases h : Set.Nonempty S ∧ BddBelow S
   · rw [if_pos h]
     apply align_epsilon
-    · simp only [real_le_eq, IN]
+    · simp only [real_le, IN]
       exact ⟨fun x hx => csInf_le h.2 hx, fun b hb => le_csInf h.1 hb⟩
     · intro y hP hy
-      simp only [real_le_eq, IN] at hP hy
+      simp only [real_le, IN] at hP hy
       exact le_antisymm (hy.2 _ hP.1) (hP.2 y hy.1)
   · rw [if_neg h]
 
 noncomputable def has_inf : (Real -> Prop) -> Real -> Prop := fun S b => IsGLB S b
 
 theorem has_inf_def : has_inf = (fun _66570 : Real -> Prop => fun _66571 : Real => ∀ c : Real, (∀ x : Real, (@IN Real _ x _66570) -> real_le c x) = (real_le c _66571)) := by
-  simp only [real_le_eq, IN]
+  simp only [real_le, IN]
   unfold has_inf
   funext S b
   apply propext
@@ -5174,7 +5084,7 @@ theorem has_inf_def : has_inf = (fun _66570 : Real -> Prop => fun _66571 : Real 
 noncomputable def has_sup : (Real -> Prop) -> Real -> Prop := fun S b => IsLUB S b
 
 theorem has_sup_def : has_sup = (fun _66582 : Real -> Prop => fun _66583 : Real => ∀ c : Real, (∀ x : Real, (@IN Real _ x _66582) -> real_le x c) = (real_le _66583 c)) := by
-  simp only [real_le_eq, IN]
+  simp only [real_le, IN]
   unfold has_sup
   funext S b
   apply propext
@@ -5330,7 +5240,7 @@ theorem iproduct_def {A : Type _} [Nonempty A] : (@iproduct A _) = (@iterate A �
 noncomputable def product {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Real) -> Real :=
   fun (s : Set A) (f : A -> Real) => ∏ᶠ i ∈ s, f i
 theorem product_def {A : Type _} [Nonempty A] : (@product A _) = (@iterate A Real _ _ real_mul) := by
-  rw [real_mul_eq]
+  rw [real_mul]
   funext s f
   exact (iterate_eq_finprod s f).symm
 
@@ -5349,7 +5259,7 @@ theorem nsum_def {A : Type _} [Nonempty A] : (@nsum A _) = (@iterate A Nat _ _ N
 noncomputable def sum {A : Type _} [Nonempty A] : (A -> Prop) -> (A -> Real) -> Real :=
   fun (s : Set A) (f : A -> Real) => ∑ᶠ i ∈ s, f i
 theorem sum_def {A : Type _} [Nonempty A] : (@sum A _) = (@iterate A Real _ _ real_add) := by
-  rw [real_add_eq]
+  rw [real_add]
   funext s f
   exact (iterate_eq_finsum s f).symm
 
@@ -5369,7 +5279,7 @@ theorem polynomial_function_def : polynomial_function = (fun _94200 : Real -> Re
   funext f
   apply propext
   unfold polynomial_function sum dotdot NUMERAL
-  simp only [real_mul_eq, real_pow_eq, Nat.zero_eq]
+  simp only [real_mul, real_pow, Nat.zero_eq]
   constructor
   · rintro ⟨p, hp⟩
     refine ⟨p.natDegree, p.coeff, fun x => ?_⟩

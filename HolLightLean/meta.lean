@@ -230,14 +230,14 @@ from HolTheory instance and exported theorems
   - Hence the attribute will require and argument: A class instance
 - Then, apply syntatic sugars (e.g, real_add → +) to make it (human) readable
 
-Usage: `@[hol_readable holTheoryInst]` or `@[hol_readable holTheoryInst [real_add_eq]]`,
+Usage: `@[hol_readable holTheoryInst]` or `@[hol_readable holTheoryInst [real_add]]`,
 where the optional list adds sugar lemmas to the `hol_sugar` simp set.
 The attribute can only be used in files importing this one; in this file use the
 command `hol_readable thm_<name> using <instance> [<sugar lemmas>]` (see the MWE below).
 -/
 syntax (name := holReadable) "hol_readable " term:max (" [" ident,* "]")? : attr
 
--- simp set of syntactic sugars, e.g. `real_add_eq : real_add = @Add.add ℝ _`
+-- simp set of syntactic sugars, e.g. `real_add : real_add = @Add.add ℝ _`
 register_simp_attr hol_sugar
 
 section HolReadable
@@ -332,7 +332,7 @@ class MiniHOL where
 /-- An alignment of `num_add`, like `real_add` in `real_align`. -/
 def nat_add (m n : ℕ) : ℕ := m + n
 
-/-- Its syntactic sugar, like `real_add_eq`. -/
+/-- Its syntactic sugar, like `real_add`. -/
 theorem nat_add_eq : nat_add = (· + ·) := rfl
 
 instance miniInst : MiniHOL where

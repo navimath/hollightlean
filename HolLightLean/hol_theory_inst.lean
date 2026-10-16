@@ -29,7 +29,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   EQ_MP := fun h1 h2 => EQ_MP h1 h2
   TRANS := fun xy yz => Eq.trans xy yz
   SYM := fun xy => Eq.symm xy
-  hexists_one := EXISTSUNIQUE
+  hexists_one := ExistsUnique
   not := Not
   hfalse := False
   hor := Or
@@ -46,15 +46,15 @@ noncomputable instance holTheoryInst : HOLTheory where
   hor_elim := fun {_ _} h {_} h1 h2 => Or.elim h h1 h2
   unit := Unit
   ne_unit := inferInstance
-  prod := prod
+  prod := fun A B _ _ => A × B
   ne_prod := fun _ _ _ _ => inferInstance
-  ind := ind
+  ind := Nat
   ne_ind := inferInstance
   num := Nat
   ne_num := inferInstance
   recspace := recspace
   ne_recspace := fun _ _ => inferInstance
-  SUM := SUM
+  SUM := fun A B _ _ => A ⊕ B
   ne_SUM := fun _ _ _ _ => inferInstance
   option := fun A _ => Option A
   ne_option := fun _ _ => ⟨none⟩
@@ -93,7 +93,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   hfalse_def := false_def
   not_def := not_def
   hexists_one_def := EXISTSUNIQUE_def
-  _FALSITY_ := _FALSITY_
+  _FALSITY_ := False
   _FALSITY__def := _FALSITY__def
   COND := COND
   COND_def := COND_def
@@ -105,7 +105,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   one_REP := one_REP
   one := ()
   one_def := one_def
-  hashek := hashek
+  hashek := True
   hashek_def := hashek_def
   LET := LET
   LET_def := LET_def
@@ -113,7 +113,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   LET_END_def := LET_END_def
   GABS := GABS
   GABS_def := GABS_def
-  GEQ := GEQ
+  GEQ := Eq
   GEQ_def := GEQ_def
   _SEQPATTERN := _SEQPATTERN
   _SEQPATTERN_def := _SEQPATTERN_def
@@ -183,9 +183,9 @@ noncomputable instance holTheoryInst : HOLTheory where
   MAX_def := MAX_def
   MIN := Nat.min
   MIN_def := MIN_def
-  EVEN := EVEN
+  EVEN := Even
   EVEN_def := EVEN_def
-  ODD := ODD
+  ODD := Odd
   ODD_def := ODD_def
   Nat_minus := Nat.sub
   minus_def := minus_def
@@ -197,7 +197,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   MOD_def := MOD_def
   minimal := HolLightLean.hol_up_real_terms.minimal
   minimal_def := HolLightLean.hol_up_real_terms.minimal_def
-  WF := WF
+  WF := WellFounded
   WF_def := WF_def
   MEASURE := HolLightLean.hol_up_real_terms.MEASURE
   MEASURE_def := HolLightLean.hol_up_real_terms.MEASURE_def
@@ -239,9 +239,9 @@ noncomputable instance holTheoryInst : HOLTheory where
   FNIL_def := FNIL_def
   _mk_sum := _mk_sum
   _dest_sum := _dest_sum
-  INL := INL
+  INL := Sum.inl
   INL_def := INL_def
-  INR := INR
+  INR := Sum.inr
   INR_def := INR_def
   OUTL := OUTL
   OUTL_def := OUTL_def
@@ -257,7 +257,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   _dest_list := _dest_list
   NIL := List.nil
   NIL_def := NIL_def
-  CONS := CONS
+  CONS := List.cons
   CONS_def := CONS_def
   ISO := ISO
   ISO_def := ISO_def
@@ -265,19 +265,19 @@ noncomputable instance holTheoryInst : HOLTheory where
   HD_def := HD_def
   TL := TL
   TL_def := TL_def
-  APPEND := APPEND
+  APPEND := List.append
   APPEND_def := APPEND_def
-  REVERSE := REVERSE
+  REVERSE := List.reverse
   REVERSE_def := REVERSE_def
-  LENGTH := LENGTH
+  LENGTH := List.length
   LENGTH_def := LENGTH_def
-  MAP := MAP
+  MAP := List.map
   MAP_def := MAP_def
   LAST := LAST
   LAST_def := LAST_def
-  BUTLAST := BUTLAST
+  BUTLAST := List.dropLast
   BUTLAST_def := BUTLAST_def
-  REPLICATE := REPLICATE
+  REPLICATE := List.replicate
   REPLICATE_def := REPLICATE_def
   NULL := NULL
   NULL_def := NULL_def
@@ -287,7 +287,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   EX_def := EX_def
   ITLIST := ITLIST
   ITLIST_def := ITLIST_def
-  MEM := MEM
+  MEM := (· ∈ ·)
   MEM_def := MEM_def
   ALL2 := ALL2
   ALL2_def := ALL2_def
@@ -305,7 +305,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   ZIP_def := ZIP_def
   ALLPAIRS := ALLPAIRS
   ALLPAIRS_def := ALLPAIRS_def
-  PAIRWISE := PAIRWISE
+  PAIRWISE := List.Pairwise
   PAIRWISE_def := PAIRWISE_def
   list_of_seq := list_of_seq
   list_of_seq_def := list_of_seq_def
@@ -363,83 +363,83 @@ noncomputable instance holTheoryInst : HOLTheory where
   treal_eq_def := treal_eq_def
   mk_real := mk_real
   dest_real := dest_real
-  real_of_num := real_of_num
-  real_of_num_def := rfl
-  real_neg := real_neg
-  real_neg_def := real_neg_eq.trans real_neg_def
-  real_add := real_add
-  real_add_def := real_add_eq.trans real_add_def
-  real_mul := real_mul
-  real_mul_def := real_mul_eq.trans real_mul_def
-  real_le := real_le
-  real_le_def := real_le_eq.trans real_le_def
-  real_inv := real_inv
-  real_inv_def := real_inv_eq.trans real_inv_def
-  real_sub := real_sub
-  real_sub_def := real_sub_eq.trans real_sub_def
-  real_lt := real_lt
-  real_lt_def := real_lt_eq.trans real_lt_def
-  real_ge := real_ge
-  real_ge_def := rfl
-  real_gt := real_gt
-  real_gt_def := rfl
-  real_abs := real_abs
+  real_of_num := Nat.cast
+  real_of_num_def := real_of_num_def
+  real_neg := (- ·)
+  real_neg_def := real_neg_def
+  real_add := (· + ·)
+  real_add_def := real_add_def
+  real_mul := (· * ·)
+  real_mul_def := real_mul_def
+  real_le := (· ≤ ·)
+  real_le_def := real_le_def
+  real_inv := (·⁻¹)
+  real_inv_def := real_inv_def
+  real_sub := (· - ·)
+  real_sub_def := real_sub_def
+  real_lt := (· < ·)
+  real_lt_def := real_lt_def
+  real_ge := (· ≥ ·)
+  real_ge_def := real_ge_def
+  real_gt := (· > ·)
+  real_gt_def := real_gt_def
+  real_abs := abs
   real_abs_def := real_abs_def
-  real_pow := real_pow
-  real_pow_def := real_pow_eq.trans real_pow_def
-  real_div := real_div
-  real_div_def := rfl
-  real_max := real_max
-  real_max_def := rfl
-  real_min := real_min
-  real_min_def := rfl
-  real_sgn := real_sgn
-  real_sgn_def := real_sgn_eq.trans real_sgn_def
-  SQRT := real_SQRT
-  SQRT_def := real_SQRT_eq.trans SQRT_def
-  DECIMAL := fun a b => real_div (real_of_num a) (real_of_num b)
+  real_pow := (· ^ ·)
+  real_pow_def := real_pow_def
+  real_div := (· / ·)
+  real_div_def := real_div_def
+  real_max := max
+  real_max_def := real_max_def
+  real_min := min
+  real_min_def := real_min_def
+  real_sgn := Real.sign
+  real_sgn_def := real_sgn_def
+  SQRT := SQRT_HOL
+  SQRT_def := SQRT_def
+  DECIMAL := fun a b => (a : ℝ) / (b : ℝ)
   DECIMAL_def := rfl
   integer := integer
   integer_def := integer_def
-  int_of_real := int_of_real
-  real_of_int := real_of_int
-  int_le := int_le
+  int_of_real := Int.floor
+  real_of_int := Int.cast
+  int_le := (· ≤ ·)
   int_le_def := int_le_def
-  int_lt := int_lt
+  int_lt := (· < ·)
   int_lt_def := int_lt_def
-  int_ge := int_ge
+  int_ge := (· ≥ ·)
   int_ge_def := int_ge_def
-  int_gt := int_gt
+  int_gt := (· > ·)
   int_gt_def := int_gt_def
-  int_of_num := int_of_num
+  int_of_num := Int.ofNat
   int_of_num_def := int_of_num_def
-  int_neg := int_neg
+  int_neg := Int.neg
   int_neg_def := int_neg_def
-  int_add := int_add
+  int_add := Int.add
   int_add_def := int_add_def
-  int_sub := int_sub
+  int_sub := Int.sub
   int_sub_def := int_sub_def
-  int_mul := int_mul
+  int_mul := Int.mul
   int_mul_def := int_mul_def
-  int_abs := int_abs
+  int_abs := abs
   int_abs_def := int_abs_def
-  int_sgn := int_sgn
+  int_sgn := Int.sign
   int_sgn_def := int_sgn_def
-  int_max := int_max
+  int_max := max
   int_max_def := int_max_def
-  int_min := int_min
+  int_min := min
   int_min_def := int_min_def
-  int_pow := int_pow
+  int_pow := Int.pow
   int_pow_def := int_pow_def
-  div := div
+  div := Int.ediv
   div_def := div_def
-  rem := rem
+  rem := Int.emod
   rem_def := rem_def
   eq2 := eq2
   eq2_def := eq2_def
   real_mod := real_mod
   real_mod_def := real_mod_def
-  int_divides := int_divides
+  int_divides := (· ∣ ·)
   int_divides_def := int_divides_def
   int_mod := int_mod
   int_mod_def := int_mod_def
@@ -465,43 +465,43 @@ noncomputable instance holTheoryInst : HOLTheory where
   prime_def := prime_def
   real_zpow := real_zpow
   real_zpow_def := real_zpow_def
-  IN := IN
+  IN := fun {A} _ a (S : Set A) => a ∈ S
   IN_def := IN_def
-  GSPEC := GSPEC
+  GSPEC := id
   GSPEC_def := GSPEC_def
   SETSPEC := SETSPEC
   SETSPEC_def := SETSPEC_def
-  EMPTY := EMPTY
+  EMPTY := fun {A} _ => (∅ : Set A)
   EMPTY_def := EMPTY_def
   INSERT := INSERT
   INSERT_def := INSERT_def
-  UNIV := UNIV
+  UNIV := Set.univ
   UNIV_def := UNIV_def
-  UNION := UNION
+  UNION := fun {A} _ => @Union.union (Set A) _
   UNION_def := UNION_def
-  UNIONS := UNIONS
+  UNIONS := Set.sUnion
   UNIONS_def := UNIONS_def
-  INTER := INTER
+  INTER := fun {A} _ => @Inter.inter (Set A) _
   INTER_def := INTER_def
-  INTERS := INTERS
+  INTERS := Set.sInter
   INTERS_def := INTERS_def
-  DIFF := DIFF
+  DIFF := fun {A} _ => @SDiff.sdiff (Set A) _
   DIFF_def := DIFF_def
   DELETE := DELETE
   DELETE_def := DELETE_def
-  SUBSET := SUBSET
+  SUBSET := fun {A} _ => @HasSubset.Subset (Set A) _
   SUBSET_def := SUBSET_def
-  PSUBSET := PSUBSET
+  PSUBSET := fun {A} _ => @HasSSubset.SSubset (Set A) _
   PSUBSET_def := PSUBSET_def
-  DISJOINT := DISJOINT
+  DISJOINT := fun {A} _ => @Disjoint (Set A) _ _
   DISJOINT_def := DISJOINT_def
   SING := SING
   SING_def := SING_def
-  FINITE := FINITE
+  FINITE := Set.Finite
   FINITE_def := FINITE_def
   INFINITE := INFINITE
   INFINITE_def := INFINITE_def
-  IMAGE := IMAGE
+  IMAGE := Set.image
   IMAGE_def := IMAGE_def
   INJ := INJ
   INJ_def := INJ_def
@@ -521,7 +521,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   CARD_def := CARD_def
   HAS_SIZE := HAS_SIZE
   HAS_SIZE_def := HAS_SIZE_def
-  CROSS := CROSS
+  CROSS := Set.prod
   CROSS_def := CROSS_def
   ARB := ARB
   ARB_def := ARB_def
@@ -557,17 +557,17 @@ noncomputable instance holTheoryInst : HOLTheory where
   ge_c_def := ge_c_def
   gt_c := gt_c
   gt_c_def := gt_c_def
-  COUNTABLE := COUNTABLE
+  COUNTABLE := Set.Countable
   COUNTABLE_def := COUNTABLE_def
   sup := sup
   sup_def := sup_def
   inf := inf
   inf_def := inf_def
-  has_inf := has_inf
+  has_inf := IsGLB
   has_inf_def := has_inf_def
-  has_sup := has_sup
+  has_sup := IsLUB
   has_sup_def := has_sup_def
-  dotdot := dotdot
+  dotdot := Set.Icc
   dotdot_def := dotdot_def
   neutral := neutral
   neutral_def := neutral_def
@@ -597,8 +597,8 @@ noncomputable instance holTheoryInst : HOLTheory where
   dimindex_def := dimindex_def
   finite_index := finite_index
   dest_finite_image := dest_finite_image
-  mk_cart := mk_cart
-  dest_cart := dest_cart
+  mk_cart := id
+  dest_cart := id
   dollar := dollar
   dollar_def := dollar_def
   lambda := lambda
