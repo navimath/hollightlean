@@ -108,7 +108,7 @@ make lean
 
 ### 4. Add the alignment files
 
-Copy to the generated Lean folder `hol_up_real_{terms,opam}.lean` from `HolLightLean/`, replacing their imports with the corresponding header `<projectname>.<name_of_fragment_file>`, in this case is `HolUptoReal.hol_up_real`.
+Copy to the generated Lean folder `HolUptoReal` the files `hol_up_real_{terms,opam}.lean` from `HolLightLean/`, replacing their imports with the corresponding header `<projectname>.<name_of_fragment_file>`, in this case is `HolUptoReal.hol_up_real`.
 
 ### 5. Check the translation
 

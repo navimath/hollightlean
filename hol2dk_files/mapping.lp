@@ -74,6 +74,14 @@ builtin "GABS" ≔ GABS;
 builtin "GABS_def" ≔ GABS_def;
 builtin "_UNGUARDED_PATTERN" ≔ _UNGUARDED_PATTERN;
 builtin "_UNGUARDED_PATTERN_def" ≔ _UNGUARDED_PATTERN_def;
+builtin "_SEQPATTERN" ≔ _SEQPATTERN;
+builtin "_SEQPATTERN_def" ≔ _SEQPATTERN_def;
+builtin "_GUARDED_PATTERN" ≔ _GUARDED_PATTERN;
+builtin "_GUARDED_PATTERN_def" ≔ _GUARDED_PATTERN_def;
+builtin "_MATCH" ≔ _MATCH;
+builtin "_MATCH_def" ≔ _MATCH_def;
+builtin "_FUNCTION" ≔ _FUNCTION;
+builtin "_FUNCTION_def" ≔ _FUNCTION_def;
 builtin "_FALSITY_" ≔ _FALSITY_;
 builtin "_FALSITY__def" ≔ _FALSITY__def;
 builtin "hashek" ≔ hashek;
@@ -86,6 +94,8 @@ builtin "HolLightLean.hol_up_real_terms.MEASURE" ≔ MEASURE;
 builtin "HolLightLean.hol_up_real_terms.MEASURE_def" ≔ MEASURE_def;
 builtin "o" ≔ o;
 builtin "o_def" ≔ o_def;
+builtin "I" ≔ I;
+builtin "I_def" ≔ I_def;
 
 // unit type
 builtin "Unit" ≔ unit;
