@@ -895,23 +895,22 @@ macro "set_align" : tactic =>
             first | finisher_tacs | solve_by_elim | skip)))
 
 /--
-Define attribute to generate (human) readable theorems
-from HolTheory instance and exported theorems
+This attribute generates HOL Light readable theorems from theorems obtained
+using [hol2dk](https://github.com/Deducteam/hol2dk) and an instance of the `HolTheory` class that parametrizes over the results.
+Example:
 
-- generate a theorem hol_<name> (without the thm_ part)
-- First unfold the projections using the HolTheory class and the instance
-  - Hence the attribute will require and argument: A class instance
-- Then, apply syntatic sugars (e.g, real_add → +) to make it (human) readable
+```lean4
+@[hol_readable holTheoryInst]
+axiom thm_T_DEF [T : HOLTheory] : hol_eq htrue (hol_eq (fun p : Prop => p) (fun p : Prop => p))
+```
 
-Usage: `@[hol_readable holTheoryInst]` or `@[hol_readable holTheoryInst [real_add]]`,
-where the optional list adds sugar lemmas to the `hol_sugar` simp set.
-The attribute can only be used in files importing this one; in this file use the
-command `hol_readable thm_<name> using <instance> [<sugar lemmas>]` (see the MWE below).
+generates the theorem `hol_T_DEF` of type
+
+```lean4
+True = ((fun p ↦ p) = fun p ↦ p)
+```
 -/
 syntax (name := holReadable) "hol_readable " term:max (" [" ident,* "]")? : attr
-
--- simp set of syntactic sugars, e.g. `real_add : real_add = @Add.add ℝ _`
-register_simp_attr hol_sugar
 
 section HolReadable
 open Lean Meta Elab Term
@@ -928,16 +927,6 @@ def unfoldInstProjections (className : Name) (e : Expr) : MetaM Expr :=
             return .visit e'
     return .continue)
 
-/-- Rewrite `e` with the `hol_sugar` simp set and the extra lemmas `sugar`. -/
-def applyHolSugar (e : Expr) (sugar : Array Name) : MetaM Simp.Result := do
-  let mut thms : SimpTheorems := {}
-  if let some ext ← getSimpExtension? `hol_sugar then
-    thms ← ext.getTheorems
-  for l in sugar do
-    thms ← thms.addConst l
-  let ctx ← Simp.mkContext (simpTheorems := #[thms]) (congrTheorems := ← getSimpCongrTheorems)
-  return (← simp e ctx).1
-
 /-- `thm_<name>` ↦ `hol_<name>`, in the same namespace. -/
 def holReadableName : Name → Name
   | .str p s =>
@@ -946,7 +935,7 @@ def holReadableName : Name → Name
 
 /-- Add the theorem `hol_<name>` stating `thm_<name> inst` with the projections of `inst`
 unfolded and the sugar applied. The first argument of `thm_<name>` must be the instance. -/
-def mkHolReadable (declName : Name) (inst : Expr) (sugar : Array Name := #[]) : MetaM Name := do
+def mkHolReadable (declName : Name) (inst : Expr) : MetaM Name := do
   let info ← getConstInfo declName
   let instTy ← whnf (← inferType inst)
   let .const className _ := instTy.getAppFn | throwError "{inst} is not a class instance"
@@ -954,22 +943,17 @@ def mkHolReadable (declName : Name) (inst : Expr) (sugar : Array Name := #[]) : 
   unless ← isDefEq d instTy do
     throwError "the first argument of {declName} is not of type {instTy}"
   let ty ← unfoldInstProjections className (b.instantiate1 inst)
-  let r ← applyHolSugar ty sugar
   let pf := mkApp (mkConst declName (info.levelParams.map mkLevelParam)) inst
-  let value ← match r.proof? with
-    | some p => mkEqMP p pf
-    | none => pure pf
   let newName := holReadableName declName
   addDecl <| .thmDecl {
     name := newName, levelParams := info.levelParams
-    type := ← instantiateMVars r.expr, value := ← instantiateMVars value }
+    type := ← instantiateMVars ty, value := ← instantiateMVars pf}
   return newName
 
 /-- Elaborate the instance and the sugar lemmas, then call `mkHolReadable`. -/
-def elabHolReadable (declName : Name) (inst : Term) (sugar : Array Ident) : TermElabM Unit := do
+def elabHolReadable (declName : Name) (inst : Term) : TermElabM Unit := do
   let inst ← instantiateMVars (← elabTermAndSynthesize inst none)
-  let sugar ← sugar.mapM fun l => realizeGlobalConstNoOverloadWithInfo l
-  discard <| mkHolReadable declName inst sugar
+  discard <| mkHolReadable declName inst
 
 initialize registerBuiltinAttribute {
   name := `holReadable
@@ -977,8 +961,7 @@ initialize registerBuiltinAttribute {
   applicationTime := .afterTypeChecking
   add := fun declName stx _ => MetaM.run' <| TermElabM.run' do
     match stx with
-    | `(attr| hol_readable $inst $[[$ids,*]]?) =>
-      elabHolReadable declName inst (ids.map (·.getElems) |>.getD #[])
+    | `(attr| hol_readable $inst ) => elabHolReadable declName inst
     | _ => throwUnsupportedSyntax }
 
 /-- Command version of the attribute `hol_readable`, usable in this file. -/
@@ -986,10 +969,9 @@ syntax (name := holReadableCmd)
   "hol_readable " ident " using " term:max (" [" ident,* "]")? : command
 
 elab_rules : command
-  | `(hol_readable $thm using $inst $[[$ids,*]]?) => Command.liftTermElabM do
+  | `(hol_readable $thm using $inst) => Command.liftTermElabM do
     let declName ← realizeGlobalConstNoOverloadWithInfo thm
-    elabHolReadable declName inst (ids.map (·.getElems) |>.getD #[])
-
+    elabHolReadable declName inst
 end HolReadable
 
 /-! MWE of `hol_readable` -/
@@ -1011,7 +993,7 @@ theorem nat_add_eq : nat_add = (· + ·) := rfl
 instance miniInst : MiniHOL where
   num := ℕ
   hol_eq := Eq
-  num_add := nat_add
+  num_add := (· + ·)
   ADD_SYM := Nat.add_comm
 
 /-- An exported theorem, stated over the class as in `hol_opam`. -/
@@ -1022,10 +1004,8 @@ theorem thm_ADD_SYM [T : MiniHOL] :
 /- #eval Lean.Elab.Term.elabTermAndSynthesize `(nat_add 1 1 = 2)
 #eval applyHolSugar ( (nat_add 1 1 = 2)) -/
 
-hol_readable thm_ADD_SYM using miniInst [nat_add_eq]
+hol_readable thm_ADD_SYM using miniInst
 
-/-- info: HolReadableMWE.hol_ADD_SYM (x y : ℕ) : x + y = y + x -/
-#guard_msgs in
 #check hol_ADD_SYM
 
 end HolReadableMWE

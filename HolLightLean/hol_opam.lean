@@ -421,6 +421,7 @@ axiom thm_ADD_SYM [T : HOLTheory] : ∀ m : num, ∀ n : num, hol_eq (Nat_add m 
 axiom thm_ADD_ASSOC [T : HOLTheory] : ∀ m : num, ∀ n : num, ∀ p : num, hol_eq (Nat_add m (Nat_add n p)) (Nat_add (Nat_add m n) p)
 @[hol_readable holTheoryInst]
 axiom thm_ADD_AC [T : HOLTheory] : ∀ (n : num) (m : num) (p : num), hand (hol_eq (Nat_add m n) (Nat_add n m)) (hand (hol_eq (Nat_add (Nat_add m n) p) (Nat_add m (Nat_add n p))) (hol_eq (Nat_add m (Nat_add n p)) (Nat_add n (Nat_add m p))))
+#check hol_ADD_AC
 @[hol_readable holTheoryInst]
 axiom thm_ADD_EQ_0 [T : HOLTheory] : ∀ m : num, ∀ n : num, hol_eq (hol_eq (Nat_add m n) (NUMERAL _0)) (hand (hol_eq m (NUMERAL _0)) (hol_eq n (NUMERAL _0)))
 @[hol_readable holTheoryInst]
@@ -521,6 +522,7 @@ axiom thm_LE_0 [T : HOLTheory] : ∀ n : num, Nat_le (NUMERAL _0) n
 axiom thm_LT_0 [T : HOLTheory] : ∀ n : num, Nat_lt (NUMERAL _0) (SUC n)
 @[hol_readable holTheoryInst]
 axiom thm_LE_REFL [T : HOLTheory] : ∀ n : num, Nat_le n n
+#check hol_LE_REFL
 @[hol_readable holTheoryInst]
 axiom thm_LT_REFL [T : HOLTheory] : ∀ n : num, HOLTheory.not (Nat_lt n n)
 @[hol_readable holTheoryInst]
@@ -1245,6 +1247,7 @@ axiom thm_EXISTS_EX [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B]
 axiom thm_FORALL_ALL [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ P : A -> B -> Prop, ∀ l : list B, hol_eq (∀ x : A, @ALL T B _ (P x) l) (@ALL T B _ (fun s : B => ∀ x : A, P x s) l)
 @[hol_readable holTheoryInst]
 axiom thm_MEM_APPEND [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ x : A, ∀ l1 : list A, ∀ l2 : list A, hol_eq (@MEM T A _ x (@APPEND T A _ l1 l2)) (hor (@MEM T A _ x l1) (@MEM T A _ x l2))
+#check hol_MEM_APPEND
 @[hol_readable holTheoryInst]
 axiom thm_MEM_MAP [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ f : A -> B, ∀ y : B, ∀ l : list A, hol_eq (@MEM T B _ y (@MAP T A B _ _ f l)) (∃ x : A, hand (@MEM T A _ x l) (hol_eq y (f x)))
 @[hol_readable holTheoryInst]
@@ -1339,6 +1342,7 @@ axiom thm_EL_MAP [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], �
 axiom thm_MAP_REVERSE [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ f : A -> B, ∀ l : list A, hol_eq (@REVERSE T B _ (@MAP T A B _ _ f l)) (@MAP T A B _ _ f (@REVERSE T A _ l))
 @[hol_readable holTheoryInst]
 axiom thm_ALL_FILTER [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ P : A -> Prop, ∀ Q : A -> Prop, ∀ l : list A, hol_eq (@ALL T A _ P (@FILTER T A _ Q l)) (@ALL T A _ (fun x : A => (Q x) -> P x) l)
+#check hol_ALL_FILTER
 @[hol_readable holTheoryInst]
 axiom thm_APPEND_SING [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ h : A, ∀ t : list A, hol_eq (@APPEND T A _ (@CONS T A _ h (@NIL T A _)) t) (@CONS T A _ h t)
 @[hol_readable holTheoryInst]
@@ -1713,6 +1717,7 @@ axiom thm_TREAL_ADD_WELLDEF [T : HOLTheory] : ∀ x1 : HOLTheory.prod HOLTheory.
 axiom thm_TREAL_MUL_WELLDEFR [T : HOLTheory] : ∀ x1 : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, ∀ x2 : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, ∀ y : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, (treal_eq x1 x2) -> treal_eq (treal_mul x1 y) (treal_mul x2 y)
 @[hol_readable holTheoryInst]
 axiom thm_TREAL_MUL_WELLDEF [T : HOLTheory] : ∀ x1 : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, ∀ x2 : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, ∀ y1 : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, ∀ y2 : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, (hand (treal_eq x1 x2) (treal_eq y1 y2)) -> treal_eq (treal_mul x1 y1) (treal_mul x2 y2)
+#check hol_TREAL_MUL_WELLDEF
 @[hol_readable holTheoryInst]
 axiom thm_TREAL_EQ_IMP_LE [T : HOLTheory] : ∀ x : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, ∀ y : HOLTheory.prod HOLTheory.hreal HOLTheory.hreal, (treal_eq x y) -> treal_le x y
 @[hol_readable holTheoryInst]
@@ -1795,6 +1800,7 @@ axiom thm_REAL_EQ_ADD_LCANCEL [T : HOLTheory] : ∀ x : HOLTheory.Real, ∀ y : 
 axiom thm_REAL_EQ_ADD_RCANCEL [T : HOLTheory] : ∀ x : HOLTheory.Real, ∀ y : HOLTheory.Real, ∀ z : HOLTheory.Real, hol_eq (hol_eq (real_add x z) (real_add y z)) (hol_eq x y)
 @[hol_readable holTheoryInst]
 axiom thm_REAL_MUL_RZERO [T : HOLTheory] : ∀ x : HOLTheory.Real, hol_eq (real_mul x (real_of_num (NUMERAL _0))) (real_of_num (NUMERAL _0))
+#check hol_REAL_MUL_RZERO
 @[hol_readable holTheoryInst]
 axiom thm_REAL_MUL_LZERO [T : HOLTheory] : ∀ x : HOLTheory.Real, hol_eq (real_mul (real_of_num (NUMERAL _0)) x) (real_of_num (NUMERAL _0))
 @[hol_readable holTheoryInst]

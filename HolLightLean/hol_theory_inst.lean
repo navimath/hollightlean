@@ -5,8 +5,11 @@ import HolLightLean.hol_theory_record
 # `HOLTheory` inhabited by the alignments
 
 Every field of the record `HOLTheory` (see `hol_theory_record.lean`) is filled with the
-corresponding Lean alignment from `conectors`, `up_to_real`, `hol_up_real_terms`,
-`real_align` and `after_real`.
+Lean/Mathlib term it is aligned to. When the alignment in `conectors`, `up_to_real`,
+`hol_up_real_terms`, `real_align` or `after_real` is a definition whose body is plain
+Lean/Mathlib, the field is that body (or the corresponding notation), so the generated
+`hol_<name>` statements read in Lean terms; HOL-specific constructions keep their name.
+The `_def` fields are the alignment theorems, which typecheck by unfolding.
 
 The only pieces not taken from those files are `DECIMAL` (commented out in `after_real`)
 and the logical rules, which are proved inline.
@@ -19,6 +22,7 @@ set_option linter.unusedVariables false
 ## The instance
 -/
 
+open Classical in
 noncomputable instance holTheoryInst : HOLTheory where
   hol_eq := Eq
   epsilon := Classical.epsilon
@@ -95,11 +99,11 @@ noncomputable instance holTheoryInst : HOLTheory where
   hexists_one_def := EXISTSUNIQUE_def
   _FALSITY_ := False
   _FALSITY__def := _FALSITY__def
-  COND := COND
+  COND := fun P x y => if P then x else y
   COND_def := COND_def
-  o := o
+  o := fun f g => f ∘ g
   o_def := o_def
-  I := I
+  I := id
   I_def := I_def
   one_ABS := one_ABS
   one_REP := one_REP
@@ -107,19 +111,19 @@ noncomputable instance holTheoryInst : HOLTheory where
   one_def := one_def
   hashek := True
   hashek_def := hashek_def
-  LET := LET
+  LET := fun f x => f x
   LET_def := LET_def
-  LET_END := LET_END
+  LET_END := id
   LET_END_def := LET_END_def
-  GABS := GABS
+  GABS := Classical.epsilon
   GABS_def := GABS_def
   GEQ := Eq
   GEQ_def := GEQ_def
   _SEQPATTERN := _SEQPATTERN
   _SEQPATTERN_def := _SEQPATTERN_def
-  _UNGUARDED_PATTERN := _UNGUARDED_PATTERN
+  _UNGUARDED_PATTERN := fun p r => p ∧ r
   _UNGUARDED_PATTERN_def := _UNGUARDED_PATTERN_def
-  _GUARDED_PATTERN := _GUARDED_PATTERN
+  _GUARDED_PATTERN := fun p g r => p ∧ g ∧ r
   _GUARDED_PATTERN_def := _GUARDED_PATTERN_def
   _MATCH := _MATCH
   _MATCH_def := _MATCH_def
@@ -129,21 +133,21 @@ noncomputable instance holTheoryInst : HOLTheory where
   mk_pair_def := mk_pair_def
   ABS_prod := ABS_prod
   REP_prod := REP_prod
-  Prod_mk := prod_mk
+  Prod_mk := Prod.mk
   pair_def := pair_def
-  FST := prod_fst
+  FST := Prod.fst
   FST_def := FST_def
-  SND := prod_snd
+  SND := Prod.snd
   SND_def := SND_def
-  CURRY := HolLightLean.hol_up_real_terms.CURRY
+  CURRY := fun f a b => f (a, b)
   CURRY_def := HolLightLean.hol_up_real_terms.CURRY_def
-  UNCURRY := HolLightLean.hol_up_real_terms.UNCURRY
+  UNCURRY := fun f p => f p.1 p.2
   UNCURRY_def := HolLightLean.hol_up_real_terms.UNCURRY_def
-  PASSOC := HolLightLean.hol_up_real_terms.PASSOC
+  PASSOC := fun f p => f ((p.1, p.2.1), p.2.2)
   PASSOC_def := HolLightLean.hol_up_real_terms.PASSOC_def
-  ONE_ONE := ONE_ONE
+  ONE_ONE := Function.Injective
   ONE_ONE_def := ONE_ONE_def
-  ONTO := ONTO
+  ONTO := fun f => ∀ y, ∃ x, y = f x
   ONTO_def := ONTO_def
   IND_SUC := IND_SUC
   IND_SUC_def := IND_SUC_def
@@ -153,53 +157,53 @@ noncomputable instance holTheoryInst : HOLTheory where
   NUM_REP_def := NUM_REP_def
   mk_num := mk_num
   dest_num := dest_num
-  _0 := Nat.zero
+  _0 := 0
   _0_def := _0_def
-  SUC := Nat.succ
+  SUC := (· + 1)
   SUC_def := SUC_def
-  NUMERAL := NUMERAL
+  NUMERAL := fun n => n
   NUMERAL_def := NUMERAL_def
-  BIT0 := BIT0
+  BIT0 := fun n => n + n
   BIT0_def := BIT0_def
-  BIT1 := BIT1
+  BIT1 := fun n => n + n + 1
   BIT1_def := BIT1_def
-  PRE := Nat.pred
+  PRE := (· - 1)
   PRE_def := PRE_def
-  Nat_add := Nat.add
+  Nat_add := (· + ·)
   add_def := add_def
-  Nat_mul := Nat.mul
+  Nat_mul := (· * ·)
   mul_def := mul_def
-  EXP := Nat.pow
+  EXP := (· ^ ·)
   EXP_def := EXP_def
-  Nat_le := Nat.le
+  Nat_le := (· ≤ ·)
   le_def := le_def
-  Nat_lt := Nat.lt
+  Nat_lt := (· < ·)
   lt_def := lt_def
-  Nat_ge := @GE.ge Nat _
+  Nat_ge := (· ≥ ·)
   ge_def := ge_def
-  Nat_gt := @GT.gt Nat _
+  Nat_gt := (· > ·)
   gt_def := gt_def
-  MAX := Nat.max
+  MAX := max
   MAX_def := MAX_def
-  MIN := Nat.min
+  MIN := min
   MIN_def := MIN_def
   EVEN := Even
   EVEN_def := EVEN_def
   ODD := Odd
   ODD_def := ODD_def
-  Nat_minus := Nat.sub
+  Nat_minus := (· - ·)
   minus_def := minus_def
   FACT := Nat.factorial
   FACT_def := FACT_def
-  DIV := Nat.div
+  DIV := (· / ·)
   DIV_def := DIV_def
-  MOD := Nat.mod
+  MOD := (· % ·)
   MOD_def := MOD_def
   minimal := HolLightLean.hol_up_real_terms.minimal
   minimal_def := HolLightLean.hol_up_real_terms.minimal_def
   WF := WellFounded
   WF_def := WF_def
-  MEASURE := HolLightLean.hol_up_real_terms.MEASURE
+  MEASURE := fun f x y => f x < f y
   MEASURE_def := HolLightLean.hol_up_real_terms.MEASURE_def
   NUMPAIR := NUMPAIR
   NUMPAIR_def := NUMPAIR_def
@@ -279,13 +283,13 @@ noncomputable instance holTheoryInst : HOLTheory where
   BUTLAST_def := BUTLAST_def
   REPLICATE := List.replicate
   REPLICATE_def := REPLICATE_def
-  NULL := NULL
+  NULL := fun l => l.isEmpty
   NULL_def := NULL_def
   ALL := ALL
   ALL_def := ALL_def
   EX := EX
   EX_def := EX_def
-  ITLIST := ITLIST
+  ITLIST := fun f l b => List.foldr f b l
   ITLIST_def := ITLIST_def
   MEM := (· ∈ ·)
   MEM_def := MEM_def
@@ -307,7 +311,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   ALLPAIRS_def := ALLPAIRS_def
   PAIRWISE := List.Pairwise
   PAIRWISE_def := PAIRWISE_def
-  list_of_seq := list_of_seq
+  list_of_seq := fun f n => List.ofFn (fun i : Fin n => f i)
   list_of_seq_def := list_of_seq_def
   _mk_char := _mk_char
   _dest_char := _dest_char
@@ -315,7 +319,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   _22943_def := rfl
   ASCII := (fun a0 : Prop => fun a1 : Prop => fun a2 : Prop => fun a3 : Prop => fun a4 : Prop => fun a5 : Prop => fun a6 : Prop => fun a7 : Prop => _mk_char ((fun a0' : Prop => fun a1' : Prop => fun a2' : Prop => fun a3' : Prop => fun a4' : Prop => fun a5' : Prop => fun a6' : Prop => fun a7' : Prop => @CONSTR (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) _ (NUMERAL Nat.zero) (@prod_mk Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))))) _ _ a0' (@prod_mk Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))) _ _ a1' (@prod_mk Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop)))) _ _ a2' (@prod_mk Prop (prod Prop (prod Prop (prod Prop Prop))) _ _ a3' (@prod_mk Prop (prod Prop (prod Prop Prop)) _ _ a4' (@prod_mk Prop (prod Prop Prop) _ _ a5' (@prod_mk Prop Prop _ _ a6' a7'))))))) (fun n : Nat => @BOTTOM (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop (prod Prop Prop))))))) _)) a0 a1 a2 a3 a4 a5 a6 a7))
   ASCII_def := rfl
-  dist := DIST
+  dist := fun p => (p.1 - p.2) + (p.2 - p.1)
   dist_def := DIST_def
   is_nadd := is_nadd
   is_nadd_def := is_nadd_def
@@ -399,7 +403,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   SQRT_def := SQRT_def
   DECIMAL := fun a b => (a : ℝ) / (b : ℝ)
   DECIMAL_def := rfl
-  integer := integer
+  integer := fun x => ∃ n : ℕ, |x| = n
   integer_def := integer_def
   int_of_real := Int.floor
   real_of_int := Int.cast
@@ -411,15 +415,15 @@ noncomputable instance holTheoryInst : HOLTheory where
   int_ge_def := int_ge_def
   int_gt := (· > ·)
   int_gt_def := int_gt_def
-  int_of_num := Int.ofNat
+  int_of_num := Nat.cast
   int_of_num_def := int_of_num_def
-  int_neg := Int.neg
+  int_neg := (- ·)
   int_neg_def := int_neg_def
-  int_add := Int.add
+  int_add := (· + ·)
   int_add_def := int_add_def
-  int_sub := Int.sub
+  int_sub := (· - ·)
   int_sub_def := int_sub_def
-  int_mul := Int.mul
+  int_mul := (· * ·)
   int_mul_def := int_mul_def
   int_abs := abs
   int_abs_def := int_abs_def
@@ -429,25 +433,25 @@ noncomputable instance holTheoryInst : HOLTheory where
   int_max_def := int_max_def
   int_min := min
   int_min_def := int_min_def
-  int_pow := Int.pow
+  int_pow := (· ^ ·)
   int_pow_def := int_pow_def
-  div := Int.ediv
+  div := (· / ·)
   div_def := div_def
-  rem := Int.emod
+  rem := (· % ·)
   rem_def := rem_def
-  eq2 := eq2
+  eq2 := fun x y R => R x y
   eq2_def := eq2_def
-  real_mod := real_mod
+  real_mod := fun m x y => ∃ q : ℝ, (∃ n : ℕ, |q| = n) ∧ x - y = q * m
   real_mod_def := real_mod_def
   int_divides := (· ∣ ·)
   int_divides_def := int_divides_def
-  int_mod := int_mod
+  int_mod := fun m x y => m ∣ x - y
   int_mod_def := int_mod_def
-  int_coprime := int_coprime
+  int_coprime := fun p => IsCoprime p.1 p.2
   int_coprime_def := int_coprime_def
-  int_gcd := int_gcd
+  int_gcd := fun p => (Int.gcd p.1 p.2 : ℤ)
   int_gcd_def := int_gcd_def
-  int_lcm := int_lcm
+  int_lcm := fun p => (Int.lcm p.1 p.2 : ℤ)
   int_lcm_def := int_lcm_def
   num_of_int := num_of_int
   num_of_int_def := num_of_int_def
@@ -469,11 +473,11 @@ noncomputable instance holTheoryInst : HOLTheory where
   IN_def := IN_def
   GSPEC := id
   GSPEC_def := GSPEC_def
-  SETSPEC := SETSPEC
+  SETSPEC := fun {A} _ x P => {x' : A | P ∧ x = x'}
   SETSPEC_def := SETSPEC_def
   EMPTY := fun {A} _ => (∅ : Set A)
   EMPTY_def := EMPTY_def
-  INSERT := INSERT
+  INSERT := fun {A} _ a (S : Set A) => (insert a S : Set A)
   INSERT_def := INSERT_def
   UNIV := Set.univ
   UNIV_def := UNIV_def
@@ -487,7 +491,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   INTERS_def := INTERS_def
   DIFF := fun {A} _ => @SDiff.sdiff (Set A) _
   DIFF_def := DIFF_def
-  DELETE := DELETE
+  DELETE := fun {A} _ (S : Set A) a => S \ ({a} : Set A)
   DELETE_def := DELETE_def
   SUBSET := fun {A} _ => @HasSubset.Subset (Set A) _
   SUBSET_def := SUBSET_def
@@ -495,23 +499,23 @@ noncomputable instance holTheoryInst : HOLTheory where
   PSUBSET_def := PSUBSET_def
   DISJOINT := fun {A} _ => @Disjoint (Set A) _ _
   DISJOINT_def := DISJOINT_def
-  SING := SING
+  SING := fun {A} _ (S : Set A) => ∃ a, S = ({a} : Set A)
   SING_def := SING_def
   FINITE := Set.Finite
   FINITE_def := FINITE_def
-  INFINITE := INFINITE
+  INFINITE := fun {A} _ (S : Set A) => ¬ S.Finite
   INFINITE_def := INFINITE_def
   IMAGE := Set.image
   IMAGE_def := IMAGE_def
-  INJ := INJ
+  INJ := fun {A B} _ _ f (S : Set A) (U : Set B) => f '' S ⊆ U ∧ Set.InjOn f S
   INJ_def := INJ_def
-  SURJ := SURJ
+  SURJ := fun {A B} _ _ f (S : Set A) (U : Set B) => f '' S ⊆ U ∧ Set.SurjOn f S U
   SURJ_def := SURJ_def
-  BIJ := BIJ
+  BIJ := fun {A B} _ _ f (S : Set A) (U : Set B) => f '' S ⊆ U ∧ Set.BijOn f S U
   BIJ_def := BIJ_def
-  CHOICE := CHOICE
+  CHOICE := Classical.epsilon
   CHOICE_def := CHOICE_def
-  REST := REST
+  REST := fun {A} _ (S : Set A) => S \ ({Classical.epsilon S} : Set A)
   REST_def := REST_def
   FINREC := FINREC
   FINREC_def := FINREC_def
@@ -519,7 +523,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   ITSET_def := ITSET_def
   CARD := CARD
   CARD_def := CARD_def
-  HAS_SIZE := HAS_SIZE
+  HAS_SIZE := fun {A} _ (s : Set A) n => s.Finite ∧ s.ncard = n
   HAS_SIZE_def := HAS_SIZE_def
   CROSS := Set.prod
   CROSS_def := CROSS_def
@@ -533,29 +537,29 @@ noncomputable instance holTheoryInst : HOLTheory where
   cartesian_product_def := cartesian_product_def
   product_map := product_map
   product_map_def := product_map_def
-  disjoint_union := disjoint_union
+  disjoint_union := fun {A K} _ _ (S : Set K) (F : K → A → Prop) => {(i, x) | S i ∧ F i x}
   disjoint_union_def := disjoint_union_def
-  set_of_list := set_of_list
+  set_of_list := fun {A} _ L => (L.toFinset : Set A)
   set_of_list_def := set_of_list_def
   list_of_set := list_of_set
   list_of_set_def := list_of_set_def
-  pairwise := pairwise
+  pairwise := fun {A} _ R (S : Set A) => ∀ x y, (x ∈ S ∧ y ∈ S ∧ ¬ x = y) → R x y
   pairwise_def := pairwise_def
-  UNION_OF := UNION_OF
+  UNION_OF := fun {A} _ (P : Set (Set (Set A))) (Q : Set (Set A)) => {s | ∃ u ∈ P, u ⊆ Q ∧ ⋃₀ u = s}
   UNION_OF_def := UNION_OF_def
-  INTERSECTION_OF := INTERSECTION_OF
+  INTERSECTION_OF := fun {A} _ (P : Set (Set (Set A))) (Q : Set (Set A)) => {s | ∃ u ∈ P, u ⊆ Q ∧ ⋂₀ u = s}
   INTERSECTION_OF_def := INTERSECTION_OF_def
-  ARBITRARY := ARBITRARY
+  ARBITRARY := fun _ => True
   ARBITRARY_def := ARBITRARY_def
-  le_c := le_c
+  le_c := fun (s : Set _) (t : Set _) => Cardinal.lift (Cardinal.mk s) ≤ Cardinal.lift (Cardinal.mk t)
   le_c_def := le_c_def
-  lt_c := lt_c
+  lt_c := fun (s : Set _) (t : Set _) => Cardinal.lift (Cardinal.mk s) < Cardinal.lift (Cardinal.mk t)
   lt_c_def := lt_c_def
-  eq_c := eq_c
+  eq_c := fun (s : Set _) (t : Set _) => Cardinal.lift (Cardinal.mk s) = Cardinal.lift (Cardinal.mk t)
   eq_c_def := eq_c_def
-  ge_c := ge_c
+  ge_c := fun (s : Set _) (t : Set _) => Cardinal.lift (Cardinal.mk t) ≤ Cardinal.lift (Cardinal.mk s)
   ge_c_def := ge_c_def
-  gt_c := gt_c
+  gt_c := fun (s : Set _) (t : Set _) => Cardinal.lift (Cardinal.mk t) < Cardinal.lift (Cardinal.mk s)
   gt_c_def := gt_c_def
   COUNTABLE := Set.Countable
   COUNTABLE_def := COUNTABLE_def
@@ -579,21 +583,21 @@ noncomputable instance holTheoryInst : HOLTheory where
   iterate_def := iterate_def
   iterato := iterato
   iterato_def := iterato_def
-  nproduct := nproduct
+  nproduct := fun {A} _ (s : Set A) f => ∏ᶠ i ∈ s, f i
   nproduct_def := nproduct_def
-  iproduct := iproduct
+  iproduct := fun {A} _ (s : Set A) f => ∏ᶠ i ∈ s, f i
   iproduct_def := iproduct_def
-  product := product
+  product := fun {A} _ (s : Set A) f => ∏ᶠ i ∈ s, f i
   product_def := product_def
-  isum := isum
+  isum := fun {A} _ (s : Set A) f => ∑ᶠ i ∈ s, f i
   isum_def := isum_def
-  nsum := nsum
+  nsum := fun {A} _ (s : Set A) f => ∑ᶠ i ∈ s, f i
   nsum_def := nsum_def
-  sum := sum
+  sum := fun {A} _ (s : Set A) f => ∑ᶠ i ∈ s, f i
   sum_def := sum_def
-  polynomial_function := polynomial_function
+  polynomial_function := fun f => ∃ p : Polynomial ℝ, ∀ x : ℝ, f x = Polynomial.eval x p
   polynomial_function_def := polynomial_function_def
-  dimindex := dimindex
+  dimindex := fun {A} _ _ => if Finite A then Nat.card A else 1
   dimindex_def := dimindex_def
   finite_index := finite_index
   dest_finite_image := dest_finite_image

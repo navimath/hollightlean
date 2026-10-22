@@ -138,7 +138,4 @@ The whole standard library is exported the same way, using `hol.ml` with root pa
   - `hol_theory_inst.lean`: `holTheoryInst`, the record filled with the Lean alignments;
   - `hol_opam.lean`: the exported theorem statements over `HOLTheory`
     (`lake build HolLightLean.hol_opam`).
-- **In progress:** To generate readable Lean theorems from the instance:
-  The MWE at the end of `meta.lean` does this today with a command:
-  `hol_readable thm_ADD_SYM using miniInst [nat_add_eq]` gives
-  `hol_ADD_SYM (x y : ℕ) : x + y = y + x`.
+- **In progress:** To generate a file containing all exported theorems in the parametrized version using a new `hol_readable` attribute appearing at the `hol_opam.lean` file.
