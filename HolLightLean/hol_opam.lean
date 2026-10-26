@@ -97,6 +97,7 @@ axiom thm_EXISTS_REFL [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ a : A, 
 axiom thm_EXISTS_UNIQUE_REFL [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ a : A, @hexists_one T A _ (fun x : A => hol_eq x a)
 @[hol_readable holTheoryInst]
 axiom thm_UNWIND_THM1 [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ P : A -> Prop, ∀ a : A, hol_eq (∃ x : A, hand (hol_eq a x) (P x)) (P a)
+#check hol_UNWIND_THM1
 @[hol_readable holTheoryInst]
 axiom thm_UNWIND_THM2 [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ P : A -> Prop, ∀ a : A, hol_eq (∃ x : A, hand (hol_eq x a) (P x)) (P a)
 @[hol_readable holTheoryInst]
@@ -217,6 +218,7 @@ axiom thm_RIGHT_IMP_EXISTS_THM [T : HOLTheory] : ∀ {A : Type} [Nonempty A], �
 axiom thm_RIGHT_EXISTS_IMP_THM [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ P : Prop, ∀ Q : A -> Prop, hol_eq (∃ x : A, P -> Q x) (P -> ∃ x : A, Q x)
 @[hol_readable holTheoryInst]
 axiom thm_COND_DEF [T : HOLTheory] : ∀ {A : Type} [Nonempty A], hol_eq (@COND T A _) (fun t : Prop => fun t1 : A => fun t2 : A => @epsilon T A _ (fun x : A => hand ((hol_eq t htrue) -> hol_eq x t1) ((hol_eq t hfalse) -> hol_eq x t2)))
+#check hol_COND_DEF
 @[hol_readable holTheoryInst]
 axiom thm_COND_CLAUSES [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ t1 : A, ∀ t2 : A, hand (hol_eq (@COND T A _ htrue t1 t2) t1) (hol_eq (@COND T A _ hfalse t1 t2) t2)
 @[hol_readable holTheoryInst]
@@ -3115,6 +3117,7 @@ axiom thm_INT_POW_LT [T : HOLTheory] : ∀ x : int, ∀ n : num, (int_lt (int_of
 axiom thm_INT_POW_LT2 [T : HOLTheory] : ∀ n : num, ∀ x : int, ∀ y : int, (hand (HOLTheory.not (hol_eq n (NUMERAL _0))) (hand (int_le (int_of_num (NUMERAL _0)) x) (int_lt x y))) -> int_lt (int_pow x n) (int_pow y n)
 @[hol_readable holTheoryInst]
 axiom thm_INT_POW_LT2_ODD [T : HOLTheory] : ∀ n : num, ∀ x : int, ∀ y : int, (hand (int_lt x y) (ODD n)) -> int_lt (int_pow x n) (int_pow y n)
+#check hol_INT_POW_LT2_ODD
 @[hol_readable holTheoryInst]
 axiom thm_INT_POW_LT2_ODD_EQ [T : HOLTheory] : ∀ n : num, ∀ x : int, ∀ y : int, (ODD n) -> hol_eq (int_lt (int_pow x n) (int_pow y n)) (int_lt x y)
 @[hol_readable holTheoryInst]
@@ -3655,14 +3658,17 @@ axiom thm_INJ [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ 
 axiom thm_SURJ [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ t : B -> Prop, ∀ s : A -> Prop, ∀ f : A -> B, hol_eq (@SURJ T A B _ _ f s t) (hand (∀ x : A, (@IN T A _ x s) -> @IN T B _ (f x) t) (∀ x : B, (@IN T B _ x t) -> ∃ y : A, hand (@IN T A _ y s) (hol_eq (f y) x)))
 @[hol_readable holTheoryInst]
 axiom thm_BIJ [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ f : A -> B, ∀ s : A -> Prop, ∀ t : B -> Prop, hol_eq (@BIJ T A B _ _ f s t) (hand (@INJ T A B _ _ f s t) (@SURJ T A B _ _ f s t))
+#check hol_BIJ
 @[hol_readable holTheoryInst]
 axiom thm_CHOICE [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ s : A -> Prop, hol_eq (@CHOICE T A _ s) (@epsilon T A _ (fun x : A => @IN T A _ x s))
+#check hol_CHOICE
 @[hol_readable holTheoryInst]
 axiom thm_REST [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ s : A -> Prop, hol_eq (@REST T A _ s) (@DELETE T A _ s (@CHOICE T A _ s))
 @[hol_readable holTheoryInst]
 axiom thm_NOT_IN_EMPTY [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ x : A, HOLTheory.not (@IN T A _ x (@EMPTY T A _))
 @[hol_readable holTheoryInst]
 axiom thm_IN_UNIV [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ x : A, @IN T A _ x (@UNIV T A _)
+#check hol_IN_UNIV
 @[hol_readable holTheoryInst]
 axiom thm_IN_UNION [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ s : A -> Prop, ∀ t : A -> Prop, ∀ x : A, hol_eq (@IN T A _ x (@UNION T A _ s t)) (hor (@IN T A _ x s) (@IN T A _ x t))
 @[hol_readable holTheoryInst]
@@ -5024,6 +5030,7 @@ axiom thm_ITERATE_UNION_GEN [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Non
 axiom thm_ITERATE_DIFF [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ op : B -> B -> B, (@monoidal T B _ op) -> ∀ f : A -> B, ∀ s : A -> Prop, ∀ t : A -> Prop, (hand (@FINITE T A _ s) (@SUBSET T A _ t s)) -> hol_eq (op (@iterate T A B _ _ op (@DIFF T A _ s t) f) (@iterate T A B _ _ op t f)) (@iterate T A B _ _ op s f)
 @[hol_readable holTheoryInst]
 axiom thm_ITERATE_DIFF_GEN [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ op : B -> B -> B, (@monoidal T B _ op) -> ∀ f : A -> B, ∀ s : A -> Prop, ∀ t : A -> Prop, (hand (@FINITE T A _ (@support T A B _ _ op f s)) (@SUBSET T A _ (@support T A B _ _ op f t) (@support T A B _ _ op f s))) -> hol_eq (op (@iterate T A B _ _ op (@DIFF T A _ s t) f) (@iterate T A B _ _ op t f)) (@iterate T A B _ _ op s f)
+#check hol_ITERATE_DIFF_GEN
 @[hol_readable holTheoryInst]
 axiom thm_ITERATE_INCL_EXCL [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [Nonempty B], ∀ op : B -> B -> B, (@monoidal T B _ op) -> ∀ s : A -> Prop, ∀ t : A -> Prop, ∀ f : A -> B, (hand (@FINITE T A _ s) (@FINITE T A _ t)) -> hol_eq (op (@iterate T A B _ _ op s f) (@iterate T A B _ _ op t f)) (op (@iterate T A B _ _ op (@UNION T A _ s t) f) (@iterate T A B _ _ op (@INTER T A _ s t) f))
 @[hol_readable holTheoryInst]
@@ -5126,6 +5133,7 @@ axiom thm_IPRODUCT_CLAUSES [T : HOLTheory] : ∀ {A B : Type} [Nonempty A] [None
 axiom thm_product [T : HOLTheory] : ∀ {A : Type} [Nonempty A], hol_eq (@product T A _) (@iterate T A HOLTheory.Real _ _ real_mul)
 @[hol_readable holTheoryInst]
 axiom thm_NEUTRAL_REAL_MUL [T : HOLTheory] : hol_eq (@neutral T HOLTheory.Real _ real_mul) (real_of_num (NUMERAL (BIT1 _0)))
+#check hol_NEUTRAL_REAL_MUL
 @[hol_readable holTheoryInst]
 axiom thm_MONOIDAL_REAL_MUL [T : HOLTheory] : @monoidal T HOLTheory.Real _ real_mul
 @[hol_readable holTheoryInst]
@@ -5168,6 +5176,7 @@ axiom thm_NSUM_0 [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ s : A -> Pro
 axiom thm_NSUM_LMUL [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ f : A -> num, ∀ c : num, ∀ s : A -> Prop, hol_eq (@nsum T A _ s (fun x : A => Nat_mul c (f x))) (Nat_mul c (@nsum T A _ s f))
 @[hol_readable holTheoryInst]
 axiom thm_NSUM_RMUL [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ f : A -> num, ∀ c : num, ∀ s : A -> Prop, hol_eq (@nsum T A _ s (fun x : A => Nat_mul (f x) c)) (Nat_mul (@nsum T A _ s f) c)
+#check hol_NSUM_RMUL
 @[hol_readable holTheoryInst]
 axiom thm_NSUM_LE [T : HOLTheory] : ∀ {A : Type} [Nonempty A], ∀ f : A -> num, ∀ g : A -> num, ∀ s : A -> Prop, (hand (@FINITE T A _ s) (∀ x : A, (@IN T A _ x s) -> Nat_le (f x) (g x))) -> Nat_le (@nsum T A _ s f) (@nsum T A _ s g)
 @[hol_readable holTheoryInst]
