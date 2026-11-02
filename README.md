@@ -7,13 +7,28 @@ constants are then mapped to their Lean/Mathlib counterpart, with a proof that t
 
 ## To replicate the translation
 
+### Automatic replication
+
+`scripts/reproduce` automatic replicate the translation for the HOL standard library or for a subset of it (up to `real.ml`). It installs pinned versions of HOL Light, hol2dk, Lambdapi and Lean in a local opam switch under `tmp/` (only opam, git, curl and make are needed beforehand). It then dumps and translates the proofs using this repository's mapping files and `complete.lean`, and checks the result with `lake build`. The Lean project is created in `tmp/output-<LIB>/`, and a rerun resumes after the last completed stage.
+```bash
+scripts/reproduce <library_option>     # HOL or Up_to_Real
+scripts/reproduce <library> <stage>   # restart from stage <stage>
+```
+
+### Manually replicate
+
 Requirements: [opam](https://opam.ocaml.org/), [HOL Light](https://github.com/jrh13/hol-light),
-[hol2dk](https://github.com/Deducteam/hol2dk),[Lambdapi](https://github.com/Deducteam/lambdapi)
-built from sources and Lean `v4.31.0`.
+[hol2dk](https://github.com/Deducteam/hol2dk), [Lambdapi](https://github.com/Deducteam/lambdapi)
+built from sources and Lean `v4.31.0`. The versions used by `scripts/reproduce` are HOL Light 3.1.0,
+hol2dk `11e45c0`, Lambdapi `dfd44e0a` and OCaml 5.3.0.
 
-### 0. Set up the tools
+The steps below export `hol_up_real.ml` (the library up to `real.ml`) as the Lean project
+`HolUptoReal`. To export the whole library, skip the fragment in step 1 and use `hol.ml`, `Hol` and
+`hol_opam` in place of `hol_up_real.ml`, `HolUptoReal` and `hol_up_real_opam`.
 
-**opam and dune** 
+#### 0. Set up the tools
+
+**opam and dune**
 ```bash
 bash -c "sh <(curl -fsSL https://opam.ocaml.org/install.sh)"
 opam init -y                      # creates ~/.opam and a default switch with an OCaml compiler
@@ -23,7 +38,8 @@ opam install -y dune
 
 **HOL Light**
 ```bash
-opam install -y --deps-only hol_light.3.0.0
+opam pin -y camlp5 8.03.06
+opam install -y --deps-only hol_light.3.1.0
 git clone https://github.com/jrh13/hol-light
 make -C hol-light
 ```
@@ -37,20 +53,28 @@ cd hol2dk && dune build && dune install
 **Lambdapi** (from sources, for `lambdapi export -o stt_lean`)
 ```bash
 git clone https://github.com/Deducteam/lambdapi
-opam pin add lambdapi ./lambdapi
+opam pin add -y lambdapi ./lambdapi
 lambdapi --version                # should print a dev version, not 3.0.0
+```
+
+**Lean** (through [elan](https://github.com/leanprover/elan))
+```bash
+curl https://elan.lean-lang.org/elan-init.sh -sSf | sh
+elan toolchain install leanprover/lean4:v4.31.0 #pin to version 4.31.0
 ```
 
 **Environment variables**, e.g. in your shell profile:
 ```bash
 export HOLLIGHT_DIR=/absolute/path/to/hol-light
-export HOL2DK_DIR=/absolute/path/to/hol2dk    #(different if installed via opam)
+export HOL2DK_DIR=$(opam var share)/hol2dk    # or the hol2dk sources
 ```
+`HOL2DK_DIR` must contain the `Makefile`, `encoding.lp` and `theory_hol.lp` used by `hol2dk config`.
 
-### 1. Patch HOL Light and choose a *fragment of `hol.ml`*
+
+#### 1. Patch HOL Light and choose a *fragment of `hol.ml`*
 
 `hol2dk patch` modifies `fusion.ml`, `bool.ml` and `equal.ml` so that HOL Light records proof
-steps (backups are kept as `*-bak.ml`; `hol2dk unpatch` restores them):
+steps (use `hol2dk unpatch` to restore):
 ```bash
 cd $HOLLIGHT_DIR
 hol2dk patch
@@ -58,20 +82,17 @@ hol2dk patch
 
 A *fragment of `hol.ml`* is a `.ml` file that loads only an initial part of the standard library.
 In current HOL Light, `hol.ml` loads the library through `hol_lib.ml`, so a fragment is a pair of
-copies of these two files. For example, `hol_up_real.ml` (everything up to `real.ml`):
+copies of these two files. For example, `hol_up_real.ml` loads `hol_lib_up_real.ml`, which keeps
+the lines of `hol_lib.ml` up to `loads "real.ml";;` (the following `loads` and the final
+`check_axioms` block are dropped):
 ```bash
 cd $HOLLIGHT_DIR
-cp hol.ml hol_up_real.ml
-cp hol_lib.ml hol_lib_up_real.ml
-# in hol_up_real.ml, load the truncated library instead of the full one
-sed -i 's/loads "hol_lib.ml"/loads "hol_lib_up_real.ml"/' hol_up_real.ml
+awk '{print} /^loads "real.ml"/{exit}' hol_lib.ml > hol_lib_up_real.ml
+sed -e 's/loads "hol_lib.ml"/loads "hol_lib_up_real.ml"/' hol.ml > hol_up_real.ml
 ```
-Then edit `hol_lib_up_real.ml` and comment out (or delete) every `loads` line after
-`loads "real.ml";;`, i.e. from `calc_rat.ml` to the end of the file (including the final
-`check_axioms` block). The fragment must keep at least everything up to `loads "fusion.ml";;`.
-Use `hol.ml` itself to export the whole library.
+A fragment must keep at least everything up to `loads "fusion.ml";;`.
 
-### 2. Dump the HOL Light proofs
+#### 2. Dump the HOL Light proofs
 
 ```bash
 cd $HOLLIGHT_DIR                   # must be run here to compute theorem names correctly
@@ -79,53 +100,63 @@ hol2dk dump-simp-before-hol hol_up_real.ml
 ```
 This produces `hol_up_real.{prf,sig,thm,nbp,pos,use}` in `$HOLLIGHT_DIR`.
 
-### 3. Translate to Lambdapi, then to Lean
+#### 3. Translate to Lambdapi, then to Lean
 
-Create a fresh folder outside `$HOLLIGHT_DIR` and copy inside the `encoding.lp`, `mapping.lp` and
-`renaming.lp` files from this repository's `hol2dk_files/` folder, together with `complete.lean`.
+Create a fresh folder outside `$HOLLIGHT_DIR` and copy inside `mapping.lp` and `renaming.lp` from
+this repository's `hol2dk_files/` folder, together with `complete.lean`. Then, inside the folder:
 ```bash
-# inside the folder
-hol2dk config hol_up_real.ml HolUptoReal complete.lean --mapping mapping.lp --renaming renaming.lp
+hol2dk config hol_up_real.ml HolUptoReal complete.lean --mapping ./mapping.lp --renaming ./renaming.lp
 make split && make -j$(nproc) lp
 make hol_up_real_opam.lp           # create theorem statements
-make lean
+make -j$(nproc) lean
+```
+The `./` in front of `mapping.lp` and `renaming.lp` is needed for the `Makefile` to exclude them
+from the files to translate. The translation uses `complete.lean` and the mappings only: the
+generated `HolUptoReal/*.lean` files are used as they are.
+
+`hol2dk config` creates a `lakefile.toml` without Mathlib. Replace it with:
+```toml
+name = "HolUptoReal"
+defaultTargets = ["HolUptoReal"]
+moreLeanArgs = ["--tstack=1000000"]   # thread stack size in KB
+
+[leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.31.0"
+
+[[lean_lib]]
+name = "HolUptoReal"
+```
+and fetch Mathlib:
+```bash
+echo "leanprover/lean4:v4.31.0" > lean-toolchain
+lake update
+lake exe cache get
 ```
 
-> Make sure Lean and Mathlib point to v4.31.0
-> In the `lakefile.toml` file of the project change these lines
-> ```toml
->[[require]]
->name = "mathlib"
->scope = "leanprover-community"
->rev = "v4.31.0"
->```
-> Finally, in the project folder run
-> ```bash
-> echo "leanprover/lean4:v4.31.0" > lean-toolchain 
-> lake update
-> ```
+#### 4. Check the translation
 
+```bash
+ulimit -s unlimited                       # large generated files overflow the default stack
+make olean                                # runs LEAN_STACK_SIZE_KB=0 lake build
+lake build HolUptoReal.hol_up_real_opam   # theorem statements (not imported by HolUptoReal.lean)
+```
+Without `ulimit -s unlimited`, some files (e.g. `thm1536906.lean` for `hol_up_real`) fail with
+`Stack overflow detected`, even with `--tstack`.
 
-### 4. Add the alignment files
-
-Copy to the generated Lean folder `HolUptoReal` the files `hol_up_real_{terms,opam}.lean` from `HolLightLean/`, replacing their imports with the corresponding header `<projectname>.<name_of_fragment_file>`, in this case is `HolUptoReal.hol_up_real`.
-
-### 5. Check the translation
-
-To verify the translation, use the command `make olean` (it runs `LEAN_STACK_SIZE_KB=0 lake build`). Large files can overflow the stack, and older Lean versions ignore `LEAN_STACK_SIZE_KB`. You can add this line to the top level of the generated project's `lakefile.toml`:
-
-   ```toml
-   moreLeanArgs = ["--tstack=1000000"]   # thread stack size in KB
-   ```
-
-**Optional**: To generate the `complete.file` you can use the script `mk_complete.py` within the `scripts` folder.
-
-   ```bash
-   lake exe cache get && lake build
-   python3 scripts/mk_complete.py           # optional: regenerate the single-file complete.lean
-   ```
-
-The whole standard library is exported the same way, using `hol.ml` with root path `Hol`.
+**Optional**: `complete.lean` is generated from the files in `HolLightLean/` by the script
+`mk_complete.py`. To regenerate it, run from the root of this repository:
+```bash
+lake exe cache get && lake build
+python3 scripts/mk_complete.py
+```
 
 ## Status
 
@@ -138,4 +169,4 @@ The whole standard library is exported the same way, using `hol.ml` with root pa
   - `hol_theory_inst.lean`: `holTheoryInst`, the record filled with the Lean alignments;
   - `hol_opam.lean`: the exported theorem statements over `HOLTheory`
     (`lake build HolLightLean.hol_opam`).
-- **In progress:** To generate a file containing all exported theorems in the parametrized version using a new `hol_readable` attribute appearing at the `hol_opam.lean` file.
+- **In progress:** To generate a file containing all exported theorems in the parametrized version using a new `hol_readable` attribute appearing at the `hol_opam.lean` file. A first version of the script that generates this file can be found at `scripts/exports_thms_repo.lean` and the result can be found at `thms_export.lean`.

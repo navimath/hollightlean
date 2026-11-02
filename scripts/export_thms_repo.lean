@@ -92,6 +92,7 @@ def create_file : CommandElabM Unit := do
                 \n\nattribute [local instance 10000] Classical.propDecidable"
   IO.FS.writeFile "thms_export.lean" (String.intercalate "\n\n" (header :: lines))
 
+#exit
 set_option maxHeartbeats 0 in
 set_option format.width 100 in
 run_cmd do create_file

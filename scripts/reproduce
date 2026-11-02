@@ -1,0 +1,263 @@
+#!/bin/bash
+
+set -e # to exit as soon as there is an error
+
+hollight_version=3.1.0
+hollight_commit=Release-3.1.0
+hol2dk_commit=11e45c0 # > 2.1.0
+lambdapi_commit=dfd44e0a # > 3.0.0
+camlp5_version=8.03.06
+ocaml_version=5.3.0
+lean_version=4.31.0
+mathlib_version=4.31.0
+
+make="make -j`nproc`"
+
+script=`realpath $0`
+repo=`dirname $script`
+repo=`dirname $repo` # root of this repository
+
+usage() {
+    cat <<__EOF__
+usage: `basename $0` LIB [STAGE]
+
+create the subdirectory tmp/ of this repository, install in it the necessary
+software, translate the HOL-Light library LIB to Lean using the mappings of
+this repository and check the result
+
+LIB: Up_to_Real or HOL
+
+STAGE:
+__EOF__
+    grep -h '^stage ' $script | sed -e 's/stage \([0-9]*\)/\1:/' -e 's/\$.*//'
+}
+
+error() {
+    echo error: $1
+    echo
+    usage
+    exit 1
+}
+
+library="$1"
+
+case $library in
+    Up_to_Real)
+        hollight_file=hol_up_real.ml
+        root_path=HolUptoReal;;
+    HOL)
+        hollight_file=hol.ml
+        root_path=Hol;;
+    "")
+        error "library argument expected";;
+    *)
+        error "unknown library name: $library";;
+esac
+
+base=`basename $hollight_file .ml`
+output=output-$library
+
+mkdir -p $repo/tmp
+cd $repo/tmp
+
+if test -n "$2"
+then
+    stage=$2
+else
+    if test -f STAGE-$library
+    then
+        stage=`head -n1 STAGE-$library` # last completed stage
+        stage=`expr $stage + 1`
+    else
+        stage=1
+    fi
+fi
+
+line() { echo '------------------------------------------------------------'; }
+
+start() {
+    line
+    echo STAGE $stage: $* ...
+}
+
+#usage: checkout_commit url commit
+checkout_commit() {
+    d=`basename $1 .git`
+    start install $d
+    if test ! -d $d; then git clone $1; fi
+    cd $d
+    git checkout $2
+    cd ..
+}
+
+create_opam_switch() {
+    start create opam switch
+    if test -d _opam
+    then
+        echo opam switch already created
+    else
+        opam update
+        opam switch create . $ocaml_version
+    fi
+}
+
+install_hollight_deps() {
+    start install HOL-Light dependencies
+    opam install -y dune
+    opam pin -y camlp5 $camlp5_version
+    opam install -y --deps-only hol_light.$hollight_version
+    opam uninstall -y ledit
+}
+
+install_lambdapi() {
+    checkout_commit https://github.com/Deducteam/lambdapi.git $lambdapi_commit
+    cd lambdapi
+    git checkout -B reproduce # opam pins the current branch
+    cd ..
+    opam pin add -y lambdapi ./lambdapi
+    lambdapi --version
+}
+
+install_lean() {
+    start install elan and Lean $lean_version
+    curl https://elan.lean-lang.org/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+    source $HOME/.elan/env
+    elan toolchain install leanprover/lean4:v$lean_version
+}
+
+install_hol2dk() {
+    checkout_commit https://github.com/Deducteam/hol2dk.git $hol2dk_commit
+    cd hol2dk
+    dune build && dune install
+    cd ..
+}
+
+install_hollight() {
+    checkout_commit https://github.com/jrh13/hol-light.git $hollight_commit
+    cd hol-light
+    make
+    cd ..
+}
+
+patch_hollight() {
+    start patch hol-light
+    if test -f $HOLLIGHT_DIR/fusion-bak.ml
+    then
+        echo hol-light already patched
+    else
+        hol2dk patch
+    fi
+}
+
+# the following stages are specific to $library
+
+gen_hollight_file() {
+    case $library in
+        Up_to_Real)
+            awk '{print} /^loads "real.ml"/{exit}' hol_lib.ml > hol_lib_up_real.ml
+            sed -e 's/loads "hol_lib.ml"/loads "hol_lib_up_real.ml"/' hol.ml > $hollight_file;;
+        *);;
+    esac
+}
+
+dump_proofs() {
+    start dump hol-light proofs
+    cd hol-light
+    gen_hollight_file
+    hol2dk dump-simp-before-hol $hollight_file
+    cd ..
+}
+
+config_output_dir() {
+    start configure output directory
+    mkdir -p $output
+    cd $output
+    if test -f Makefile; then $make clean-all; fi
+    cp -f $repo/hol2dk_files/mapping.lp $repo/hol2dk_files/renaming.lp $repo/complete.lean .
+    hol2dk config $hollight_file $root_path complete.lean --mapping ./mapping.lp --renaming ./renaming.lp
+    cd ..
+}
+
+translate_proofs() {
+    start translate HOL-Light proofs to lambdapi and lean
+    cd $output
+    make split
+    $make lp
+    make ${base}_opam.lp
+    $make lean
+    cd ..
+}
+
+config_lean_project() {
+    start configure Lean project
+    cd $output
+    echo "leanprover/lean4:v$lean_version" > lean-toolchain
+    cat > lakefile.toml <<__EOF__
+name = "$root_path"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["$root_path"]
+moreLeanArgs = ["--tstack=1000000"] # thread stack size in KB
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints \`fun a ↦ b\`
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v$mathlib_version"
+
+[[lean_lib]]
+name = "$root_path"
+__EOF__
+    lake update
+    lake exe cache get
+    cd ..
+}
+
+check_proofs() {
+    start check proofs
+    cd $output
+    make olean
+    LEAN_STACK_SIZE_KB=0 lake build $root_path.${base}_opam
+    cd ..
+}
+
+stage() {
+    if test $1 -eq $stage
+    then
+        shift
+        t0=$SECONDS
+        $*
+        echo $((SECONDS - t0)) > time-$library-$stage
+        echo $stage > STAGE-$library
+        stage=`expr $stage + 1`
+    fi
+}
+
+stage 1 create_opam_switch
+eval `opam env`
+export HOL2DK_DIR=$OPAM_SWITCH_PREFIX/share/hol2dk
+export HOLLIGHT_DIR=`pwd`/hol-light
+stage 2 install_hollight_deps
+stage 3 install_lambdapi
+stage 4 install_lean
+stage 5 install_hol2dk
+stage 6 install_hollight
+stage 7 patch_hollight
+stage 8 dump_proofs
+stage 9 config_output_dir
+stage 10 translate_proofs
+stage 11 config_lean_project
+ulimit -s unlimited 2> /dev/null || ulimit -s `ulimit -H -s`
+stage 12 check_proofs
+
+for f in `ls -1 time-$library-* | sort -V`
+do
+    t=`cat $f`
+    printf '%02d:%02d:%02d ' $((t/3600)) $((t%3600/60)) $((t%60))
+    echo `grep "^stage ${f##*-} " $script`
+done
