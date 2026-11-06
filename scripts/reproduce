@@ -4,8 +4,8 @@ set -e # to exit as soon as there is an error
 
 hollight_version=3.1.0
 hollight_commit=Release-3.1.0
-hol2dk_commit=11e45c0 # > 2.1.0
-lambdapi_commit=dfd44e0a # > 3.0.0
+hol2dk_commit=d22bf99 # > 2.1.0
+lambdapi_commit=eb680ac # > 3.0.0
 camlp5_version=8.03.06
 ocaml_version=5.3.0
 lean_version=4.31.0

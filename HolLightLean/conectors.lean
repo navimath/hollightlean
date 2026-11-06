@@ -5,6 +5,7 @@ import Mathlib.Analysis.Real.Sqrt
 import Mathlib.Data.Real.Sign
 import Mathlib.Data.Set.Card
 
+set_option linter.style.nameCheck false
 set_option linter.style.longLine false
 set_option linter.unusedVariables false
 

@@ -19,6 +19,7 @@ set_option linter.unusedVariables false
 set_option linter.style.missingEnd false
 set_option relaxedAutoImplicit false
 set_option maxSynthPendingDepth 3
+set_option linter.style.nameCheck false
 
 /-! ### conectors.lean -/
 
