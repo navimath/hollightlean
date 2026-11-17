@@ -9,6 +9,8 @@ constants are then mapped to their Lean/Mathlib counterpart, with a proof that t
 
 ### Automatic replication
 
+Needs [opam](https://opam.ocaml.org/) installed.
+
 `scripts/reproduce` automatic replicate the translation for the HOL standard library or for a subset of it (up to `real.ml`). It installs pinned versions of HOL Light, hol2dk, Lambdapi and Lean in a local opam switch under `tmp/` (only opam, git, curl and make are needed beforehand). It then dumps and translates the proofs using this repository's mapping files and `complete.lean`, and checks the result with `lake build`. The Lean project is created in `tmp/output-<LIB>/`, and a rerun resumes after the last completed stage.
 ```bash
 scripts/reproduce <library_option>     # HOL or Up_to_Real
