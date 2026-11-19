@@ -23,7 +23,7 @@ set_option linter.unusedVariables false
 -/
 
 open Classical in
-noncomputable instance holTheoryInst : HOLTheory where
+noncomputable instance HolTheoryInst : HOLTheory where
   hol_eq := Eq
   epsilon := Classical.epsilon
   fun_ext := fun h => funext h
@@ -471,7 +471,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   real_zpow_def := real_zpow_def
   IN := fun {A} _ a (S : Set A) => a ∈ S
   IN_def := IN_def
-  GSPEC := id
+  GSPEC := setOf
   GSPEC_def := GSPEC_def
   SETSPEC := fun {A} _ x P => {x' : A | P ∧ x = x'}
   SETSPEC_def := SETSPEC_def
@@ -539,7 +539,7 @@ noncomputable instance holTheoryInst : HOLTheory where
   product_map_def := product_map_def
   disjoint_union := fun {A K} _ _ (S : Set K) (F : K → A → Prop) => {(i, x) | S i ∧ F i x}
   disjoint_union_def := disjoint_union_def
-  set_of_list := fun {A} _ L => (L.toFinset : Set A)
+  set_of_list := fun {A} _ L => {x | x ∈ L}
   set_of_list_def := set_of_list_def
   list_of_set := list_of_set
   list_of_set_def := list_of_set_def
