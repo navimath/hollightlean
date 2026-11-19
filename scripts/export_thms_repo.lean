@@ -21,12 +21,17 @@ def get_oarray : CommandElabM (Array (ℕ × Name)) := do
   return opair.qsort (·.1 < ·.1)
 
 /--
-Changes `A → Prop` to `Set A`
+Recursively turns function types from `A → Prop` to `Set A`.
 -/
-def toSet (e : Expr) : MetaM Expr := Meta.transform e (post := fun e => do
-    if let .forallE _ d (.sort .zero) _ := e then
+partial def toSet (e : Expr) : MetaM Expr := Meta.transform e (post := fun e => do
+    match e with
+    | .forallE _ d (.sort .zero) _ => -- A → Prop ⇒ Set A
       if let some e' ← observing? (mkAppM ``Set #[d]) then return .done e'
-    return .continue)
+      return .continue
+    | .forallE n d b bi => -- A → (... → Prop)
+       if b.hasLooseBVars || !b.getForallBody.isProp then return .continue
+       return .done (.forallE n d (← toSet b) bi)
+    | _ => return .continue)
 
 /--
 Pretty prints an expression `e` using the list of options below.
@@ -37,9 +42,9 @@ def pprint_with (style : Options → Options) (e : Expr) : TermElabM String := d
 def styles : List (Options → Options) := [
     fun o => (o.setBool `pp.funBinderTypes true).setBool `pp.analyze true
       |>.setBool `pp.numericTypes true |>.setBool `pp.proofs true, --prints readable style
-    fun o => (o.setBool `pp.explicit true).setBool `pp.funBinderTypes true
+/-  fun o => (o.setBool `pp.explicit true).setBool `pp.funBinderTypes true
       |>.setBool `pp.numericTypes true |>.setBool `pp.proofs true, -- prints all explicits
-    fun o => o.setBool `pp.all true] -- prints everything
+    fun o => o.setBool `pp.all true-/] -- prints everything
 
 /--
 Checks whether the output of `pprint_with` is still definitionally equal to the original expression.
@@ -68,6 +73,46 @@ def get_stmt? (new original : Expr) : TermElabM (Option (String × ℕ)) := do
         return some (s, i)
     return none
 
+/- open PrettyPrinter Delaborator SubExpr in
+@[local app_unexpander abs]
+def absParen : Delab := do
+  guard ((← getExpr).getAppNumArgs == 4)     -- @abs α inst₁ inst₂ x
+  let a ← withAppArg delab
+  `(|($a)|) -/
+
+/--
+This function will substitude operators that need explicit type ascriptions:
+First, in `toTyAsc` it the detects whether certain applications
+appear, for instance `∅` and returns instead `tyAsc (Set α) ∅` that delaborates
+into `(∅ : Set α)` using `delabTyAsc`.
+-/
+def tyAsc (α : Sort u) (a : α) : α := a
+
+/--
+Check if a term is of the form of the if statements
+and in that case changes the term by `tyAsc ty e` that delaborates into (e : ty)
+-/
+def toTyAsc (e : Expr) : MetaM Expr := transform e (post := fun e => do
+  if e.isAppOfArity ``EmptyCollection.emptyCollection 2
+    || e.isAppOfArity ``Set.univ 1
+    || e.isAppOfArity ``SetLike.coe 4
+    || e.isAppOfArity ``List.nil 1 then
+      let ty ← inferType e
+      return .done (mkApp2 (.const ``tyAsc [← getLevel ty]) ty e)
+  return .continue
+)
+
+open PrettyPrinter Delaborator SubExpr in
+/--
+tyAsc delaborator when appearing in applications
+-/
+@[delab app.tyAsc]
+def delabTyAsc : Delab := do
+  --guard ((← getExpr).getAppNumArgs == 2) should not be needed
+  let ty ← withNaryArg 0 delab
+  let a ← withNaryArg 1 delab
+  `(($a : $ty))
+
 def create_file : CommandElabM Unit := do
   let fallbacks ←  IO.mkRef 0
   let unchecked ←  IO.mkRef (#[] : Array Name)
@@ -79,7 +124,7 @@ def create_file : CommandElabM Unit := do
       let some pf := info.value? (allowOpaque := true) | throwError "{n} has no proof"
       let inst ← ppExpr pf.appArg!
       let .const thm _ := pf.getAppFn | throwError "{n} is not an application"
-      let setTy ← toSet info.type
+      let setTy ← toTyAsc (← toSet info.type)
       let stmt ← match (← get_stmt? setTy info.type) with
         | some (s, i) => do if i > 0 then fallbacks.modify (· + 1)
                          pure s
